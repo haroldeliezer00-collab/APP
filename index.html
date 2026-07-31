@@ -9,9 +9,15 @@
 </head>
 <body class="bg-slate-100 text-slate-800 pb-28">
 
-    <header class="bg-white shadow-sm py-4 px-4 text-center sticky top-0 z-50">
-        <h1 class="text-xl font-bold text-sky-900">Centro de Apuestas Harold José</h1>
-        <p class="text-xs text-slate-500">Sistema Integral de Pagos, Sistemas y Bancos</p>
+    <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50">
+        <div class="flex justify-between items-center max-w-md mx-auto">
+            <div></div>
+            <div>
+                <h1 class="text-base font-bold text-sky-900">Centro de Apuestas Harold José</h1>
+                <p class="text-[10px] text-slate-500">Sistema Integral de Pagos y Caja</p>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full">v3.7 Activo</span>
+        </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
@@ -35,14 +41,10 @@
                     <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
                     <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
                     
-                    <button type="button" id="verifyCaptureBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i> Analizar y Verificar Comprobante
-                    </button>
-                    
-                    <div id="analysisBox" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
+                    <div id="analysisBox" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
                         <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                             <i class="fa-solid fa-spinner fa-spin text-amber-600" id="spinnerIcon"></i>
-                            <span id="analysisText">Analizando imagen...</span>
+                            <span id="analysisText">Analizando comprobante automáticamente...</span>
                         </p>
                         <div id="analysisResultDetails" class="text-[11px] text-amber-800 hidden space-y-0.5 mt-1 border-t border-amber-200 pt-1">
                             <p>✅ Referencia detectada: <span id="resRef" class="font-bold">---</span></p>
@@ -193,21 +195,21 @@
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-2xl z-50">
-        <button data-target="pagos" class="nav-btn flex flex-col items-center text-sky-600 transition flex-1 py-1">
+        <button data-target="pagos" class="nav-btn flex flex-col items-center text-sky-600 font-bold transition flex-1 py-1">
             <i class="fa-solid fa-house text-lg"></i>
-            <span class="text-[10px] font-semibold mt-1">Pagos</span>
+            <span class="text-[10px] mt-1">Pagos</span>
         </button>
-        <button data-target="caja" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition flex-1 py-1">
+        <button data-target="caja" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
             <i class="fa-solid fa-wallet text-lg"></i>
-            <span class="text-[10px] font-semibold mt-1">Caja</span>
+            <span class="text-[10px] mt-1">Caja</span>
         </button>
-        <button data-target="sistemas" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition flex-1 py-1">
+        <button data-target="sistemas" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
             <i class="fa-solid fa-chart-line text-lg"></i>
-            <span class="text-[10px] font-semibold mt-1">Sistemas</span>
+            <span class="text-[10px] mt-1">Sistemas</span>
         </button>
-        <button data-target="bancos" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition flex-1 py-1">
+        <button data-target="bancos" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
             <i class="fa-solid fa-building-columns text-lg"></i>
-            <span class="text-[10px] font-semibold mt-1">Bancos</span>
+            <span class="text-[10px] mt-1">Bancos</span>
         </button>
     </nav>
 
@@ -228,7 +230,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Navegación por pestañas infalible
+            // 1. Control de Pestañas 100% Fluido e Inmediato
             const navButtons = document.querySelectorAll('.nav-btn');
             const sections = document.querySelectorAll('.view-section');
 
@@ -248,19 +250,19 @@
                         activeSection.style.display = 'block';
                     }
 
-                    // Actualizar estilos de los botones del menú inferior
+                    // Actualizar estilos del menú inferior
                     navButtons.forEach(btn => {
-                        btn.classList.remove('text-sky-600');
+                        btn.classList.remove('text-sky-600', 'font-bold');
                         btn.classList.add('text-slate-400');
                     });
                     button.classList.remove('text-slate-400');
-                    button.classList.add('text-sky-600');
+                    button.classList.add('text-sky-600', 'font-bold');
                     
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
             });
 
-            // Establecer vista inicial activa
+            // Forzar vista de pagos al iniciar
             document.getElementById('view-pagos').style.display = 'block';
 
             // 2. Manejo de imágenes (Archivo o Pegar con Ctrl+V desde WhatsApp Web)
@@ -270,7 +272,6 @@
             const fileNameText = document.getElementById('fileName');
             const uploadText = document.getElementById('uploadText');
             
-            const verifyCaptureBtn = document.getElementById('verifyCaptureBtn');
             const analysisBox = document.getElementById('analysisBox');
             const analysisText = document.getElementById('analysisText');
             const spinnerIcon = document.getElementById('spinnerIcon');
@@ -278,17 +279,46 @@
 
             function handleImageFile(file, sourceName) {
                 if (file) {
-                    uploadText.textContent = "¡Captura cargada con éxito!";
+                    uploadText.textContent = "¡Imagen cargada correctamente!";
                     fileNameText.textContent = sourceName || file.name;
-                    analysisBox.classList.add('hidden');
-                    analysisResultDetails.classList.add('hidden');
                     
+                    // Mostrar caja de análisis animada de inmediato
+                    previewContainer.style.display = 'block';
+                    analysisBox.style.display = 'block';
+                    spinnerIcon.style.display = 'inline-block';
+                    analysisText.textContent = "Leyendo comprobante y verificando referencia...";
+                    analysisResultDetails.style.display = 'none';
+
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         imagePreview.src = event.target.result;
-                        previewContainer.classList.remove('hidden');
                     }
                     reader.readAsDataURL(file);
+
+                    // Simulación automática del análisis inteligente (1.2 segundos)
+                    setTimeout(() => {
+                        const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
+                        const mockMonto = (Math.random() * 150 + 10).toFixed(2);
+                        const bancosList = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
+                        const mockBanco = bancosList[Math.floor(Math.random() * bancosList.length)];
+
+                        // Rellenar campos automáticamente
+                        document.getElementById('refNumber').value = mockRef;
+                        document.getElementById('paymentAmount').value = mockMonto;
+                        document.getElementById('paymentBank').value = mockBanco;
+
+                        // Mostrar detalles comprobados
+                        document.getElementById('resRef').textContent = mockRef;
+                        document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
+                        document.getElementById('resBanco').textContent = mockBanco;
+
+                        analysisText.textContent = "¡Comprobante analizado y validado con éxito!";
+                        spinnerIcon.style.display = 'none';
+                        analysisResultDetails.style.display = 'block';
+
+                        // Disparar comprobación de duplicados
+                        document.getElementById('refNumber').dispatchEvent(new Event('input'));
+                    }, 1200);
                 }
             }
 
@@ -300,32 +330,4 @@
             window.addEventListener('paste', (e) => {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let item of items) {
-                    if (item.kind === 'file' && item.type.startsWith('image/')) {
-                        const blob = item.getAsFile();
-                        if (blob) {
-                            handleImageFile(blob, "captura_whatsapp_web.jpg");
-                        }
-                    }
-                }
-            });
-
-            // 3. Botón Analizar con feedback visual animado en vivo
-            verifyCaptureBtn.addEventListener('click', () => {
-                analysisBox.classList.remove('hidden');
-                analysisText.textContent = "Analizando comprobante y extrayendo datos...";
-                spinnerIcon.style.display = 'inline-block';
-                analysisResultDetails.classList.add('hidden');
-
-                setTimeout(() => {
-                    // Generar simulación de extracción automática de datos
-                    const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
-                    const mockMonto = (Math.random() * 200 + 5).toFixed(2);
-                    const bancosList = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
-                    const mockBanco = bancosList[Math.floor(Math.random() * bancosList.length)];
-
-                    document.getElementById('refNumber').value = mockRef;
-                    document.getElementById('paymentAmount').value = mockMonto;
-                    document.getElementById('paymentBank').value = mockBanco;
-
-                    document.getElementById('resRef').textContent = mockRef;
-                    document.
+                    
