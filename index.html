@@ -26,19 +26,30 @@
                     <div class="text-sky-600 text-2xl">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura, archivo o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> para pegar desde WhatsApp Web</p>
+                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> para pegar desde WhatsApp Web</p>
                     
                     <input type="file" id="fileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
                 </div>
 
-                <div id="previewContainer" class="hidden mt-3 text-center space-y-2">
+                <div id="previewContainer" class="hidden mt-3 text-center space-y-3">
                     <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
                     <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
                     
-                    <button type="button" id="verifyCaptureBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar y Verificar Comprobante
+                    <button type="button" id="verifyCaptureBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i> Analizar y Verificar Comprobante
                     </button>
-                    <p id="analysisStatus" class="text-xs text-emerald-600 font-bold hidden"><i class="fa-solid fa-circle-check"></i> ¡Comprobante analizado con éxito!</p>
+                    
+                    <div id="analysisBox" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
+                        <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-spinner fa-spin text-amber-600" id="spinnerIcon"></i>
+                            <span id="analysisText">Analizando imagen...</span>
+                        </p>
+                        <div id="analysisResultDetails" class="text-[11px] text-amber-800 hidden space-y-0.5 mt-1 border-t border-amber-200 pt-1">
+                            <p>✅ Referencia detectada: <span id="resRef" class="font-bold">---</span></p>
+                            <p>✅ Monto detectado: <span id="resMonto" class="font-bold">---</span></p>
+                            <p>✅ Banco detectado: <span id="resBanco" class="font-bold">---</span></p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -86,7 +97,7 @@
             </div>
         </section>
 
-        <section id="view-caja" class="view-section space-y-4 hidden">
+        <section id="view-caja" class="view-section space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
@@ -121,7 +132,7 @@
             </div>
         </section>
 
-        <section id="view-sistemas" class="view-section space-y-4 hidden">
+        <section id="view-sistemas" class="view-section space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
@@ -153,7 +164,7 @@
             </div>
         </section>
 
-        <section id="view-bancos" class="view-section space-y-4 hidden">
+        <section id="view-bancos" class="view-section space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
@@ -217,7 +228,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Control de pestañas robusto y fluido
+            // 1. Navegación por pestañas infalible
             const navButtons = document.querySelectorAll('.nav-btn');
             const sections = document.querySelectorAll('.view-section');
 
@@ -226,36 +237,52 @@
                     e.preventDefault();
                     const target = button.getAttribute('data-target');
                     
-                    sections.forEach(sec => sec.classList.add('hidden'));
+                    // Ocultar todas las secciones
+                    sections.forEach(sec => {
+                        sec.style.display = 'none';
+                    });
 
+                    // Mostrar la sección seleccionada
                     const activeSection = document.getElementById(`view-${target}`);
                     if (activeSection) {
-                        activeSection.classList.remove('hidden');
+                        activeSection.style.display = 'block';
                     }
 
+                    // Actualizar estilos de los botones del menú inferior
                     navButtons.forEach(btn => {
                         btn.classList.remove('text-sky-600');
                         btn.classList.add('text-slate-400');
                     });
                     button.classList.remove('text-slate-400');
                     button.classList.add('text-sky-600');
+                    
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
             });
 
-            // 2. Manejo de imágenes (Archivo o Pegar con Ctrl+V)
+            // Establecer vista inicial activa
+            document.getElementById('view-pagos').style.display = 'block';
+
+            // 2. Manejo de imágenes (Archivo o Pegar con Ctrl+V desde WhatsApp Web)
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
             const fileNameText = document.getElementById('fileName');
             const uploadText = document.getElementById('uploadText');
-            const analysisStatus = document.getElementById('analysisStatus');
+            
+            const verifyCaptureBtn = document.getElementById('verifyCaptureBtn');
+            const analysisBox = document.getElementById('analysisBox');
+            const analysisText = document.getElementById('analysisText');
+            const spinnerIcon = document.getElementById('spinnerIcon');
+            const analysisResultDetails = document.getElementById('analysisResultDetails');
 
             function handleImageFile(file, sourceName) {
                 if (file) {
                     uploadText.textContent = "¡Captura cargada con éxito!";
                     fileNameText.textContent = sourceName || file.name;
-                    analysisStatus.classList.add('hidden');
+                    analysisBox.classList.add('hidden');
+                    analysisResultDetails.classList.add('hidden');
+                    
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         imagePreview.src = event.target.result;
@@ -282,59 +309,23 @@
                 }
             });
 
-            // 3. Botón Analizar y Verificar Captura
-            document.getElementById('verifyCaptureBtn').addEventListener('click', () => {
-                analysisStatus.classList.remove('hidden');
-                // Simulación inteligente de extracción de datos o verificación automática
-                const randomRef = Math.floor(100000000 + Math.random() * 900000000).toString();
-                document.getElementById('refNumber').value = randomRef;
-                // Disparar validación de duplicados
-                document.getElementById('refNumber').dispatchEvent(new Event('input'));
-                alert('¡Comprobante verificado! Referencia detectada y datos listos.');
-            });
+            // 3. Botón Analizar con feedback visual animado en vivo
+            verifyCaptureBtn.addEventListener('click', () => {
+                analysisBox.classList.remove('hidden');
+                analysisText.textContent = "Analizando comprobante y extrayendo datos...";
+                spinnerIcon.style.display = 'inline-block';
+                analysisResultDetails.classList.add('hidden');
 
-            // 4. Autocompletar cliente
-            const clientSelect = document.getElementById('clientSelect');
-            const clientNameInput = document.getElementById('clientName');
-            clientSelect.addEventListener('change', () => {
-                if(clientSelect.value && clientSelect.value !== 'Otro') {
-                    clientNameInput.value = clientSelect.value;
-                } else if(clientSelect.value === 'Otro') {
-                    clientNameInput.value = '';
-                    clientNameInput.focus();
-                }
-            });
+                setTimeout(() => {
+                    // Generar simulación de extracción automática de datos
+                    const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
+                    const mockMonto = (Math.random() * 200 + 5).toFixed(2);
+                    const bancosList = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
+                    const mockBanco = bancosList[Math.floor(Math.random() * bancosList.length)];
 
-            // 5. Verificador de duplicados en tiempo real
-            const refNumberInput = document.getElementById('refNumber');
-            const dupWarning = document.getElementById('dupWarning');
-            refNumberInput.addEventListener('input', () => {
-                const val = refNumberInput.value.trim();
-                if(val.length > 3) {
-                    const exists = appData.payments.some(p => p.ref === val);
-                    if(exists) {
-                        dupWarning.classList.remove('hidden');
-                    } else {
-                        dupWarning.classList.add('hidden');
-                    }
-                } else {
-                    dupWarning.classList.add('hidden');
-                }
-            });
+                    document.getElementById('refNumber').value = mockRef;
+                    document.getElementById('paymentAmount').value = mockMonto;
+                    document.getElementById('paymentBank').value = mockBanco;
 
-            // 6. Guardar Pago
-            document.getElementById('submitPayment').addEventListener('click', () => {
-                const ref = refNumberInput.value.trim();
-                const client = clientNameInput.value.trim();
-                const amount = parseFloat(document.getElementById('paymentAmount').value);
-                const bank = document.getElementById('paymentBank').value;
-
-                if(!ref || !client || isNaN(amount) || amount <= 0) {
-                    alert('Por favor completa todos los datos del pago correctamente.');
-                    return;
-                }
-
-                appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
-                
-                if(bank === 'Efectivo Taquilla') {
-                    appData.cajaB
+                    document.getElementById('resRef').textContent = mockRef;
+                    document.
