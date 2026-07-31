@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro de Apuestas Harold José</title>
-    <!-- Tailwind CSS para un diseño profesional y rápido -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tesseract.js para leer texto de las imágenes (OCR) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -28,8 +30,14 @@
                 <h2 class="text-lg font-semibold text-sky-800 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Registrar Pago Recibido</h2>
                 
                 <div class="border-2 border-dashed border-sky-300 rounded-xl p-6 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer relative" id="drop-zone">
-                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
-                    <p class="text-sm text-slate-600 font-medium">Pega (Ctrl+V) o Selecciona Captura</p>
+                    <div id="loading-indicator" class="hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl text-sky-600 mb-2"></i>
+                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante y buscando referencia...</p>
+                    </div>
+                    <div id="upload-prompt">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
+                        <p class="text-sm text-slate-600 font-medium">Pega (Ctrl+V) o Selecciona Captura</p>
+                    </div>
                     <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
             </div>
@@ -37,7 +45,7 @@
             <!-- Formulario para Guardar si la referencia es nueva -->
             <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 hidden space-y-3">
                 <h3 class="text-sm font-bold text-slate-700">Detalles del Comprobante</h3>
-                <input type="text" id="input-ref" placeholder="Número de Referencia" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="text" id="input-ref" placeholder="Número de Referencia" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-slate-100 font-bold" readonly>
                 <input type="text" id="input-cliente-pago" placeholder="Nombre del Cliente" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <input type="number" id="input-monto" placeholder="Monto (VES / USD)" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR PAGO</button>
@@ -127,38 +135,91 @@
             }
         }
 
-        async function procesarComprobante() {
-            const refEjemplo = Math.floor(10000000 + Math.random() * 90000000).toString();
-            
-            const { data, error } = await supabaseClient
-                .from('referencias_pagos')
-                .select('*')
-                .eq('referencia', refEjemplo)
-                .single();
-
-            if(data) {
-                alert(`❌ La referencia ${refEjemplo} ya fue utilizada por ${data.cliente}`);
+        function mostrarCargando(activo) {
+            const cargandoEl = document.getElementById('loading-indicator');
+            const promptEl = document.getElementById('upload-prompt');
+            if (activo) {
+                cargandoEl.classList.remove('hidden');
+                promptEl.classList.add('hidden');
             } else {
-                document.getElementById('input-ref').value = refEjemplo;
-                document.getElementById('form-referencia').classList.remove('hidden');
-                alert(`✅ Comprobante leído. Referencia generada: ${refEjemplo}`);
+                cargandoEl.classList.add('hidden');
+                promptEl.classList.remove('hidden');
             }
+        }
+
+        async function procesarImagenComprobante(imageFile) {
+            mostrarCargando(true);
+            document.getElementById('form-referencia').classList.add('hidden');
+
+            try {
+                // Usar Tesseract para leer el texto de la imagen en español
+                const resultadoOCR = await Tesseract.recognize(imageFile, 'es');
+                const textoLeido = resultadoOCR.data.text;
+
+                // Buscar patrón de referencia u operación (números largos de 6 a 15 dígitos)
+                let referenciaEncontrada = extraerNumeroReferencia(textoLeido);
+
+                if (!referenciaEncontrada) {
+                    mostrarCargando(false);
+                    alert("⚠️ No se pudo detectar automáticamente el número de referencia en la imagen. Por favor, verifica que la captura sea clara.");
+                    return;
+                }
+
+                // Consultar en Supabase si la referencia ya existe
+                const { data, error } = await supabaseClient
+                    .from('referencias_pagos')
+                    .select('*')
+                    .eq('referencia', referenciaEncontrada)
+                    .single();
+
+                mostrarCargando(false);
+
+                if (data) {
+                    alert(`❌ ¡ALERTA DE PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue utilizada anteriormente por el cliente: "${data.cliente}".`);
+                } else {
+                    document.getElementById('input-ref').value = referenciaEncontrada;
+                    document.getElementById('form-referencia').classList.remove('hidden');
+                    alert(`✅ ¡Comprobante leído con éxito!\nReferencia detectada: ${referenciaEncontrada}`);
+                }
+
+            } catch (err) {
+                mostrarCargando(false);
+                console.error(err);
+                alert("❌ Ocurrió un error al procesar la imagen del comprobante.");
+            }
+        }
+
+        function extraerNumeroReferencia(texto) {
+            // Buscar palabras clave como referencia, operación o ref seguidas de números
+            const regexKw = /(?:referencia|operaci[oó]n|ref\.?)\D*?(\d{6,15})/i;
+            const matchKw = texto.match(regexKw);
+            if (matchKw && matchKw[1]) {
+                return matchKw[1];
+            }
+            
+            // Búsqueda alternativa: cualquier secuencia numérica larga típica de bancos venezolanos (8 a 15 dígitos)
+            const numeros = texto.match(/\d{8,15}/g);
+            if (numeros && numeros.length > 0) {
+                return numeros[0];
+            }
+            return null;
         }
 
         // Detectar archivo seleccionado manualmente
         document.getElementById('file-input').addEventListener('change', function(e) {
             if(e.target.files.length > 0) {
-                procesarComprobante();
+                procesarImagenComprobante(e.target.files[0]);
             }
         });
 
-        // Detectar cuando pegan una imagen con Ctrl+V en cualquier parte
+        // Detectar cuando pegan una imagen con Ctrl+V
         window.addEventListener('paste', function(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     e.preventDefault();
-                    procesarComprobante();
+                    const blob = items[i].getAsFile();
+                    procesarImagenComprobante(blob);
                     break;
                 }
             }
@@ -179,9 +240,9 @@
                 .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
 
             if(error) {
-                alert('Error al guardar: ' + error.message);
+                alert('Error al guardar en la base de datos: ' + error.message);
             } else {
-                alert('¡Pago guardado y registrado con éxito!');
+                alert('¡Pago guardado y registrado con éxito en el sistema!');
                 document.getElementById('form-referencia').classList.add('hidden');
                 document.getElementById('input-ref').value = '';
                 document.getElementById('input-cliente-pago').value = '';
