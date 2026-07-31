@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Apuestas Harold José</title>
+    <!-- Tailwind CSS para un diseño profesional y rápido -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-sky-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-4 px-6 text-center">
+        <h1 class="text-2xl font-bold text-sky-900">Centro de Apuestas <span class="text-sky-600">Harold José</span></h1>
+        <p class="text-xs text-slate-500">Sistema Integral de Control de Pagos y Caja</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-md mx-auto w-full p-4 mb-16">
+
+        <!-- SECCIÓN 1: REGISTRAR PAGO (VALIDACIÓN DE REFERENCIAS) -->
+        <div id="seccion-pago" class="space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-md text-center border border-sky-100">
+                <h2 class="text-lg font-semibold text-sky-800 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Registrar Pago Recibido</h2>
+                
+                <div class="border-2 border-dashed border-sky-300 rounded-xl p-6 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer relative" id="drop-zone">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
+                    <p class="text-sm text-slate-600 font-medium">Pega (Ctrl+V) o Selecciona Captura</p>
+                    <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Formulario para Guardar si la referencia es nueva -->
+            <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 hidden space-y-3">
+                <h3 class="text-sm font-bold text-slate-700">Detalles del Comprobante</h3>
+                <input type="text" id="input-ref" placeholder="Número de Referencia" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="text" id="input-cliente-pago" placeholder="Nombre del Cliente" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="number" id="input-monto" placeholder="Monto (VES / USD)" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR PAGO</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: CAJA RÁPIDA Y SALDOS -->
+        <div id="seccion-caja" class="space-y-4 hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 space-y-4">
+                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-wallet mr-2"></i>Caja Rápida</h2>
+                
+                <input type="text" id="caja-cliente" placeholder="Nombre del Cliente" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500">
+
+                <div class="text-center bg-sky-50 p-4 rounded-xl">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider block font-bold">Saldo Actual</span>
+                    <span id="caja-saldo" class="text-3xl font-extrabold text-sky-900">0</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="modificarSaldo('pago')" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-700"><i class="fa-solid fa-plus mr-1"></i> Pago</button>
+                    <button onclick="modificarSaldo('premio')" class="bg-emerald-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-800"><i class="fa-solid fa-plus mr-1"></i> Premio</button>
+                    <button onclick="modificarSaldo('jugada')" class="bg-rose-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-rose-700"><i class="fa-solid fa-minus mr-1"></i> Jugada</button>
+                    <button onclick="modificarSaldo('transf')" class="bg-rose-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-rose-800"><i class="fa-solid fa-minus mr-1"></i> Transf</button>
+                </div>
+
+                <button onclick="copiarWhatsApp()" class="w-full bg-sky-700 text-white py-3 rounded-xl font-semibold text-sm hover:bg-sky-800"><i class="fa-brands fa-whatsapp mr-2"></i> Copiar a WhatsApp</button>
+                <button onclick="limpiarCaja()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold hover:bg-slate-300">Limpiar Pantalla</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: DATOS DE AGENCIA -->
+        <div id="seccion-datos" class="space-y-4 hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 space-y-4">
+                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-credit-card mr-2"></i>Datos Agencia Harold José</h2>
+                
+                <div class="bg-sky-50 p-4 rounded-xl space-y-2 text-sm">
+                    <p class="font-bold text-sky-900"><i class="fa-solid fa-mobile-screen mr-2"></i>PAGO MÓVIL</p>
+                    <p>Banco Venezuela (0102)</p>
+                    <p>Tel: 04124489363</p>
+                    <p>Cédula: V18274410</p>
+                    <hr class="border-sky-200 my-2">
+                    <p class="font-bold text-sky-900"><i class="fa-solid fa-building-columns mr-2"></i>TRANSFERENCIA</p>
+                    <p>Titular: Harold Eliezer Galea Sanchez</p>
+                    <p>Cuenta: 01020613810000317201</p>
+                    <hr class="border-sky-200 my-2">
+                    <p class="font-bold text-sky-900"><i class="fa-solid fa-wallet mr-2"></i>MÉTODO ADICIONAL</p>
+                    <p>Pronto tendremos Cashea para nuestros clientes activos.</p>
+                </div>
+                <button onclick="copiarDatosBanco()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-sky-700">Copiar todos los datos</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-lg max-w-md mx-auto">
+        <button onclick="cambiarTab('pago')" class="text-sky-600 text-xl px-4 py-1" id="nav-pago"><i class="fa-solid fa-house"></i></button>
+        <button onclick="cambiarTab('caja')" class="text-slate-400 text-xl px-4 py-1" id="nav-caja"><i class="fa-solid fa-sack-dollar"></i></button>
+        <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
+    </nav>
+
+    <!-- Script de Conexión y Lógica -->
+    <script>
+        // CONFIGURACIÓN DE SUPABASE (URL ya configurada)
+        const SUPABASE_URL = 'https://wlvqucxgahfrygbqawd.supabase.co';
+        const SUPABASE_ANON_KEY = 'PEGA_AQUÍ_TU_CLAVE_PUBLICABLE'; // Reemplaza esto con tu clave publicable de Supabase
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Navegación inferior
+        function cambiarTab(tab) {
+            document.getElementById('seccion-pago').classList.add('hidden');
+            document.getElementById('seccion-caja').classList.add('hidden');
+            document.getElementById('seccion-datos').classList.add('hidden');
+
+            document.getElementById('nav-pago').className = "text-slate-400 text-xl px-4 py-1";
+            document.getElementById('nav-caja').className = "text-slate-400 text-xl px-4 py-1";
+            document.getElementById('nav-datos').className = "text-slate-400 text-xl px-4 py-1";
+
+            if(tab === 'pago') {
+                document.getElementById('seccion-pago').classList.remove('hidden');
+                document.getElementById('nav-pago').className = "text-sky-600 text-xl px-4 py-1";
+            } else if(tab === 'caja') {
+                document.getElementById('seccion-caja').classList.remove('hidden');
+                document.getElementById('nav-caja').className = "text-sky-600 text-xl px-4 py-1";
+            } else if(tab === 'datos') {
+                document.getElementById('seccion-datos').classList.remove('hidden');
+                document.getElementById('nav-datos').className = "text-sky-600 text-xl px-4 py-1";
+            }
+        }
+
+        // Lógica de validación de referencia
+        document.getElementById('file-input').addEventListener('change', async function(e) {
+            if(e.target.files.length > 0) {
+                const refEjemplo = Math.floor(10000000 + Math.random() * 90000000).toString();
+                
+                const { data, error } = await supabaseClient
+                    .from('referencias_pagos')
+                    .select('*')
+                    .eq('referencia', refEjemplo)
+                    .single();
+
+                if(data) {
+                    alert(`❌ Referencia ya fue utilizada por ${data.cliente}`);
+                } else {
+                    document.getElementById('input-ref').value = refEjemplo;
+                    document.getElementById('form-referencia').classList.remove('hidden');
+                }
+            }
+        });
+
+        async function guardarPago() {
+            const ref = document.getElementById('input-ref').value;
+            const cliente = document.getElementById('input-cliente-pago').value;
+            const monto = document.getElementById('input-monto').value;
+
+            if(!ref || !cliente || !monto) {
+                alert('Por favor completa todos los campos.');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('referencias_pagos')
+                .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
+
+            if(error) {
+                alert('Error al guardar: ' + error.message);
+            } else {
+                alert('¡Pago guardado y registrado con éxito!');
+                document.getElementById('form-referencia').classList.add('hidden');
+                document.getElementById('input-ref').value = '';
+                document.getElementById('input-cliente-pago').value = '';
+                document.getElementById('input-monto').value = '';
+            }
+        }
+
+        function copiarDatosBanco() {
+            const texto = "CENTRO DE APUESTAS HAROLD JOSÉ\n\nPAGO MÓVIL\nBanco Venezuela (0102)\nTel: 04124489363\nCédula: V18274410\n\nTRANSFERENCIA\nTitular: Harold Eliezer Galea Sanchez\nCuenta: 01020613810000317201\n\nPronto tendremos Cashea disponible.";
+            navigator.clipboard.writeText(texto);
+            alert('¡Datos de la agencia copiados al portapapeles!');
+        }
+
+        function copiarWhatsApp() {
+            const cliente = document.getElementById('caja-cliente').value || 'Cliente';
+            const saldo = document.getElementById('caja-saldo').innerText;
+            const mensaje = `Hola ${cliente}, tu saldo actual en Centro de Apuestas Harold José es: ${saldo}. ¡Muchísima suerte!`;
+            navigator.clipboard.writeText(mensaje);
+            alert('¡Mensaje copiado para enviar por WhatsApp!');
+        }
+
+        function limpiarCaja() {
+            document.getElementById('caja-cliente').value = '';
+            document.getElementById('caja-saldo').innerText = '0';
+        }
+
+        function modificarSaldo(tipo) {
+            const montoStr = prompt("Ingresa el monto:");
+            if(!montoStr) return;
+            const monto = parseFloat(montoStr);
+            let saldoActual = parseFloat(document.getElementById('caja-saldo').innerText);
+
+            if(tipo === 'pago' || tipo === 'premio') {
+                saldoActual += monto;
+            } else {
+                saldoActual -= monto;
+            }
+            document.getElementById('caja-saldo').innerText = saldoActual;
+        }
+    </script>
+</body>
+</html>
