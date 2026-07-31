@@ -127,7 +127,7 @@
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
     </nav>
 
-    <!-- Script con control avanzado de duplicados por fecha y cierre de día -->
+    <!-- Script con validación estricta anti-fraude de datos propios -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfvrygbqawd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
@@ -140,6 +140,7 @@
         };
 
         let listaClientesCache = [];
+        let datosPropiosVerificados = false; // Bandera de seguridad anti-fraude
 
         window.addEventListener('DOMContentLoaded', () => {
             cargarClientesSaldos();
@@ -167,17 +168,21 @@
             }
         }
 
-        // Procesamiento OCR con Alerta de Días Transcurridos y Duplicados
+        // Procesamiento OCR Avanzado Anti-Fraude y Anti-Duplicados
         async function procesarImagenRapida(file) {
             const statusDiv = document.getElementById('estado-lectura');
             statusDiv.classList.remove('hidden', 'bg-emerald-50', 'bg-rose-50', 'bg-amber-50', 'border-emerald-200', 'border-rose-200', 'border-amber-200');
             statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-sky-50 border-sky-200 text-sky-800";
-            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo captura y validando historial...';
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo captura y validando seguridad...';
+
+            datosPropiosVerificados = false; // Resetear bandera
 
             try {
                 const result = await Tesseract.recognize(file, 'eng', { logger: m => {} });
                 const texto = result.data.text;
                 const textoLower = texto.toLowerCase();
+                // Limpiar espacios, puntos y guiones para buscar cédula o teléfono de forma infalible
+                const textoLimpio = textoLower.replace(/[\s\.\-\/\,]/g, '');
 
                 let refEncontrada = '';
                 const matchRef = texto.match(/(?:operacion|referencia|ref|operación|num)[^\d]*(\d{8,15})/i);
@@ -222,16 +227,18 @@
                     return;
                 }
 
-                // 2. Validar si los datos de la captura corresponden a la agencia
-                const contieneCedula = textoLower.includes('18274410') || textoLower.includes('18.274.410');
-                const contieneTelefono = textoLower.includes('4489363') || textoLower.includes('04124489363');
+                // 2. Validar estrictamente si los datos corresponden a la agencia (Cédula 18274410 o Teléfono 04124489363)
+                const contieneCedula = textoLimpio.includes('18274410');
+                const contieneTelefono = textoLimpio.includes('04124489363') || textoLimpio.includes('4489363');
 
                 if (!contieneCedula && !contieneTelefono) {
-                    statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-amber-50 border-amber-200 text-amber-800";
-                    statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> <strong>¡ATENCIÓN! Posible error o datos ajenos</strong><br>Ref: ${refEncontrada}. El sistema no detecta tu cédula (18274410) ni tu teléfono (04124489363) en esta captura.`;
+                    statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-rose-50 border-rose-200 text-rose-800";
+                    statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> <strong>¡ALERTA! ESTE PAGO NO ES TUYO</strong><br>Ref: ${refEncontrada}. La captura <strong>no contiene</strong> tu cédula (V18274410) ni tu teléfono (04124489363). ¡Podría ser un comprobante falso o ajeno!`;
+                    datosPropiosVerificados = false;
                 } else {
                     statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800";
                     statusDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1 text-base"></i> <strong>¡Referencia cargada y verificada! (${refEncontrada})</strong><br>Datos correctos de la agencia identificados.`;
+                    datosPropiosVerificados = true;
                 }
 
                 document.getElementById('input-cliente-pago').focus();
@@ -271,6 +278,14 @@
                 return;
             }
 
+            // Candado de seguridad final: Si no se verificaron datos propios, exigir confirmación extrema
+            if(!datosPropiosVerificados) {
+                let confirmarForzado = confirm("🚨 ¡ADVERTENCIA DE SEGURIDAD!\n\nEl sistema detectó que este comprobante NO contiene tus datos (Cédula o Teléfono) o escribiste la referencia manualmente sin verificar.\n\n¿Estás 100% SEGURO de que este pago llegó a tu cuenta?");
+                if(!confirmarForzado) {
+                    return;
+                }
+            }
+
             try {
                 const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?referencia=eq.${encodeURIComponent(ref)}`, {
                     headers: headersSupabase
@@ -300,6 +315,7 @@
                 document.getElementById('input-cliente-pago').value = '';
                 document.getElementById('input-monto').value = '';
                 document.getElementById('estado-lectura').classList.add('hidden');
+                datosPropiosVerificados = false;
                 
                 cargarClientesSaldos();
 
@@ -407,7 +423,6 @@
             }
         }
 
-        // Función de Cierre de Día (Limpia referencias y pone en 0 saldos)
         async function cierreDeDia() {
             let clave = prompt("⚠️ ATENCIÓN: Esto borrará el registro de referencias y pondrá todos los saldos en 0 para iniciar un nuevo día.\n\nEscribe 'harold' para confirmar:");
             if(clave !== 'harold') {
@@ -416,13 +431,11 @@
             }
 
             try {
-                // Borrar todas las referencias del día
                 await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?id=gt.0`, {
                     method: 'DELETE',
                     headers: headersSupabase
                 });
 
-                // Borrar o resetear saldos de clientes
                 await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes?id=gt.0`, {
                     method: 'DELETE',
                     headers: headersSupabase
