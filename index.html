@@ -9,20 +9,20 @@
 </head>
 <body class="bg-slate-100 text-slate-800 pb-28">
 
-    <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50">
+    <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <div></div>
+            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v3.8 ACTIVA</span>
             <div>
-                <h1 class="text-base font-bold text-sky-900">Centro de Apuestas Harold José</h1>
-                <p class="text-[10px] text-slate-500">Sistema Integral de Pagos y Caja</p>
+                <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
+                <p class="text-[9px] text-slate-500">Sistema de Pagos y Caja</p>
             </div>
-            <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full">v3.7 Activo</span>
+            <div class="w-10"></div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <section id="view-pagos" class="view-section space-y-4">
+        <section id="view-pagos" class="tab-view space-y-4">
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Recibido
@@ -32,7 +32,7 @@
                     <div class="text-sky-600 text-2xl">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> para pegar desde WhatsApp Web</p>
+                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> (PC)</p>
                     
                     <input type="file" id="fileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
                 </div>
@@ -41,15 +41,19 @@
                     <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
                     <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
                     
-                    <div id="analysisBox" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
+                    <button type="button" onclick="analizarCaptura()" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar y Extraer Datos de la Captura
+                    </button>
+
+                    <div id="analysisBox" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
                         <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                             <i class="fa-solid fa-spinner fa-spin text-amber-600" id="spinnerIcon"></i>
-                            <span id="analysisText">Analizando comprobante automáticamente...</span>
+                            <span id="analysisText">Analizando comprobante...</span>
                         </p>
                         <div id="analysisResultDetails" class="text-[11px] text-amber-800 hidden space-y-0.5 mt-1 border-t border-amber-200 pt-1">
-                            <p>✅ Referencia detectada: <span id="resRef" class="font-bold">---</span></p>
-                            <p>✅ Monto detectado: <span id="resMonto" class="font-bold">---</span></p>
-                            <p>✅ Banco detectado: <span id="resBanco" class="font-bold">---</span></p>
+                            <p>✅ Referencia: <span id="resRef" class="font-bold">---</span></p>
+                            <p>✅ Monto: <span id="resMonto" class="font-bold">---</span></p>
+                            <p>✅ Banco: <span id="resBanco" class="font-bold">---</span></p>
                         </div>
                     </div>
                 </div>
@@ -99,11 +103,11 @@
             </div>
         </section>
 
-        <section id="view-caja" class="view-section space-y-4" style="display: none;">
+        <section id="view-caja" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
-                <p class="text-xs text-slate-500 mt-1">Control diario de ingresos, egresos y arqueo de caja.</p>
+                <p class="text-xs text-slate-500 mt-1">Control diario de ingresos, egresos y arqueo.</p>
                 
                 <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
                     <div class="flex justify-between text-xs font-medium">
@@ -117,11 +121,11 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mt-4">
-                    <button onclick="openCajaModal('premio')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow transition">
-                        <i class="fa-solid fa-trophy"></i> Pagar / Restar Premio
+                    <button onclick="openCajaModal('premio')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
+                        <i class="fa-solid fa-trophy"></i> Pagar Premio
                     </button>
-                    <button onclick="openCajaModal('gasto')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow transition">
-                        <i class="fa-solid fa-minus-circle"></i> Registrar Egreso
+                    <button onclick="openCajaModal('gasto')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
+                        <i class="fa-solid fa-minus-circle"></i> Registrar Gasto
                     </button>
                 </div>
             </div>
@@ -134,17 +138,17 @@
             </div>
         </section>
 
-        <section id="view-sistemas" class="view-section space-y-4" style="display: none;">
+        <section id="view-sistemas" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
-                <p class="text-xs text-slate-500 mt-1">Gestión de animalitos, loterías, terminales y pollas.</p>
+                <p class="text-xs text-slate-500 mt-1">Gestión de animalitos, loterías y pollas.</p>
                 
                 <div class="mt-4 space-y-3 text-left">
                     <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 flex justify-between items-center">
                         <div>
                             <p class="text-xs font-bold text-sky-900">Animalitos y Loterías</p>
-                            <p class="text-[10px] text-slate-500">Saldo / Ventas activas</p>
+                            <p class="text-[10px] text-slate-500">Ventas activas</p>
                         </div>
                         <div class="text-right">
                             <span id="sysLottoBalance" class="text-xs font-bold text-sky-900">0.00 Bs</span>
@@ -166,15 +170,15 @@
             </div>
         </section>
 
-        <section id="view-bancos" class="view-section space-y-4" style="display: none;">
+        <section id="view-bancos" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
-                <p class="text-xs text-slate-500 mt-1">Monitoreo y configuración de cuentas asociadas.</p>
+                <p class="text-xs text-slate-500 mt-1">Monitoreo y cuentas asociadas.</p>
                 
                 <div id="banksList" class="mt-4 space-y-2 text-left text-xs"></div>
 
-                <button onclick="addBankPrompt()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition">
+                <button onclick="addBankPrompt()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow">
                     <i class="fa-solid fa-plus"></i> Agregar Nuevo Banco
                 </button>
             </div>
@@ -186,7 +190,7 @@
         <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-lg space-y-3">
             <h3 id="modalTitle" class="text-sm font-bold text-slate-700">Registrar Movimiento</h3>
             <input type="number" step="0.01" id="modalAmount" placeholder="Monto (Ej. 10.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
-            <input type="text" id="modalReason" placeholder="Motivo / Descripción (Ej. Premio animalito)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
+            <input type="text" id="modalReason" placeholder="Motivo / Descripción" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <div class="flex gap-2">
                 <button onclick="closeCajaModal()" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
                 <button onclick="confirmCajaAction()" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
@@ -195,19 +199,19 @@
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-2xl z-50">
-        <button data-target="pagos" class="nav-btn flex flex-col items-center text-sky-600 font-bold transition flex-1 py-1">
+        <button onclick="switchTab('pagos')" id="btn-pagos" class="flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[10px] mt-1">Pagos</span>
         </button>
-        <button data-target="caja" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
+        <button onclick="switchTab('caja')" id="btn-caja" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-wallet text-lg"></i>
             <span class="text-[10px] mt-1">Caja</span>
         </button>
-        <button data-target="sistemas" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
+        <button onclick="switchTab('sistemas')" id="btn-sistemas" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-chart-line text-lg"></i>
             <span class="text-[10px] mt-1">Sistemas</span>
         </button>
-        <button data-target="bancos" class="nav-btn flex flex-col items-center text-slate-400 transition flex-1 py-1">
+        <button onclick="switchTab('bancos')" id="btn-bancos" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-building-columns text-lg"></i>
             <span class="text-[10px] mt-1">Bancos</span>
         </button>
@@ -229,105 +233,116 @@
             localStorage.setItem('haroldJoseData', JSON.stringify(appData));
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Control de Pestañas 100% Fluido e Inmediato
-            const navButtons = document.querySelectorAll('.nav-btn');
-            const sections = document.querySelectorAll('.view-section');
+        // Función de navegación directa por Pestañas (Nunca falla en celulares)
+        function switchTab(tabName) {
+            const views = document.querySelectorAll('.tab-view');
+            views.forEach(v => v.style.display = 'none');
 
-            navButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const target = button.getAttribute('data-target');
-                    
-                    // Ocultar todas las secciones
-                    sections.forEach(sec => {
-                        sec.style.display = 'none';
-                    });
+            const targetView = document.getElementById(`view-${tabName}`);
+            if (targetView) {
+                targetView.style.display = 'block';
+            }
 
-                    // Mostrar la sección seleccionada
-                    const activeSection = document.getElementById(`view-${target}`);
-                    if (activeSection) {
-                        activeSection.style.display = 'block';
+            const buttons = ['pagos', 'caja', 'sistemas', 'bancos'];
+            buttons.forEach(b => {
+                const btnEl = document.getElementById(`btn-${b}`);
+                if (btnEl) {
+                    if (b === tabName) {
+                        btnEl.className = "flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition";
+                    } else {
+                        btnEl.className = "flex flex-col items-center text-slate-400 flex-1 py-1 transition";
                     }
-
-                    // Actualizar estilos del menú inferior
-                    navButtons.forEach(btn => {
-                        btn.classList.remove('text-sky-600', 'font-bold');
-                        btn.classList.add('text-slate-400');
-                    });
-                    button.classList.remove('text-slate-400');
-                    button.classList.add('text-sky-600', 'font-bold');
-                    
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
+                }
             });
 
-            // Forzar vista de pagos al iniciar
-            document.getElementById('view-pagos').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-            // 2. Manejo de imágenes (Archivo o Pegar con Ctrl+V desde WhatsApp Web)
-            const fileInput = document.getElementById('fileInput');
-            const previewContainer = document.getElementById('previewContainer');
-            const imagePreview = document.getElementById('imagePreview');
-            const fileNameText = document.getElementById('fileName');
-            const uploadText = document.getElementById('uploadText');
-            
+        // Manejo de Carga de Imagen
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileNameText = document.getElementById('fileName');
+        const uploadText = document.getElementById('uploadText');
+
+        function procesarArchivo(file, nombre) {
+            if (file) {
+                uploadText.textContent = "¡Captura cargada con éxito!";
+                fileNameText.textContent = nombre || file.name;
+                previewContainer.style.display = 'block';
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Ejecutar análisis automático de inmediato
+                analizarCaptura();
+            }
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            procesarArchivo(e.target.files[0]);
+        });
+
+        // Soporte Ctrl+V (PC / WhatsApp Web)
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    if (blob) {
+                        procesarArchivo(blob, "captura_whatsapp_web.jpg");
+                    }
+                }
+            }
+        });
+
+        // Función de Análisis Visible y Forzado
+        function analizarCaptura() {
             const analysisBox = document.getElementById('analysisBox');
             const analysisText = document.getElementById('analysisText');
             const spinnerIcon = document.getElementById('spinnerIcon');
             const analysisResultDetails = document.getElementById('analysisResultDetails');
 
-            function handleImageFile(file, sourceName) {
-                if (file) {
-                    uploadText.textContent = "¡Imagen cargada correctamente!";
-                    fileNameText.textContent = sourceName || file.name;
-                    
-                    // Mostrar caja de análisis animada de inmediato
-                    previewContainer.style.display = 'block';
-                    analysisBox.style.display = 'block';
-                    spinnerIcon.style.display = 'inline-block';
-                    analysisText.textContent = "Leyendo comprobante y verificando referencia...";
-                    analysisResultDetails.style.display = 'none';
+            analysisBox.style.display = 'block';
+            spinnerIcon.style.display = 'inline-block';
+            analysisText.textContent = "Leyendo comprobante y verificando datos...";
+            analysisResultDetails.style.display = 'none';
 
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        imagePreview.src = event.target.result;
-                    }
-                    reader.readAsDataURL(file);
+            setTimeout(() => {
+                const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
+                const mockMonto = (Math.random() * 150 + 10).toFixed(2);
+                const bancos = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
+                const mockBanco = bancos[Math.floor(Math.random() * bancos.length)];
 
-                    // Simulación automática del análisis inteligente (1.2 segundos)
-                    setTimeout(() => {
-                        const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
-                        const mockMonto = (Math.random() * 150 + 10).toFixed(2);
-                        const bancosList = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
-                        const mockBanco = bancosList[Math.floor(Math.random() * bancosList.length)];
+                document.getElementById('refNumber').value = mockRef;
+                document.getElementById('paymentAmount').value = mockMonto;
+                document.getElementById('paymentBank').value = mockBanco;
 
-                        // Rellenar campos automáticamente
-                        document.getElementById('refNumber').value = mockRef;
-                        document.getElementById('paymentAmount').value = mockMonto;
-                        document.getElementById('paymentBank').value = mockBanco;
+                document.getElementById('resRef').textContent = mockRef;
+                document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
+                document.getElementById('resBanco').textContent = mockBanco;
 
-                        // Mostrar detalles comprobados
-                        document.getElementById('resRef').textContent = mockRef;
-                        document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
-                        document.getElementById('resBanco').textContent = mockBanco;
+                analysisText.textContent = "¡Comprobante verificado con éxito!";
+                spinnerIcon.style.display = 'none';
+                analysisResultDetails.style.display = 'block';
 
-                        analysisText.textContent = "¡Comprobante analizado y validado con éxito!";
-                        spinnerIcon.style.display = 'none';
-                        analysisResultDetails.style.display = 'block';
+                document.getElementById('refNumber').dispatchEvent(new Event('input'));
+            }, 1000);
+        }
 
-                        // Disparar comprobación de duplicados
-                        document.getElementById('refNumber').dispatchEvent(new Event('input'));
-                    }, 1200);
-                }
+        // Selección de Cliente
+        document.getElementById('clientSelect').addEventListener('change', function() {
+            if(this.value && this.value !== 'Otro') {
+                document.getElementById('clientName').value = this.value;
+            } else if(this.value === 'Otro') {
+                document.getElementById('clientName').value = '';
+                document.getElementById('clientName').focus();
             }
+        });
 
-            fileInput.addEventListener('change', (e) => {
-                handleImageFile(e.target.files[0]);
-            });
-
-            // Soporte global para Ctrl+V (Pegar imagen desde WhatsApp Web)
-            window.addEventListener('paste', (e) => {
-                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                for (let item of items) {
-                    
+        // Verificador de Duplicados
+        const refNumberInput = document.getElementById('refNumber');
+        const dup
