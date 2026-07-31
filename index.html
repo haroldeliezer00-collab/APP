@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 text-slate-800 pb-20">
+<body class="bg-slate-100 text-slate-800 pb-24">
 
     <!-- Encabezado -->
     <header class="bg-white shadow-sm py-4 px-4 text-center sticky top-0 z-50">
@@ -35,7 +35,6 @@
                     <button type="button" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow transition pointer-events-none">
                         Seleccionar Captura
                     </button>
-                    <!-- Input oculto para manejar archivos desde el teléfono -->
                     <input type="file" id="fileInput" accept="image/*" class="hidden">
                 </div>
 
@@ -49,22 +48,40 @@
             <!-- Formulario de Datos -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-sky-600"></i> Lector Móvil Optimizado
+                    <i class="fa-solid fa-bolt text-sky-600"></i> Lector y Verificador Antiduplicados
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
                     <input type="text" id="refNumber" placeholder="Ej. 006851779829" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <p id="dupWarning" class="text-[10px] text-red-500 font-bold mt-1 hidden"><i class="fa-solid fa-triangle-exclamation"></i> ¡Atención! Esta referencia ya fue registrada anteriormente.</p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del Cliente</label>
-                    <input type="text" id="clientName" placeholder="Ej. Edgar" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <select id="clientSelect" class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 mb-2">
+                        <option value="">Seleccionar cliente existente...</option>
+                        <option value="Edgar">Edgar</option>
+                        <option value="Carlos">Carlos</option>
+                        <option value="Maria">Maria</option>
+                        <option value="Otro">Otro (Escribir abajo)</option>
+                    </select>
+                    <input type="text" id="clientName" placeholder="O escribe el nombre del cliente" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Monto del Pago (Bs / USD)</label>
-                    <input type="number" id="paymentAmount" placeholder="0.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <input type="number" step="0.01" id="paymentAmount" placeholder="0.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Destino del Pago (Banco)</label>
+                    <select id="paymentBank" class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="Banco de Venezuela">Banco de Venezuela</option>
+                        <option value="Banesco">Banesco</option>
+                        <option value="Mercantil">Mercantil</option>
+                        <option value="Efectivo Taquilla">Efectivo Taquilla</option>
+                    </select>
                 </div>
 
                 <button type="button" id="submitPayment" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow transition">
@@ -75,45 +92,106 @@
 
         <!-- ================= VISTA: CAJA ================= -->
         <section id="view-caja" class="view-section space-y-4" style="display: none;">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
-                <p class="text-xs text-slate-500 mt-1">Control diario de ingresos, egresos y arqueo de caja de la taquilla.</p>
+                <p class="text-xs text-slate-500 mt-1">Control diario de ingresos, egresos y arqueo de caja.</p>
+                
                 <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
                     <div class="flex justify-between text-xs font-medium">
                         <span class="text-slate-500">Efectivo Disponible:</span>
-                        <span class="text-slate-800 font-bold">$0.00 / 0.00 Bs</span>
+                        <span id="cashEffective" class="text-slate-800 font-bold">$0.00</span>
                     </div>
                     <div class="flex justify-between text-xs font-medium">
                         <span class="text-slate-500">Pagos Móviles / Bancos:</span>
-                        <span class="text-slate-800 font-bold">$0.00 / 0.00 Bs</span>
+                        <span id="cashBanks" class="text-slate-800 font-bold">$0.00</span>
                     </div>
+                </div>
+
+                <!-- Botones de Acción Rápida Caja -->
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="openCajaModal('premio')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow transition">
+                        <i class="fa-solid fa-trophy"></i> Pagar / Restar Premio
+                    </button>
+                    <button onclick="openCajaModal('gasto')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow transition">
+                        <i class="fa-solid fa-minus-circle"></i> Registrar Egreso
+                    </button>
+                </div>
+            </div>
+
+            <!-- Historial de Movimientos de Caja -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-xs font-bold text-slate-700 mb-2">Movimientos del Día</h3>
+                <div id="cajaHistory" class="space-y-2 text-xs">
+                    <p class="text-slate-400 text-center py-2">No hay movimientos registrados hoy.</p>
                 </div>
             </div>
         </section>
 
         <!-- ================= VISTA: SISTEMAS ================= -->
         <section id="view-sistemas" class="view-section space-y-4" style="display: none;">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
-                <p class="text-xs text-slate-500 mt-1">Gestión y control de animalitos, loterías, terminales y pollas.</p>
-                <div class="mt-4 p-3 bg-sky-50 rounded-xl border border-sky-100 text-xs text-sky-800 font-medium">
-                    Animalitos, Loterías, Terminales y Pollas Millonarias activos.
+                <p class="text-xs text-slate-500 mt-1">Gestión de animalitos, loterías, terminales y pollas.</p>
+                
+                <div class="mt-4 space-y-3 text-left">
+                    <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-sky-900">Animalitos y Loterías</p>
+                            <p class="text-[10px] text-slate-500">Saldo / Ventas activas</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="sysLottoBalance" class="text-xs font-bold text-sky-900">0.00 Bs</span>
+                            <button onclick="updateSystem('Loterias')" class="ml-2 bg-sky-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-indigo-900">Terminales y Pollas</p>
+                            <p class="text-[10px] text-slate-500">Control de jugadas</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="sysPollasBalance" class="text-xs font-bold text-indigo-900">0.00 Bs</span>
+                            <button onclick="updateSystem('Pollas')" class="ml-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ================= VISTA: BANCOS ================= -->
         <section id="view-bancos" class="view-section space-y-4" style="display: none;">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
-                <p class="text-xs text-slate-500 mt-1">Monitoreo de saldos y cuentas bancarias asociadas al centro de apuestas.</p>
+                <p class="text-xs text-slate-500 mt-1">Monitoreo y configuración de cuentas asociadas.</p>
+                
+                <div id="banksList" class="mt-4 space-y-2 text-left text-xs">
+                    <!-- Se cargan dinámicamente -->
+                </div>
+
+                <button onclick="addBankPrompt()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition">
+                    <i class="fa-solid fa-plus"></i> Agregar Nuevo Banco
+                </button>
             </div>
         </section>
 
     </main>
+
+    <!-- Modal para Caja / Premios / Egresos -->
+    <div id="cajaModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-lg space-y-3">
+            <h3 id="modalTitle" class="text-sm font-bold text-slate-700">Registrar Movimiento</h3>
+            <input type="number" step="0.01" id="modalAmount" placeholder="Monto (Ej. 10.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
+            <input type="text" id="modalReason" placeholder="Motivo / Descripción (Ej. Pago de animalito a Juan)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
+            <div class="flex gap-2">
+                <button onclick="closeCajaModal()" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button onclick="confirmCajaAction()" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Barra de Navegación Inferior Fija -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2 shadow-lg z-50">
@@ -135,8 +213,24 @@
         </button>
     </nav>
 
-    <!-- JavaScript Integrado -->
+    <!-- JavaScript Integrado con Lógica Completa -->
     <script>
+        // Estado Global de la App en LocalStorage
+        let appData = JSON.parse(localStorage.getItem('haroldJoseData')) || {
+            payments: [],
+            cajaBalance: { effective: 0, banks: 0 },
+            cajaHistory: [],
+            systems: { lotto: 0, pollas: 0 },
+            banks: [
+                { name: 'Banco de Venezuela', acc: '0102-****-2299', phone: '0412-4489363' },
+                { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000' }
+            ]
+        };
+
+        function saveState() {
+            localStorage.setItem('haroldJoseData', JSON.stringify(appData));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Control del menú inferior (Cambio de vistas)
             const navButtons = document.querySelectorAll('.nav-btn');
@@ -145,13 +239,8 @@
             navButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const target = button.getAttribute('data-target');
-
                     sections.forEach(sec => sec.style.display = 'none');
-
-                    const activeSection = document.getElementById(`view-${target}`);
-                    if (activeSection) {
-                        activeSection.style.display = 'block';
-                    }
+                    document.getElementById(`view-${target}`).style.display = 'block';
 
                     navButtons.forEach(btn => {
                         btn.classList.remove('text-sky-600');
@@ -159,12 +248,11 @@
                     });
                     button.classList.remove('text-slate-400');
                     button.classList.add('text-sky-600');
-
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
             });
 
-            // 2. Control de selección y previsualización de imágenes desde el celular
+            // 2. Control de selección y previsualización de imágenes
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
@@ -172,16 +260,13 @@
             const fileNameText = document.getElementById('fileName');
             const uploadText = document.getElementById('uploadText');
 
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
-            });
+            uploadArea.addEventListener('click', () => fileInput.click());
 
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     uploadText.textContent = "¡Captura cargada con éxito!";
                     fileNameText.textContent = file.name;
-
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         imagePreview.src = event.target.result;
@@ -190,7 +275,80 @@
                     reader.readAsDataURL(file);
                 }
             });
+
+            // 3. Autocompletar nombre de cliente
+            const clientSelect = document.getElementById('clientSelect');
+            const clientNameInput = document.getElementById('clientName');
+            clientSelect.addEventListener('change', () => {
+                if(clientSelect.value && clientSelect.value !== 'Otro') {
+                    clientNameInput.value = clientSelect.value;
+                } else if(clientSelect.value === 'Otro') {
+                    clientNameInput.value = '';
+                    clientNameInput.focus();
+                }
+            });
+
+            // 4. Verificador de Referencia Duplicada en tiempo real
+            const refNumberInput = document.getElementById('refNumber');
+            const dupWarning = document.getElementById('dupWarning');
+            refNumberInput.addEventListener('input', () => {
+                const val = refNumberInput.value.trim();
+                if(val.length > 3) {
+                    const exists = appData.payments.some(p => p.ref === val);
+                    if(exists) {
+                        dupWarning.classList.remove('hidden');
+                    } else {
+                        dupWarning.classList.add('hidden');
+                    }
+                } else {
+                    dupWarning.classList.add('hidden');
+                }
+            });
+
+            // 5. Botón Guardar Pago
+            document.getElementById('submitPayment').addEventListener('click', () => {
+                const ref = refNumberInput.value.trim();
+                const client = clientNameInput.value.trim();
+                const amount = parseFloat(document.getElementById('paymentAmount').value);
+                const bank = document.getElementById('paymentBank').value;
+
+                if(!ref || !client || isNaN(amount) || amount <= 0) {
+                    alert('Por favor completa todos los datos del pago correctamente.');
+                    return;
+                }
+
+                // Guardar pago
+                appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
+                
+                // Actualizar saldos de caja
+                if(bank === 'Efectivo Taquilla') {
+                    appData.cajaBalance.effective += amount;
+                } else {
+                    appData.cajaBalance.banks += amount;
+                }
+
+                // Registrar en historial
+                appData.cajaHistory.unshift({ desc: `Pago recibido de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
+
+                saveState();
+                renderUI();
+
+                // Limpiar formulario
+                refNumberInput.value = '';
+                clientNameInput.value = '';
+                document.getElementById('paymentAmount').value = '';
+                previewContainer.classList.add('hidden');
+                uploadText.textContent = "Toca aquí para elegir captura o sube tu archivo";
+                dupWarning.classList.add('hidden');
+
+                alert('¡Pago guardado y registrado en caja con éxito!');
+            });
+
+            renderUI();
         });
-    </script>
-</body>
-</html>
+
+        // Funciones de Caja y Modales
+        let currentModalType = '';
+        function openCajaModal(type) {
+            currentModalType = type;
+            document.getElementById('modalTitle').textContent = type === 'premio
