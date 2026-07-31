@@ -345,4 +345,136 @@
 
         // Verificador de Duplicados
         const refNumberInput = document.getElementById('refNumber');
-        const dup
+        const dupWarning = document.getElementById('dupWarning');
+        refNumberInput.addEventListener('input', () => {
+            const val = refNumberInput.value.trim();
+            if(val.length > 3) {
+                const exists = appData.payments.some(p => p.ref === val);
+                dupWarning.style.display = exists ? 'block' : 'none';
+            } else {
+                dupWarning.style.display = 'none';
+            }
+        });
+
+        // Guardar Pago
+        document.getElementById('submitPayment').addEventListener('click', () => {
+            const ref = refNumberInput.value.trim();
+            const client = document.getElementById('clientName').value.trim();
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            const bank = document.getElementById('paymentBank').value;
+
+            if(!ref || !client || isNaN(amount) || amount <= 0) {
+                alert('Por favor complete todos los datos del pago.');
+                return;
+            }
+
+            appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
+            
+            if(bank === 'Efectivo Taquilla') {
+                appData.cajaBalance.effective += amount;
+            } else {
+                appData.cajaBalance.banks += amount;
+            }
+
+            appData.cajaHistory.unshift({ desc: `Pago de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
+
+            saveState();
+            renderUI();
+
+            refNumberInput.value = '';
+            document.getElementById('clientName').value = '';
+            document.getElementById('paymentAmount').value = '';
+            fileInput.value = '';
+            previewContainer.style.display = 'none';
+            uploadText.textContent = "Sube tu captura o presiona Ctrl+V";
+            dupWarning.style.display = 'none';
+            document.getElementById('analysisBox').style.display = 'none';
+
+            alert('¡Pago registrado con éxito!');
+        });
+
+        let currentModalType = '';
+        function openCajaModal(type) {
+            currentModalType = type;
+            document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio' : 'Registrar Gasto';
+            document.getElementById('cajaModal').classList.remove('hidden');
+        }
+
+        function closeCajaModal() {
+            document.getElementById('cajaModal').classList.add('hidden');
+            document.getElementById('modalAmount').value = '';
+            document.getElementById('modalReason').value = '';
+        }
+
+        function confirmCajaAction() {
+            const amount = parseFloat(document.getElementById('modalAmount').value);
+            const reason = document.getElementById('modalReason').value.trim();
+
+            if(isNaN(amount) || amount <= 0 || !reason) {
+                alert('Introduce un monto válido y un motivo.');
+                return;
+            }
+
+            appData.cajaBalance.effective -= amount;
+            appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount}`, type: 'expense' });
+            
+            saveState();
+            renderUI();
+            closeCajaModal();
+            alert('Movimiento registrado.');
+        }
+
+        function updateSystem(sysName) {
+            const val = prompt(`Nuevo saldo para ${sysName}:`);
+            if(val !== null && !isNaN(val)) {
+                if(sysName === 'Loterias') appData.systems.lotto = parseFloat(val);
+                if(sysName === 'Pollas') appData.systems.pollas = parseFloat(val);
+                saveState();
+                renderUI();
+            }
+        }
+
+        function addBankPrompt() {
+            const name = prompt('Nombre del Banco:');
+            const acc = prompt('Número de Cuenta / Referencia:');
+            const phone = prompt('Teléfono Pago Móvil:');
+            if(name && acc) {
+                appData.banks.push({ name, acc, phone: phone || 'N/A' });
+                saveState();
+                renderUI();
+            }
+        }
+
+        function renderUI() {
+            document.getElementById('cashEffective').textContent = `$${appData.cajaBalance.effective.toFixed(2)}`;
+            document.getElementById('cashBanks').textContent = `$${appData.cajaBalance.banks.toFixed(2)}`;
+
+            const historyContainer = document.getElementById('cajaHistory');
+            if(appData.cajaHistory.length === 0) {
+                historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos hoy.</p>`;
+            } else {
+                historyContainer.innerHTML = appData.cajaHistory.map(h => `
+                    <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
+                        <span class="text-slate-700">${h.desc}</span>
+                        <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount}</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('sysLottoBalance').textContent = `${appData.systems.lotto.toFixed(2)} Bs`;
+            document.getElementById('sysPollasBalance').textContent = `${appData.systems.pollas.toFixed(2)} Bs`;
+
+            const banksContainer = document.getElementById('banksList');
+            banksContainer.innerHTML = appData.banks.map(b => `
+                <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1">
+                    <p class="font-bold text-indigo-900">${b.name}</p>
+                    <p class="text-slate-600">Cuenta: ${b.acc}</p>
+                    <p class="text-slate-600">Pago Móvil: ${b.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        renderUI();
+    </script>
+</body>
+</html>
