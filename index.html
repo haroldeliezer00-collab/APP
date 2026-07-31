@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José</title>
+    <title>Agencia Harold José</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tesseract.js para lectura OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -17,50 +15,46 @@
 
     <!-- Header -->
     <header class="bg-white shadow-sm py-4 px-6 text-center">
-        <h1 class="text-2xl font-bold text-sky-900">Centro de Apuestas <span class="text-sky-600">Harold José</span></h1>
+        <h1 class="text-2xl font-bold text-sky-900">Agencia <span class="text-sky-600">Harold Jose</span></h1>
         <p class="text-xs text-slate-500">Sistema Integral de Control de Pagos y Caja</p>
     </header>
 
     <!-- Main Container -->
     <main class="flex-grow max-w-md mx-auto w-full p-4 mb-20">
 
-        <!-- SECCIÓN 1: REGISTRAR PAGO Y VALIDAR COMPROBANTE -->
+        <!-- SECCIÓN 1: REGISTRAR PAGO Y VALIDAR -->
         <div id="seccion-pago" class="space-y-4">
             <div class="bg-white p-6 rounded-2xl shadow-md text-center border border-sky-100">
                 <h2 class="text-lg font-semibold text-sky-800 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Registrar Pago Recibido</h2>
                 
                 <div class="border-2 border-dashed border-sky-300 rounded-xl p-6 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer relative" id="drop-zone">
-                    <div id="loading-indicator" class="hidden">
-                        <i class="fa-solid fa-spinner fa-spin text-3xl text-sky-600 mb-2"></i>
-                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante y validando agencia...</p>
-                    </div>
                     <div id="upload-prompt">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
                         <p class="text-sm text-slate-600 font-medium">Pega (Ctrl+V) o Selecciona Captura</p>
+                        <button class="mt-3 bg-sky-600 text-white text-xs py-2 px-4 rounded-xl font-semibold shadow hover:bg-sky-700">Seleccionar Captura</button>
                     </div>
                     <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
             </div>
 
-            <!-- Formulario para Guardar si el comprobante es válido -->
-            <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 hidden space-y-3">
-                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-emerald-800 text-xs font-bold text-center">
-                    <i class="fa-solid fa-circle-check mr-1"></i> ¡Comprobante verificado a nombre de la Agencia!
+            <!-- Formulario de Registro (Siempre disponible al pegar/subir) -->
+            <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 space-y-3">
+                <div class="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-sky-900 text-xs font-bold text-center">
+                    <i class="fa-solid fa-bolt mr-1"></i> Ingresa o verifica los datos del comprobante
                 </div>
-                <h3 class="text-sm font-bold text-slate-700">Completar Datos del Pago</h3>
                 <div>
-                    <label class="text-xs text-slate-500 font-semibold">Referencia / Operación</label>
-                    <input type="text" id="input-ref" class="w-full p-3 border rounded-xl text-sm bg-slate-100 font-bold" readonly>
+                    <label class="text-xs text-slate-500 font-semibold">Número de Referencia / Operación</label>
+                    <input type="text" id="input-ref" placeholder="Ej. 062122239942" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 bg-slate-50 font-bold">
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 font-semibold">Nombre del Cliente</label>
-                    <input type="text" id="input-cliente-pago" placeholder="Ej. Juan Pérez" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                    <input type="text" id="input-cliente-pago" placeholder="Ej. Edgar" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 font-semibold">Monto del Pago (Bs / USD)</label>
-                    <input type="number" step="0.01" id="input-monto" placeholder="Ej. 200.00" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                    <input type="number" step="0.01" id="input-monto" placeholder="Ej. 800.00" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
                 </div>
-                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR Y SUMAR A SALDO</button>
+                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR PAGO</button>
             </div>
         </div>
 
@@ -69,11 +63,10 @@
             <div class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 space-y-4">
                 <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-wallet mr-2"></i>Caja Rápida de Clientes</h2>
                 
-                <!-- Selector de clientes registrados -->
                 <div>
-                    <label class="text-xs text-slate-500 font-bold mb-1 block">Selecciona un Cliente:</label>
+                    <label class="text-xs text-slate-500 font-bold mb-1 block">Selecciona un Cliente Registrado:</label>
                     <select id="select-cliente-caja" onchange="seleccionarClienteCaja()" class="w-full p-3 border rounded-xl text-sm bg-slate-50 font-semibold focus:ring-2 focus:ring-sky-500">
-                        <option value="">-- Elige un cliente con saldo --</option>
+                        <option value="">-- Elige un cliente --</option>
                     </select>
                 </div>
 
@@ -100,7 +93,7 @@
         <!-- SECCIÓN 3: DATOS DE AGENCIA -->
         <div id="seccion-datos" class="space-y-4 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 space-y-4">
-                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-credit-card mr-2"></i>Datos Agencia Harold José</h2>
+                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-credit-card mr-2"></i>Datos Agencia Harold Jose</h2>
                 
                 <div class="bg-sky-50 p-4 rounded-xl space-y-2 text-sm">
                     <p class="font-bold text-sky-900"><i class="fa-solid fa-mobile-screen mr-2"></i>PAGO MÓVIL</p>
@@ -137,7 +130,6 @@
 
         let listaClientesCache = [];
 
-        // Cargar clientes al iniciar
         window.addEventListener('DOMContentLoaded', () => {
             cargarClientesSaldos();
         });
@@ -164,103 +156,16 @@
             }
         }
 
-        function mostrarCargando(activo) {
-            const cargandoEl = document.getElementById('loading-indicator');
-            const promptEl = document.getElementById('upload-prompt');
-            if (activo) {
-                cargandoEl.classList.remove('hidden');
-                promptEl.classList.add('hidden');
-            } else {
-                cargandoEl.classList.add('hidden');
-                promptEl.classList.remove('hidden');
-            }
-        }
-
-        async function procesarImagenComprobante(imageFile) {
-            mostrarCargando(true);
-            document.getElementById('form-referencia').classList.add('hidden');
-
-            let timeoutTriggered = false;
-            const timer = setTimeout(() => {
-                timeoutTriggered = true;
-                mostrarCargando(false);
-                alert("⚠️ El lector tardó procesando la imagen. Intenta con otra captura nítida.");
-            }, 25000);
-
-            try {
-                const resultadoOCR = await Tesseract.recognize(imageFile, 'es');
-                if (timeoutTriggered) return;
-                clearTimeout(timer);
-
-                const textoLeido = resultadoOCR.data.text;
-                const textoLimpio = textoLeido.replace(/\s+/g, ' ').toUpperCase();
-
-                // 1. VALIDAR SI LOS DATOS SON DE LA AGENCIA
-                const esDeLaAgencia = 
-                    textoLimpio.includes('04124489363') || 
-                    textoLimpio.includes('18274410') || 
-                    textoLimpio.includes('7201') || 
-                    textoLimpio.includes('HAROLD') || 
-                    textoLimpio.includes('GALEA');
-
-                if (!esDeLaAgencia) {
-                    mostrarCargando(false);
-                    alert("❌ ¡ALERTA! Estos datos no corresponden a la agencia (Verifica el número, cédula o beneficiario del comprobante).");
-                    return;
-                }
-
-                // 2. EXTRAER NÚMERO DE REFERENCIA
-                let referenciaEncontrada = extraerNumeroReferencia(textoLeido);
-
-                if (!referenciaEncontrada) {
-                    mostrarCargando(false);
-                    alert("⚠️ El comprobante es válido de la agencia, pero no se pudo leer automáticamente el número de referencia. Escríbelo manualmente si lo deseas.");
-                    return;
-                }
-
-                // 3. VERIFICAR SI YA FUE USADO EN SUPABASE
-                const { data, error } = await supabaseClient
-                    .from('referencias_pagos')
-                    .select('*')
-                    .eq('referencia', referenciaEncontrada)
-                    .single();
-
-                mostrarCargando(false);
-
-                if (data) {
-                    alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue registrada con anterioridad por el cliente: "${data.cliente}".`);
-                } else {
-                    document.getElementById('input-ref').value = referenciaEncontrada;
-                    document.getElementById('form-referencia').classList.remove('hidden');
-                    alert(`✅ ¡Comprobante verificado con éxito!\nReferencia detectada: ${referenciaEncontrada}`);
-                }
-
-            } catch (err) {
-                if (timeoutTriggered) return;
-                clearTimeout(timer);
-                mostrarCargando(false);
-                console.error(err);
-                alert("❌ Ocurrió un error procesando el comprobante.");
-            }
-        }
-
-        function extraerNumeroReferencia(texto) {
-            const textoLimpio = texto.replace(/\r?\n/g, ' ');
-            const regexEtiquetas = /(?:referencia|operaci[oó]n|ref\.?|nro\.?)\D*?(\d{4,15})/i;
-            const match = textoLimpio.match(regexEtiquetas);
-            if (match && match[1]) {
-                return match[1];
-            }
-            const numeros = textoLimpio.match(/\b\d{6,15}\b/g);
-            if (numeros && numeros.length > 0) {
-                return numeros[0];
-            }
-            return null;
+        // Simular lectura rápida al seleccionar o pegar imagen
+        function procesarImagenRapida(file) {
+            // Generar un número de referencia aleatorio temporal o dejar listo para que el usuario escriba o pegue
+            alert("📋 Captura cargada. Verifica el número de referencia, nombre y monto antes de guardar.");
+            document.getElementById('input-cliente-pago').focus();
         }
 
         document.getElementById('file-input').addEventListener('change', function(e) {
             if(e.target.files.length > 0) {
-                procesarImagenComprobante(e.target.files[0]);
+                procesarImagenRapida(e.target.files[0]);
             }
         });
 
@@ -269,38 +174,50 @@
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     e.preventDefault();
-                    const blob = items[i].getAsFile();
-                    procesarImagenComprobante(blob);
+                    procesarImagenRapida(items[i].getAsFile());
                     break;
                 }
             }
         });
 
         async function guardarPago() {
-            const ref = document.getElementById('input-ref').value;
+            const ref = document.getElementById('input-ref').value.trim();
             const cliente = document.getElementById('input-cliente-pago').value.trim();
             const monto = parseFloat(document.getElementById('input-monto').value);
 
             if(!ref || !cliente || isNaN(monto)) {
-                alert('Por favor completa todos los campos correctamente.');
+                alert('⚠️ Por favor completa todos los campos (Referencia, Cliente y Monto).');
                 return;
             }
 
-            // Guardar referencia
+            // Verificar si la referencia ya existe en Supabase para evitar fraude
+            const { data: existenteRef } = await supabaseClient
+                .from('referencias_pagos')
+                .select('*')
+                .eq('referencia', ref)
+                .single();
+
+            if (existenteRef) {
+                alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${ref} ya fue registrada anteriormente por el cliente: "${existenteRef.cliente}".`);
+                return;
+            }
+
+            // Guardar referencia en Supabase
             const { error } = await supabaseClient
                 .from('referencias_pagos')
                 .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
 
             if(error) {
-                alert('Error al guardar pago: ' + error.message);
+                alert('Error al guardar referencia: ' + error.message);
                 return;
             }
 
-            // Actualizar o crear saldo del cliente en tabla saldos_clientes
+            // Actualizar o crear saldo del cliente en saldos_clientes
             await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
 
-            alert('¡Pago registrado con éxito y sumado al saldo del cliente!');
-            document.getElementById('form-referencia').classList.add('hidden');
+            alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
+            
+            // Limpiar formulario
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente-pago').value = '';
             document.getElementById('input-monto').value = '';
@@ -325,7 +242,7 @@
             listaClientesCache.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.nombre;
-                opt.textContent = `${c.nombre} (Saldo: ${c.saldo})`;
+                opt.textContent = `${c.nombre} (Saldo: ${c.saldo.toFixed(2)} Bs)`;
                 select.appendChild(opt);
             });
         }
@@ -373,14 +290,12 @@
 
             document.getElementById('caja-saldo').innerText = nuevoSaldo.toFixed(2);
 
-            // Guardar en Supabase
             await actualizarSaldoEnBaseDatos(clienteNombre, nuevoSaldo, 'fijar');
             cargarClientesSaldos();
-            alert(`¡Saldo actualizado correctamente! Nuevo saldo: ${nuevoSaldo.toFixed(2)}`);
+            alert(`¡Saldo actualizado correctamente! Nuevo saldo: ${nuevoSaldo.toFixed(2)} Bs`);
         }
 
         async function actualizarSaldoEnBaseDatos(nombreCliente, montoAccion, modo) {
-            // Verificar si el cliente ya existe en saldos_clientes
             const { data: existente } = await supabaseClient
                 .from('saldos_clientes')
                 .select('*')
