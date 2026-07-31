@@ -123,7 +123,7 @@
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
     </nav>
 
-    <!-- Script con credenciales correctas -->
+    <!-- Script con columna en minúscula corregida -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfvrygbqawd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
@@ -230,8 +230,8 @@
             }
 
             try {
-                // 1. Validar si ya existe la referencia
-                const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?Referencia=eq.${encodeURIComponent(ref)}`, {
+                // 1. Validar si ya existe la referencia (usando columna en minúscula)
+                const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?referencia=eq.${encodeURIComponent(ref)}`, {
                     headers: headersSupabase
                 });
                 const existentes = await resCheck.json();
@@ -241,11 +241,11 @@
                     return;
                 }
 
-                // 2. Guardar el pago
+                // 2. Guardar el pago (usando columna en minúscula)
                 const resInsert = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos`, {
                     method: 'POST',
                     headers: headersSupabase,
-                    body: JSON.stringify({ Referencia: ref, cliente: cliente, monto: monto })
+                    body: JSON.stringify({ referencia: ref, cliente: cliente, monto: monto })
                 });
 
                 if (!resInsert.ok) {
