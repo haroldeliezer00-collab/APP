@@ -26,16 +26,18 @@
                     <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Recibido
                 </h2>
                 
-                <!-- Área de Carga de Archivo -->
-                <div id="uploadArea" class="border-2 border-dashed border-sky-300 rounded-xl p-6 text-center bg-sky-50/50 cursor-pointer hover:bg-sky-50 transition">
-                    <div class="text-sky-600 text-3xl mb-2">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                <!-- Área de Carga de Archivo (Optimizada para Móvil con input directo) -->
+                <div id="uploadArea" class="relative border-2 border-dashed border-sky-300 rounded-xl p-6 text-center bg-sky-50/50 cursor-pointer hover:bg-sky-50 transition overflow-hidden">
+                    <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20">
+                    <div class="relative z-10 pointer-events-none">
+                        <div class="text-sky-600 text-3xl mb-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <p id="uploadText" class="text-xs text-slate-600 font-medium mb-3">Toca aquí para elegir captura o sube tu archivo</p>
+                        <span class="inline-block bg-sky-600 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow transition">
+                            Seleccionar Captura
+                        </span>
                     </div>
-                    <p id="uploadText" class="text-xs text-slate-600 font-medium mb-3">Toca aquí para elegir captura o sube tu archivo</p>
-                    <button type="button" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow transition pointer-events-none">
-                        Seleccionar Captura
-                    </button>
-                    <input type="file" id="fileInput" accept="image/*" class="hidden">
                 </div>
 
                 <!-- Contenedor de Vista Previa -->
@@ -91,7 +93,7 @@
         </section>
 
         <!-- ================= VISTA: CAJA ================= -->
-        <section id="view-caja" class="view-section space-y-4" style="display: none;">
+        <section id="view-caja" class="view-section space-y-4 hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
@@ -108,7 +110,6 @@
                     </div>
                 </div>
 
-                <!-- Botones de Acción Rápida Caja -->
                 <div class="grid grid-cols-2 gap-2 mt-4">
                     <button onclick="openCajaModal('premio')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow transition">
                         <i class="fa-solid fa-trophy"></i> Pagar / Restar Premio
@@ -119,7 +120,6 @@
                 </div>
             </div>
 
-            <!-- Historial de Movimientos de Caja -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="text-xs font-bold text-slate-700 mb-2">Movimientos del Día</h3>
                 <div id="cajaHistory" class="space-y-2 text-xs">
@@ -129,7 +129,7 @@
         </section>
 
         <!-- ================= VISTA: SISTEMAS ================= -->
-        <section id="view-sistemas" class="view-section space-y-4" style="display: none;">
+        <section id="view-sistemas" class="view-section space-y-4 hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
@@ -162,15 +162,13 @@
         </section>
 
         <!-- ================= VISTA: BANCOS ================= -->
-        <section id="view-bancos" class="view-section space-y-4" style="display: none;">
+        <section id="view-bancos" class="view-section space-y-4 hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
                 <p class="text-xs text-slate-500 mt-1">Monitoreo y configuración de cuentas asociadas.</p>
                 
-                <div id="banksList" class="mt-4 space-y-2 text-left text-xs">
-                    <!-- Se cargan dinámicamente -->
-                </div>
+                <div id="banksList" class="mt-4 space-y-2 text-left text-xs"></div>
 
                 <button onclick="addBankPrompt()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition">
                     <i class="fa-solid fa-plus"></i> Agregar Nuevo Banco
@@ -185,7 +183,7 @@
         <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-lg space-y-3">
             <h3 id="modalTitle" class="text-sm font-bold text-slate-700">Registrar Movimiento</h3>
             <input type="number" step="0.01" id="modalAmount" placeholder="Monto (Ej. 10.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
-            <input type="text" id="modalReason" placeholder="Motivo / Descripción (Ej. Pago de animalito a Juan)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
+            <input type="text" id="modalReason" placeholder="Motivo / Descripción (Ej. Premio animalito)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <div class="flex gap-2">
                 <button onclick="closeCajaModal()" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
                 <button onclick="confirmCajaAction()" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
@@ -213,9 +211,8 @@
         </button>
     </nav>
 
-    <!-- JavaScript Integrado con Lógica Completa -->
+    <!-- JavaScript Integrado -->
     <script>
-        // Estado Global de la App en LocalStorage
         let appData = JSON.parse(localStorage.getItem('haroldJoseData')) || {
             payments: [],
             cajaBalance: { effective: 0, banks: 0 },
@@ -232,15 +229,19 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Control del menú inferior (Cambio de vistas)
+            // 1. Control del menú inferior (Cambio de vistas con Tailwind hidden)
             const navButtons = document.querySelectorAll('.nav-btn');
             const sections = document.querySelectorAll('.view-section');
 
             navButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const target = button.getAttribute('data-target');
-                    sections.forEach(sec => sec.style.display = 'none');
-                    document.getElementById(`view-${target}`).style.display = 'block';
+                    sections.forEach(sec => sec.classList.add('hidden'));
+
+                    const activeSection = document.getElementById(`view-${target}`);
+                    if (activeSection) {
+                        activeSection.classList.remove('hidden');
+                    }
 
                     navButtons.forEach(btn => {
                         btn.classList.remove('text-sky-600');
@@ -252,15 +253,12 @@
                 });
             });
 
-            // 2. Control de selección y previsualización de imágenes
-            const uploadArea = document.getElementById('uploadArea');
+            // 2. Control de selección de imágenes directo
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
             const fileNameText = document.getElementById('fileName');
             const uploadText = document.getElementById('uploadText');
-
-            uploadArea.addEventListener('click', () => fileInput.click());
 
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -288,7 +286,7 @@
                 }
             });
 
-            // 4. Verificador de Referencia Duplicada en tiempo real
+            // 4. Verificador de Referencia Duplicada
             const refNumberInput = document.getElementById('refNumber');
             const dupWarning = document.getElementById('dupWarning');
             refNumberInput.addEventListener('input', () => {
@@ -317,23 +315,19 @@
                     return;
                 }
 
-                // Guardar pago
                 appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
                 
-                // Actualizar saldos de caja
                 if(bank === 'Efectivo Taquilla') {
                     appData.cajaBalance.effective += amount;
                 } else {
                     appData.cajaBalance.banks += amount;
                 }
 
-                // Registrar en historial
                 appData.cajaHistory.unshift({ desc: `Pago recibido de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
 
                 saveState();
                 renderUI();
 
-                // Limpiar formulario
                 refNumberInput.value = '';
                 clientNameInput.value = '';
                 document.getElementById('paymentAmount').value = '';
@@ -341,14 +335,20 @@
                 uploadText.textContent = "Toca aquí para elegir captura o sube tu archivo";
                 dupWarning.classList.add('hidden');
 
-                alert('¡Pago guardado y registrado en caja con éxito!');
+                alert('¡Pago guardado y registrado con éxito!');
             });
 
             renderUI();
         });
 
-        // Funciones de Caja y Modales
         let currentModalType = '';
         function openCajaModal(type) {
             currentModalType = type;
-            document.getElementById('modalTitle').textContent = type === 'premio
+            document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio' : 'Registrar Egreso / Gasto';
+            document.getElementById('cajaModal').classList.remove('hidden');
+        }
+
+        function closeCajaModal() {
+            document.getElementById('cajaModal').classList.add('hidden');
+            document.getElementById('modalAmount').value = '';
+            
