@@ -125,7 +125,7 @@
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
     </nav>
 
-    <!-- Script de Conexión y Lógica -->
+    <!-- Script de Conexión y Lógica Corregido -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfrygbqawd.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
@@ -234,10 +234,11 @@
                 return;
             }
 
+            // Usamos 'Referencia' con R mayúscula tal cual está en tu base de datos
             const { data: existenteRef } = await supabaseClient
                 .from('referencias_pagos')
                 .select('*')
-                .eq('referencia', ref)
+                .eq('Referencia', ref)
                 .single();
 
             if (existenteRef) {
@@ -247,7 +248,7 @@
 
             const { error } = await supabaseClient
                 .from('referencias_pagos')
-                .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
+                .insert([{ Referencia: ref, cliente: cliente, monto: monto }]);
 
             if(error) {
                 alert('Error al guardar referencia: ' + error.message);
