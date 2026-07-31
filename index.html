@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tesseract.js para lectura OCR automática -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -35,16 +37,18 @@
                     </div>
                     <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
+                <!-- Mensaje de estado de lectura OCR -->
+                <div id="estado-lectura" class="mt-3 text-xs font-semibold text-sky-700 hidden"></div>
             </div>
 
-            <!-- Formulario de Registro (Siempre disponible al pegar/subir) -->
+            <!-- Formulario de Registro -->
             <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 space-y-3">
                 <div class="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-sky-900 text-xs font-bold text-center">
-                    <i class="fa-solid fa-bolt mr-1"></i> Ingresa o verifica los datos del comprobante
+                    <i class="fa-solid fa-bolt mr-1"></i> Referencia detectada automáticamente
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 font-semibold">Número de Referencia / Operación</label>
-                    <input type="text" id="input-ref" placeholder="Ej. 062122239942" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 bg-slate-50 font-bold">
+                    <input type="text" id="input-ref" placeholder="Ej. 062122239942" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 bg-slate-50 font-bold text-sky-900">
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 font-semibold">Nombre del Cliente</label>
@@ -156,11 +160,49 @@
             }
         }
 
-        // Simular lectura rápida al seleccionar o pegar imagen
-        function procesarImagenRapida(file) {
-            // Generar un número de referencia aleatorio temporal o dejar listo para que el usuario escriba o pegue
-            alert("📋 Captura cargada. Verifica el número de referencia, nombre y monto antes de guardar.");
-            document.getElementById('input-cliente-pago').focus();
+        // Lector OCR Automático para extraer la referencia
+        async function procesarImagenRapida(file) {
+            const statusDiv = document.getElementById('estado-lectura');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo comprobante y buscando referencia...';
+
+            try {
+                const worker = await Tesseract.createWorker('es');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+
+                const texto = ret.data.text;
+                console.log("Texto detectado:", texto);
+
+                // Buscar número de referencia con expresiones regulares comunes en comprobantes
+                let refEncontrada = '';
+                const matchRef = texto.match(/(?:referencia|operacion|ref)[:\s]*([0-9]{8,15})/i);
+                
+                if (matchRef && matchRef[1]) {
+                    refEncontrada = matchRef[1];
+                } else {
+                    // Si no encuentra la etiqueta, busca cualquier secuencia numérica de 10 a 14 dígitos
+                    const numeros = texto.match(/\b\d{10,14}\b/g);
+                    if (numeros && numeros.length > 0) {
+                        refEncontrada = numeros[0];
+                    }
+                }
+
+                if (refEncontrada) {
+                    document.getElementById('input-ref').value = refEncontrada;
+                    statusDiv.innerHTML = `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> ¡Referencia detectada: ${refEncontrada}!</span>`;
+                } else {
+                    statusDiv.innerHTML = `<span class="text-amber-700"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No se distinguió la referencia. Por favor escríbela.</span>`;
+                }
+
+                // Dar foco automático al nombre del cliente para agilizar
+                document.getElementById('input-cliente-pago').focus();
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerHTML = `<span class="text-rose-700">Error al procesar la imagen. Ingresa la referencia manualmente.</span>`;
+                document.getElementById('input-ref').focus();
+            }
         }
 
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -217,10 +259,11 @@
 
             alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
             
-            // Limpiar formulario
+            // Limpiar formulario y estado
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente-pago').value = '';
             document.getElementById('input-monto').value = '';
+            document.getElementById('estado-lectura').classList.add('hidden');
             
             cargarClientesSaldos();
         }
@@ -285,7 +328,7 @@
             } else if(tipo === 'jugada') {
                 nuevoSaldo -= monto;
             } else if(tipo === 'transf') {
-                nuevoSaldo = 0; // Vaciar / Retirar todo
+                nuevoSaldo = 0; 
             }
 
             document.getElementById('caja-saldo').innerText = nuevoSaldo.toFixed(2);
