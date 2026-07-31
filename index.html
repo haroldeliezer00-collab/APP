@@ -6,8 +6,6 @@
     <title>Agencia Harold José</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tesseract liviano por CDN optimizado -->
@@ -125,12 +123,17 @@
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
     </nav>
 
-    <!-- Script con Conexión Administradora (Service Role) -->
+    <!-- Script con Conexión Directa Fetch (Sin librerías bloqueables) -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfrygbqawd.supabase.co';
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQ4OTkxMCwiZXhwIjoyMTAxMDY1OTEwfQ.ThOyeZBU5LoPKauMQM8VNl7CE7v6CCMyKgUqHbG3NkM';
+        const SUPABASE_KEY = 'ThOyeZBU5LoPKauMQM8VNl7CE7v6CCMyKgUqHbG3NkM';
         
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        const headersSupabase = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
 
         let listaClientesCache = [];
 
@@ -167,16 +170,8 @@
             statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo referencia al instante...';
 
             try {
-                const result = await Tesseract.recognize(
-                    file,
-                    'eng',
-                    { 
-                        logger: m => {} 
-                    }
-                );
-
+                const result = await Tesseract.recognize(file, 'eng', { logger: m => {} });
                 const texto = result.data.text;
-                console.log("Texto detectado:", texto);
 
                 let refEncontrada = '';
                 const matchRef = texto.match(/(?:operacion|referencia|ref|operación|num)[^\d]*(\d{8,15})/i);
@@ -234,58 +229,66 @@
                 return;
             }
 
-            const { data: existenteRef } = await supabaseClient
-                .from('referencias_pagos')
-                .select('*')
-                .eq('Referencia', ref)
-                .single();
+            try {
+                // 1. Validar si ya existe la referencia
+                const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?Referencia=eq.${encodeURIComponent(ref)}`, {
+                    headers: headersSupabase
+                });
+                const existentes = await resCheck.json();
 
-            if (existenteRef) {
-                alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${ref} ya fue registrada anteriormente por el cliente: "${existenteRef.cliente}".`);
-                return;
+                if (existentes && existentes.length > 0) {
+                    alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${ref} ya fue registrada anteriormente por el cliente: "${existentes[0].cliente}".`);
+                    return;
+                }
+
+                // 2. Guardar el pago
+                const resInsert = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos`, {
+                    method: 'POST',
+                    headers: headersSupabase,
+                    body: JSON.stringify({ Referencia: ref, cliente: cliente, monto: monto })
+                });
+
+                if (!resInsert.ok) {
+                    throw new Error(await resInsert.text());
+                }
+
+                // 3. Actualizar saldo
+                await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
+
+                alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
+                
+                document.getElementById('input-ref').value = '';
+                document.getElementById('input-cliente-pago').value = '';
+                document.getElementById('input-monto').value = '';
+                document.getElementById('estado-lectura').classList.add('hidden');
+                
+                cargarClientesSaldos();
+
+            } catch (err) {
+                console.error(err);
+                alert('Error al guardar referencia: ' + err.message);
             }
-
-            const { error } = await supabaseClient
-                .from('referencias_pagos')
-                .insert([{ Referencia: ref, cliente: cliente, monto: monto }]);
-
-            if(error) {
-                alert('Error al guardar referencia: ' + error.message);
-                return;
-            }
-
-            await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
-
-            alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
-            
-            document.getElementById('input-ref').value = '';
-            document.getElementById('input-cliente-pago').value = '';
-            document.getElementById('input-monto').value = '';
-            document.getElementById('estado-lectura').classList.add('hidden');
-            
-            cargarClientesSaldos();
         }
 
         async function cargarClientesSaldos() {
-            const { data, error } = await supabaseClient
-                .from('saldos_clientes')
-                .select('*');
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes?select=*`, {
+                    headers: headersSupabase
+                });
+                listaClientesCache = await res.json() || [];
+                
+                const select = document.getElementById('select-cliente-caja');
+                select.innerHTML = '<option value="">-- Elige un cliente --</option>';
 
-            if(error) {
-                console.error("Error cargando saldos:", error);
-                return;
+                listaClientesCache.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.nombre;
+                    opt.textContent = `${c.nombre} (Saldo: ${Number(c.saldo).toFixed(2)} Bs)`;
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error("Error cargando saldos:", err);
             }
-
-            listaClientesCache = data || [];
-            const select = document.getElementById('select-cliente-caja');
-            select.innerHTML = '<option value="">-- Elige un cliente --</option>';
-
-            listaClientesCache.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.nombre;
-                opt.textContent = `${c.nombre} (Saldo: ${c.saldo.toFixed(2)} Bs)`;
-                select.appendChild(opt);
-            });
         }
 
         function seleccionarClienteCaja() {
@@ -299,7 +302,7 @@
             const clienteEncontrado = listaClientesCache.find(c => c.nombre === nombreSeleccionado);
             if(clienteEncontrado) {
                 document.getElementById('caja-cliente').value = clienteEncontrado.nombre;
-                document.getElementById('caja-saldo').innerText = clienteEncontrado.saldo.toFixed(2);
+                document.getElementById('caja-saldo').innerText = Number(clienteEncontrado.saldo).toFixed(2);
             }
         }
 
@@ -337,23 +340,31 @@
         }
 
         async function actualizarSaldoEnBaseDatos(nombreCliente, montoAccion, modo) {
-            const { data: existente } = await supabaseClient
-                .from('saldos_clientes')
-                .select('*')
-                .eq('nombre', nombreCliente)
-                .single();
+            try {
+                const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes?nombre=eq.${encodeURIComponent(nombreCliente)}`, {
+                    headers: headersSupabase
+                });
+                const existentes = await resCheck.json();
 
-            if(existente) {
-                let saldoFinal = modo === 'ingresar' ? existente.saldo + montoAccion : montoAccion;
-                await supabaseClient
-                    .from('saldos_clientes')
-                    .update({ saldo: saldoFinal })
-                    .eq('nombre', nombreCliente);
-            } else {
-                let saldoInicial = modo === 'ingresar' ? montoAccion : 0;
-                await supabaseClient
-                    .from('saldos_clientes')
-                    .insert([{ nombre: nombreCliente, saldo: saldoInicial }]);
+                if(existentes && existentes.length > 0) {
+                    let cli = existentes[0];
+                    let saldoFinal = modo === 'ingresar' ? Number(cli.saldo) + montoAccion : montoAccion;
+                    
+                    await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes?id=eq.${cli.id}`, {
+                        method: 'PATCH',
+                        headers: headersSupabase,
+                        body: JSON.stringify({ saldo: saldoFinal })
+                    });
+                } else {
+                    let saldoInicial = modo === 'ingresar' ? montoAccion : 0;
+                    await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes`, {
+                        method: 'POST',
+                        headers: headersSupabase,
+                        body: JSON.stringify({ nombre: nombreCliente, saldo: saldoInicial })
+                    });
+                }
+            } catch (err) {
+                console.error("Error actualizando saldo:", err);
             }
         }
 
