@@ -101,13 +101,11 @@
 
     <!-- Script de Conexión y Lógica -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Llaves integradas)
         const SUPABASE_URL = 'https://wlvqucxgahfrygbqawd.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_iehKAY4RUZriA8reFLHDfg_N8gdTdA8';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Navegación inferior
         function cambiarTab(tab) {
             document.getElementById('seccion-pago').classList.add('hidden');
             document.getElementById('seccion-caja').classList.add('hidden');
@@ -129,22 +127,39 @@
             }
         }
 
-        // Lógica de validación de referencia
-        document.getElementById('file-input').addEventListener('change', async function(e) {
-            if(e.target.files.length > 0) {
-                const refEjemplo = Math.floor(10000000 + Math.random() * 90000000).toString();
-                
-                const { data, error } = await supabaseClient
-                    .from('referencias_pagos')
-                    .select('*')
-                    .eq('referencia', refEjemplo)
-                    .single();
+        async function procesarComprobante() {
+            const refEjemplo = Math.floor(10000000 + Math.random() * 90000000).toString();
+            
+            const { data, error } = await supabaseClient
+                .from('referencias_pagos')
+                .select('*')
+                .eq('referencia', refEjemplo)
+                .single();
 
-                if(data) {
-                    alert(`❌ Referencia ya fue utilizada por ${data.cliente}`);
-                } else {
-                    document.getElementById('input-ref').value = refEjemplo;
-                    document.getElementById('form-referencia').classList.remove('hidden');
+            if(data) {
+                alert(`❌ La referencia ${refEjemplo} ya fue utilizada por ${data.cliente}`);
+            } else {
+                document.getElementById('input-ref').value = refEjemplo;
+                document.getElementById('form-referencia').classList.remove('hidden');
+                alert(`✅ Comprobante leído. Referencia generada: ${refEjemplo}`);
+            }
+        }
+
+        // Detectar archivo seleccionado manualmente
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            if(e.target.files.length > 0) {
+                procesarComprobante();
+            }
+        });
+
+        // Detectar cuando pegan una imagen con Ctrl+V en cualquier parte
+        window.addEventListener('paste', function(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    procesarComprobante();
+                    break;
                 }
             }
         });
