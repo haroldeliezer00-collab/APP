@@ -128,7 +128,7 @@
     <!-- Script de Conexión y Lógica -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfrygbqawd.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_iehKAY4RUZriA8reFLHDfg_N8gdTdA8';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -167,7 +167,6 @@
             statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo referencia al instante...';
 
             try {
-                // Usar Tesseract con configuración rápida y flexible
                 const result = await Tesseract.recognize(
                     file,
                     'eng',
@@ -180,17 +179,13 @@
                 console.log("Texto detectado:", texto);
 
                 let refEncontrada = '';
-                
-                // Expresión regular robusta para capturar números de referencia largos (Banesco, BDV, Exterior, etc., de 8 a 15 dígitos)
                 const matchRef = texto.match(/(?:operacion|referencia|ref|operación|num)[^\d]*(\d{8,15})/i);
                 
                 if (matchRef && matchRef[1]) {
                     refEncontrada = matchRef[1];
                 } else {
-                    // Buscar cualquier bloque de números de 8 a 15 dígitos directos en el texto
                     const nums = texto.match(/\b\d{8,15}\b/g);
                     if (nums && nums.length > 0) {
-                        // Filtrar para evitar tomar cédulas (V-18274410) o teléfonos
                         const posibleRef = nums.find(n => n.length >= 10 && n !== '18274410' && !n.startsWith('0412') && !n.startsWith('0102'));
                         refEncontrada = posibleRef || nums[0];
                     }
@@ -239,7 +234,6 @@
                 return;
             }
 
-            // Verificar si la referencia ya existe en Supabase para evitar fraude
             const { data: existenteRef } = await supabaseClient
                 .from('referencias_pagos')
                 .select('*')
@@ -251,7 +245,6 @@
                 return;
             }
 
-            // Guardar referencia en Supabase
             const { error } = await supabaseClient
                 .from('referencias_pagos')
                 .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
@@ -261,12 +254,10 @@
                 return;
             }
 
-            // Actualizar o crear saldo del cliente en saldos_clientes
             await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
 
             alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
             
-            // Limpiar formulario y estado
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente-pago').value = '';
             document.getElementById('input-monto').value = '';
