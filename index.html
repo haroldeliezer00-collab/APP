@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tesseract.js para leer texto de las imágenes (OCR) -->
+    <!-- Tesseract.js para lectura OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -32,7 +32,7 @@
                 <div class="border-2 border-dashed border-sky-300 rounded-xl p-6 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer relative" id="drop-zone">
                     <div id="loading-indicator" class="hidden">
                         <i class="fa-solid fa-spinner fa-spin text-3xl text-sky-600 mb-2"></i>
-                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante y buscando referencia...</p>
+                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante multibanco...</p>
                     </div>
                     <div id="upload-prompt">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
@@ -151,21 +151,29 @@
             mostrarCargando(true);
             document.getElementById('form-referencia').classList.add('hidden');
 
-            try {
-                // Usar Tesseract para leer el texto de la imagen en español
-                const resultadoOCR = await Tesseract.recognize(imageFile, 'es');
-                const textoLeido = resultadoOCR.data.text;
+            // Seguridad por si la librería se traba: máximo 12 segundos
+            let timeoutTriggered = false;
+            const timer = setTimeout(() => {
+                timeoutTriggered = true;
+                mostrarCargando(false);
+                alert("⚠️ El lector tardó demasiado procesando esta imagen. Intenta con otra captura más clara.");
+            }, 12000);
 
-                // Buscar patrón de referencia u operación (números largos de 6 a 15 dígitos)
+            try {
+                const resultadoOCR = await Tesseract.recognize(imageFile, 'es');
+                if (timeoutTriggered) return;
+                clearTimeout(timer);
+
+                const textoLeido = resultadoOCR.data.text;
                 let referenciaEncontrada = extraerNumeroReferencia(textoLeido);
 
                 if (!referenciaEncontrada) {
                     mostrarCargando(false);
-                    alert("⚠️ No se pudo detectar automáticamente el número de referencia en la imagen. Por favor, verifica que la captura sea clara.");
+                    alert("⚠️ No se pudo ubicar el número de referencia en este comprobante. Verifica que se vea nítido.");
                     return;
                 }
 
-                // Consultar en Supabase si la referencia ya existe
+                // Consultar Supabase
                 const { data, error } = await supabaseClient
                     .from('referencias_pagos')
                     .select('*')
@@ -175,7 +183,7 @@
                 mostrarCargando(false);
 
                 if (data) {
-                    alert(`❌ ¡ALERTA DE PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue utilizada anteriormente por el cliente: "${data.cliente}".`);
+                    alert(`❌ ¡ALERTA DE PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue registrada anteriormente por el cliente: "${data.cliente}".`);
                 } else {
                     document.getElementById('input-ref').value = referenciaEncontrada;
                     document.getElementById('form-referencia').classList.remove('hidden');
@@ -183,36 +191,38 @@
                 }
 
             } catch (err) {
+                if (timeoutTriggered) return;
+                clearTimeout(timer);
                 mostrarCargando(false);
                 console.error(err);
-                alert("❌ Ocurrió un error al procesar la imagen del comprobante.");
+                alert("❌ Ocurrió un error leyendo el comprobante.");
             }
         }
 
         function extraerNumeroReferencia(texto) {
-            // Buscar palabras clave como referencia, operación o ref seguidas de números
-            const regexKw = /(?:referencia|operaci[oó]n|ref\.?)\D*?(\d{6,15})/i;
-            const matchKw = texto.match(regexKw);
-            if (matchKw && matchKw[1]) {
-                return matchKw[1];
+            const textoLimpio = texto.replace(/\r?\n/g, ' ');
+
+            // 1. Palabras clave comunes en bancos (Banesco, Provincial, Venezuela, etc.)
+            const regexEtiquetas = /(?:referencia|operaci[oó]n|ref\.?|nro\.?)\D*?(\d{4,12})/i;
+            const match = textoLimpio.match(regexEtiquetas);
+            if (match && match[1]) {
+                return match[1];
             }
-            
-            // Búsqueda alternativa: cualquier secuencia numérica larga típica de bancos venezolanos (8 a 15 dígitos)
-            const numeros = texto.match(/\d{8,15}/g);
+
+            // 2. Búsqueda secundaria de números largos típicos de transacciones
+            const numeros = textoLimpio.match(/\b\d{6,12}\b/g);
             if (numeros && numeros.length > 0) {
                 return numeros[0];
             }
             return null;
         }
 
-        // Detectar archivo seleccionado manualmente
         document.getElementById('file-input').addEventListener('change', function(e) {
             if(e.target.files.length > 0) {
                 procesarImagenComprobante(e.target.files[0]);
             }
         });
 
-        // Detectar cuando pegan una imagen con Ctrl+V
         window.addEventListener('paste', function(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let i = 0; i < items.length; i++) {
@@ -240,9 +250,9 @@
                 .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
 
             if(error) {
-                alert('Error al guardar en la base de datos: ' + error.message);
+                alert('Error al guardar: ' + error.message);
             } else {
-                alert('¡Pago guardado y registrado con éxito en el sistema!');
+                alert('¡Pago guardado y registrado con éxito!');
                 document.getElementById('form-referencia').classList.add('hidden');
                 document.getElementById('input-ref').value = '';
                 document.getElementById('input-cliente-pago').value = '';
