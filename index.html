@@ -89,6 +89,10 @@
 
                 <button onclick="copiarWhatsApp()" class="w-full bg-sky-700 text-white py-3 rounded-xl font-semibold text-sm hover:bg-sky-800 shadow"><i class="fa-brands fa-whatsapp mr-2"></i> Copiar Mensaje WhatsApp</button>
                 <button onclick="limpiarCaja()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold hover:bg-slate-300">Limpiar Pantalla</button>
+
+                <hr class="border-slate-200 my-2">
+                <!-- Botón de Cierre de Día / Reset General -->
+                <button onclick="cierreDeDia()" class="w-full bg-rose-600 text-white py-3 rounded-xl font-semibold text-xs hover:bg-rose-700 shadow"><i class="fa-solid fa-power-off mr-1"></i> Cierre de Día (Reiniciar Todo)</button>
             </div>
         </div>
 
@@ -123,7 +127,7 @@
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
     </nav>
 
-    <!-- Script con validación inteligente de duplicados y datos propios -->
+    <!-- Script con control avanzado de duplicados por fecha y cierre de día -->
     <script>
         const SUPABASE_URL = 'https://wlvqucxgahfvrygbqawd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
@@ -163,12 +167,12 @@
             }
         }
 
-        // Procesamiento OCR Inteligente (Anti-fraude y Anti-duplicados)
+        // Procesamiento OCR con Alerta de Días Transcurridos y Duplicados
         async function procesarImagenRapida(file) {
             const statusDiv = document.getElementById('estado-lectura');
             statusDiv.classList.remove('hidden', 'bg-emerald-50', 'bg-rose-50', 'bg-amber-50', 'border-emerald-200', 'border-rose-200', 'border-amber-200');
             statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-sky-50 border-sky-200 text-sky-800";
-            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo captura y validando datos...';
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Leyendo captura y validando historial...';
 
             try {
                 const result = await Tesseract.recognize(file, 'eng', { logger: m => {} });
@@ -197,26 +201,34 @@
 
                 document.getElementById('input-ref').value = refEncontrada;
 
-                // 1. Validar si ya existe la referencia en la base de datos INMEDIATAMENTE
+                // 1. Validar si ya existe la referencia en la base de datos
                 const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?referencia=eq.${encodeURIComponent(refEncontrada)}`, {
                     headers: headersSupabase
                 });
                 const existentes = await resCheck.json();
 
                 if (existentes && existentes.length > 0) {
+                    let item = existentes[0];
+                    let fechaRegistro = new Date(item.created_at);
+                    let ahora = new Date();
+                    let diferenciaDias = Math.floor((ahora - fechaRegistro) / (1000 * 60 * 60 * 24));
+                    let fechaFormateada = fechaRegistro.toLocaleString();
+
+                    let mensajeTiempo = diferenciaDias === 0 ? "hoy mismo" : `hace ${diferenciaDias} día(s) (${fechaFormateada})`;
+
                     statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-rose-50 border-rose-200 text-rose-800";
-                    statusDiv.innerHTML = `<i class="fa-solid fa-ban mr-1 text-base"></i> <strong>¡REFERENCIA DUPLICADA!</strong><br>Este pago ya fue registrado anteriormente por el cliente: <strong>"${existentes[0].cliente}"</strong>.`;
-                    document.getElementById('input-cliente-pago.value = existentes[0].cliente;');
+                    statusDiv.innerHTML = `<i class="fa-solid fa-ban mr-1 text-base"></i> <strong>¡REFERENCIA DUPLICADA!</strong><br>Este pago se envió <strong>${mensajeTiempo}</strong> por el cliente: <strong>"${item.cliente}"</strong>.`;
+                    document.getElementById('input-cliente-pago').value = item.cliente;
                     return;
                 }
 
-                // 2. Validar si los datos de la captura corresponden a la agencia (Cédula o Teléfono)
+                // 2. Validar si los datos de la captura corresponden a la agencia
                 const contieneCedula = textoLower.includes('18274410') || textoLower.includes('18.274.410');
                 const contieneTelefono = textoLower.includes('4489363') || textoLower.includes('04124489363');
 
                 if (!contieneCedula && !contieneTelefono) {
                     statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-amber-50 border-amber-200 text-amber-800";
-                    statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> <strong>¡ATENCIÓN! Posible error o datos ajenos</strong><br>Ref: ${refEncontrada}. El sistema no detecta tu cédula (18274410) ni tu teléfono (04124489363) en esta captura. ¡Revísala bien!`;
+                    statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> <strong>¡ATENCIÓN! Posible error o datos ajenos</strong><br>Ref: ${refEncontrada}. El sistema no detecta tu cédula (18274410) ni tu teléfono (04124489363) en esta captura.`;
                 } else {
                     statusDiv.className = "mt-3 text-xs font-semibold p-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800";
                     statusDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1 text-base"></i> <strong>¡Referencia cargada y verificada! (${refEncontrada})</strong><br>Datos correctos de la agencia identificados.`;
@@ -260,18 +272,16 @@
             }
 
             try {
-                // Validación extra al hacer clic en guardar por seguridad
                 const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?referencia=eq.${encodeURIComponent(ref)}`, {
                     headers: headersSupabase
                 });
                 const existentes = await resCheck.json();
 
                 if (existentes && existentes.length > 0) {
-                    alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${ref} ya fue registrada anteriormente por el cliente: "${existentes[0].cliente}".`);
+                    alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${ref} ya fue registrada por "${existentes[0].cliente}".`);
                     return;
                 }
 
-                // Guardar el pago
                 const resInsert = await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos`, {
                     method: 'POST',
                     headers: headersSupabase,
@@ -282,7 +292,6 @@
                     throw new Error(await resInsert.text());
                 }
 
-                // Actualizar saldo
                 await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
 
                 alert('¡Pago guardado con éxito y sumado a la caja del cliente!');
@@ -395,6 +404,35 @@
                 }
             } catch (err) {
                 console.error("Error actualizando saldo:", err);
+            }
+        }
+
+        // Función de Cierre de Día (Limpia referencias y pone en 0 saldos)
+        async function cierreDeDia() {
+            let clave = prompt("⚠️ ATENCIÓN: Esto borrará el registro de referencias y pondrá todos los saldos en 0 para iniciar un nuevo día.\n\nEscribe 'harold' para confirmar:");
+            if(clave !== 'harold') {
+                alert("Operación cancelada.");
+                return;
+            }
+
+            try {
+                // Borrar todas las referencias del día
+                await fetch(`${SUPABASE_URL}/rest/v1/referencias_pagos?id=gt.0`, {
+                    method: 'DELETE',
+                    headers: headersSupabase
+                });
+
+                // Borrar o resetear saldos de clientes
+                await fetch(`${SUPABASE_URL}/rest/v1/saldos_clientes?id=gt.0`, {
+                    method: 'DELETE',
+                    headers: headersSupabase
+                });
+
+                alert("✅ ¡Cierre de día realizado con éxito! Sistema listo para empezar de nuevo.");
+                location.reload();
+            } catch (err) {
+                console.error(err);
+                alert("Error al realizar el cierre: " + err.message);
             }
         }
 
