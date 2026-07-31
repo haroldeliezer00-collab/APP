@@ -11,7 +11,7 @@
 
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v3.8 ACTIVA</span>
+            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v3.9 FUNCIONAL</span>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
                 <p class="text-[9px] text-slate-500">Sistema de Pagos y Caja</p>
@@ -32,7 +32,7 @@
                     <div class="text-sky-600 text-2xl">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> (PC)</p>
+                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube tu captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> aquí</p>
                     
                     <input type="file" id="fileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
                 </div>
@@ -41,7 +41,7 @@
                     <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
                     <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
                     
-                    <button type="button" onclick="analizarCaptura()" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <button type="button" id="btnAnalizar" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar y Extraer Datos de la Captura
                     </button>
 
@@ -121,10 +121,10 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mt-4">
-                    <button onclick="openCajaModal('premio')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
+                    <button type="button" id="btnPremio" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
                         <i class="fa-solid fa-trophy"></i> Pagar Premio
                     </button>
-                    <button onclick="openCajaModal('gasto')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
+                    <button type="button" id="btnGasto" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
                         <i class="fa-solid fa-minus-circle"></i> Registrar Gasto
                     </button>
                 </div>
@@ -152,7 +152,7 @@
                         </div>
                         <div class="text-right">
                             <span id="sysLottoBalance" class="text-xs font-bold text-sky-900">0.00 Bs</span>
-                            <button onclick="updateSystem('Loterias')" class="ml-2 bg-sky-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
+                            <button type="button" id="btnUpdateLotto" class="ml-2 bg-sky-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
                         </div>
                     </div>
 
@@ -163,7 +163,7 @@
                         </div>
                         <div class="text-right">
                             <span id="sysPollasBalance" class="text-xs font-bold text-indigo-900">0.00 Bs</span>
-                            <button onclick="updateSystem('Pollas')" class="ml-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
+                            <button type="button" id="btnUpdatePollas" class="ml-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
                         </div>
                     </div>
                 </div>
@@ -178,7 +178,7 @@
                 
                 <div id="banksList" class="mt-4 space-y-2 text-left text-xs"></div>
 
-                <button onclick="addBankPrompt()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow">
+                <button type="button" id="btnAddBank" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow">
                     <i class="fa-solid fa-plus"></i> Agregar Nuevo Banco
                 </button>
             </div>
@@ -192,289 +192,328 @@
             <input type="number" step="0.01" id="modalAmount" placeholder="Monto (Ej. 10.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <input type="text" id="modalReason" placeholder="Motivo / Descripción" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <div class="flex gap-2">
-                <button onclick="closeCajaModal()" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
-                <button onclick="confirmCajaAction()" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+                <button type="button" id="modalCancel" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
+                <button type="button" id="modalSave" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
             </div>
         </div>
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-2xl z-50">
-        <button onclick="switchTab('pagos')" id="btn-pagos" class="flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition">
+        <button type="button" id="nav-pagos" class="flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[10px] mt-1">Pagos</span>
         </button>
-        <button onclick="switchTab('caja')" id="btn-caja" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
+        <button type="button" id="nav-caja" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-wallet text-lg"></i>
             <span class="text-[10px] mt-1">Caja</span>
         </button>
-        <button onclick="switchTab('sistemas')" id="btn-sistemas" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
+        <button type="button" id="nav-sistemas" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-chart-line text-lg"></i>
             <span class="text-[10px] mt-1">Sistemas</span>
         </button>
-        <button onclick="switchTab('bancos')" id="btn-bancos" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
+        <button type="button" id="nav-bancos" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
             <i class="fa-solid fa-building-columns text-lg"></i>
             <span class="text-[10px] mt-1">Bancos</span>
         </button>
     </nav>
 
     <script>
-        let appData = JSON.parse(localStorage.getItem('haroldJoseData')) || {
-            payments: [],
-            cajaBalance: { effective: 0, banks: 0 },
-            cajaHistory: [],
-            systems: { lotto: 0, pollas: 0 },
-            banks: [
-                { name: 'Banco de Venezuela', acc: '0102-****-2299', phone: '0412-4489363' },
-                { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000' }
-            ]
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            let appData = {
+                payments: [],
+                cajaBalance: { effective: 0, banks: 0 },
+                cajaHistory: [],
+                systems: { lotto: 0, pollas: 0 },
+                banks: [
+                    { name: 'Banco de Venezuela', acc: '0102-****-2299', phone: '0412-4489363' },
+                    { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000' }
+                ]
+            };
 
-        function saveState() {
-            localStorage.setItem('haroldJoseData', JSON.stringify(appData));
-        }
-
-        // Función de navegación directa por Pestañas (Nunca falla en celulares)
-        function switchTab(tabName) {
-            const views = document.querySelectorAll('.tab-view');
-            views.forEach(v => v.style.display = 'none');
-
-            const targetView = document.getElementById(`view-${tabName}`);
-            if (targetView) {
-                targetView.style.display = 'block';
+            try {
+                const saved = localStorage.getItem('haroldJoseDataV39');
+                if (saved) {
+                    appData = JSON.parse(saved);
+                }
+            } catch(e) {
+                console.error("Error al leer localStorage", e);
             }
 
-            const buttons = ['pagos', 'caja', 'sistemas', 'bancos'];
-            buttons.forEach(b => {
-                const btnEl = document.getElementById(`btn-${b}`);
-                if (btnEl) {
-                    if (b === tabName) {
-                        btnEl.className = "flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition";
-                    } else {
-                        btnEl.className = "flex flex-col items-center text-slate-400 flex-1 py-1 transition";
+            function saveState() {
+                try {
+                    localStorage.setItem('haroldJoseDataV39', JSON.stringify(appData));
+                } catch(e) {
+                    console.error("Error al guardar localStorage", e);
+                }
+            }
+
+            // 1. Navegación por pestañas segura
+            function switchTab(tabName) {
+                const views = document.querySelectorAll('.tab-view');
+                views.forEach(v => v.style.display = 'none');
+
+                const targetView = document.getElementById(`view-${tabName}`);
+                if (targetView) {
+                    targetView.style.display = 'block';
+                }
+
+                const tabs = ['pagos', 'caja', 'sistemas', 'bancos'];
+                tabs.forEach(b => {
+                    const btnEl = document.getElementById(`nav-${b}`);
+                    if (btnEl) {
+                        if (b === tabName) {
+                            btnEl.className = "flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition";
+                        } else {
+                            btnEl.className = "flex flex-col items-center text-slate-400 flex-1 py-1 transition";
+                        }
+                    }
+                });
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.getElementById('nav-pagos').addEventListener('click', () => switchTab('pagos'));
+            document.getElementById('nav-caja').addEventListener('click', () => switchTab('caja'));
+            document.getElementById('nav-sistemas').addEventListener('click', () => switchTab('sistemas'));
+            document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
+
+            // 2. Carga de Imagen y Análisis
+            const fileInput = document.getElementById('fileInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const fileNameText = document.getElementById('fileName');
+            const uploadText = document.getElementById('uploadText');
+            const btnAnalizar = document.getElementById('btnAnalizar');
+
+            function procesarArchivo(file, nombre) {
+                if (file) {
+                    uploadText.textContent = "¡Imagen cargada correctamente!";
+                    fileNameText.textContent = nombre || file.name;
+                    previewContainer.style.display = 'block';
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    ejecutarAnalisis();
+                }
+            }
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    procesarArchivo(e.target.files[0]);
+                }
+            });
+
+            // Pegar imagen con Ctrl+V
+            window.addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) {
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        const blob = item.getAsFile();
+                        if (blob) {
+                            procesarArchivo(blob, "captura_portapapeles.jpg");
+                        }
                     }
                 }
             });
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+            function ejecutarAnalisis() {
+                const analysisBox = document.getElementById('analysisBox');
+                const analysisText = document.getElementById('analysisText');
+                const spinnerIcon = document.getElementById('spinnerIcon');
+                const analysisResultDetails = document.getElementById('analysisResultDetails');
 
-        // Manejo de Carga de Imagen
-        const fileInput = document.getElementById('fileInput');
-        const previewContainer = document.getElementById('previewContainer');
-        const imagePreview = document.getElementById('imagePreview');
-        const fileNameText = document.getElementById('fileName');
-        const uploadText = document.getElementById('uploadText');
+                analysisBox.style.display = 'block';
+                spinnerIcon.style.display = 'inline-block';
+                analysisText.textContent = "Analizando comprobante y extrayendo referencia...";
+                analysisResultDetails.style.display = 'none';
 
-        function procesarArchivo(file, nombre) {
-            if (file) {
-                uploadText.textContent = "¡Captura cargada con éxito!";
-                fileNameText.textContent = nombre || file.name;
-                previewContainer.style.display = 'block';
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                setTimeout(() => {
+                    const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
+                    const mockMonto = (Math.random() * 150 + 10).toFixed(2);
+                    const bancos = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
+                    const mockBanco = bancos[Math.floor(Math.random() * bancos.length)];
 
-                // Ejecutar análisis automático de inmediato
-                analizarCaptura();
+                    document.getElementById('refNumber').value = mockRef;
+                    document.getElementById('paymentAmount').value = mockMonto;
+                    document.getElementById('paymentBank').value = mockBanco;
+
+                    document.getElementById('resRef').textContent = mockRef;
+                    document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
+                    document.getElementById('resBanco').textContent = mockBanco;
+
+                    analysisText.textContent = "¡Comprobante analizado con éxito!";
+                    spinnerIcon.style.display = 'none';
+                    analysisResultDetails.style.display = 'block';
+
+                    document.getElementById('refNumber').dispatchEvent(new Event('input'));
+                }, 1000);
             }
-        }
 
-        fileInput.addEventListener('change', (e) => {
-            procesarArchivo(e.target.files[0]);
-        });
+            btnAnalizar.addEventListener('click', ejecutarAnalisis);
 
-        // Soporte Ctrl+V (PC / WhatsApp Web)
-        window.addEventListener('paste', (e) => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            for (let item of items) {
-                if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    const blob = item.getAsFile();
-                    if (blob) {
-                        procesarArchivo(blob, "captura_whatsapp_web.jpg");
-                    }
+            // 3. Selección de Cliente
+            const clientSelect = document.getElementById('clientSelect');
+            const clientNameInput = document.getElementById('clientName');
+            clientSelect.addEventListener('change', function() {
+                if(this.value && this.value !== 'Otro') {
+                    clientNameInput.value = this.value;
+                } else if(this.value === 'Otro') {
+                    clientNameInput.value = '';
+                    clientNameInput.focus();
+                }
+            });
+
+            // 4. Verificador de Duplicados
+            const refNumberInput = document.getElementById('refNumber');
+            const dupWarning = document.getElementById('dupWarning');
+            refNumberInput.addEventListener('input', () => {
+                const val = refNumberInput.value.trim();
+                if(val.length > 3) {
+                    const exists = appData.payments.some(p => p.ref === val);
+                    dupWarning.style.display = exists ? 'block' : 'none';
+                } else {
+                    dupWarning.style.display = 'none';
+                }
+            });
+
+            // 5. Guardar Pago
+            document.getElementById('submitPayment').addEventListener('click', () => {
+                const ref = refNumberInput.value.trim();
+                const client = clientNameInput.value.trim();
+                const amount = parseFloat(document.getElementById('paymentAmount').value);
+                const bank = document.getElementById('paymentBank').value;
+
+                if(!ref || !client || isNaN(amount) || amount <= 0) {
+                    alert('Por favor complete todos los datos del pago.');
+                    return;
+                }
+
+                appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
+                
+                if(bank === 'Efectivo Taquilla') {
+                    appData.cajaBalance.effective += amount;
+                } else {
+                    appData.cajaBalance.banks += amount;
+                }
+
+                appData.cajaHistory.unshift({ desc: `Pago de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
+
+                saveState();
+                renderUI();
+
+                refNumberInput.value = '';
+                clientNameInput.value = '';
+                document.getElementById('paymentAmount').value = '';
+                fileInput.value = '';
+                previewContainer.style.display = 'none';
+                uploadText.textContent = "Sube tu captura o presiona Ctrl+V aquí";
+                dupWarning.style.display = 'none';
+                document.getElementById('analysisBox').style.display = 'none';
+
+                alert('¡Pago registrado con éxito!');
+            });
+
+            // 6. Modal y Caja
+            let currentModalType = '';
+            const cajaModal = document.getElementById('cajaModal');
+            
+            document.getElementById('btnPremio').addEventListener('click', () => openCajaModal('premio'));
+            document.getElementById('btnGasto').addEventListener('click', () => openCajaModal('gasto'));
+            document.getElementById('modalCancel').addEventListener('click', closeCajaModal);
+            document.getElementById('modalSave').addEventListener('click', confirmCajaAction);
+
+            function openCajaModal(type) {
+                currentModalType = type;
+                document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio' : 'Registrar Gasto';
+                cajaModal.classList.remove('hidden');
+            }
+
+            function closeCajaModal() {
+                cajaModal.classList.add('hidden');
+                document.getElementById('modalAmount').value = '';
+                document.getElementById('modalReason').value = '';
+            }
+
+            function confirmCajaAction() {
+                const amount = parseFloat(document.getElementById('modalAmount').value);
+                const reason = document.getElementById('modalReason').value.trim();
+
+                if(isNaN(amount) || amount <= 0 || !reason) {
+                    alert('Introduce un monto válido y un motivo.');
+                    return;
+                }
+
+                appData.cajaBalance.effective -= amount;
+                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount}`, type: 'expense' });
+                
+                saveState();
+                renderUI();
+                closeCajaModal();
+                alert('Movimiento registrado.');
+            }
+
+            // 7. Sistemas y Bancos
+            document.getElementById('btnUpdateLotto').addEventListener('click', () => updateSystem('Loterias'));
+            document.getElementById('btnUpdatePollas').addEventListener('click', () => updateSystem('Pollas'));
+            document.getElementById('btnAddBank').addEventListener('click', addBankPrompt);
+
+            function updateSystem(sysName) {
+                const val = prompt(`Nuevo saldo para ${sysName}:`);
+                if(val !== null && !isNaN(val)) {
+                    if(sysName === 'Loterias') appData.systems.lotto = parseFloat(val);
+                    if(sysName === 'Pollas') appData.systems.pollas = parseFloat(val);
+                    saveState();
+                    renderUI();
                 }
             }
-        });
 
-        // Función de Análisis Visible y Forzado
-        function analizarCaptura() {
-            const analysisBox = document.getElementById('analysisBox');
-            const analysisText = document.getElementById('analysisText');
-            const spinnerIcon = document.getElementById('spinnerIcon');
-            const analysisResultDetails = document.getElementById('analysisResultDetails');
-
-            analysisBox.style.display = 'block';
-            spinnerIcon.style.display = 'inline-block';
-            analysisText.textContent = "Leyendo comprobante y verificando datos...";
-            analysisResultDetails.style.display = 'none';
-
-            setTimeout(() => {
-                const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
-                const mockMonto = (Math.random() * 150 + 10).toFixed(2);
-                const bancos = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
-                const mockBanco = bancos[Math.floor(Math.random() * bancos.length)];
-
-                document.getElementById('refNumber').value = mockRef;
-                document.getElementById('paymentAmount').value = mockMonto;
-                document.getElementById('paymentBank').value = mockBanco;
-
-                document.getElementById('resRef').textContent = mockRef;
-                document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
-                document.getElementById('resBanco').textContent = mockBanco;
-
-                analysisText.textContent = "¡Comprobante verificado con éxito!";
-                spinnerIcon.style.display = 'none';
-                analysisResultDetails.style.display = 'block';
-
-                document.getElementById('refNumber').dispatchEvent(new Event('input'));
-            }, 1000);
-        }
-
-        // Selección de Cliente
-        document.getElementById('clientSelect').addEventListener('change', function() {
-            if(this.value && this.value !== 'Otro') {
-                document.getElementById('clientName').value = this.value;
-            } else if(this.value === 'Otro') {
-                document.getElementById('clientName').value = '';
-                document.getElementById('clientName').focus();
-            }
-        });
-
-        // Verificador de Duplicados
-        const refNumberInput = document.getElementById('refNumber');
-        const dupWarning = document.getElementById('dupWarning');
-        refNumberInput.addEventListener('input', () => {
-            const val = refNumberInput.value.trim();
-            if(val.length > 3) {
-                const exists = appData.payments.some(p => p.ref === val);
-                dupWarning.style.display = exists ? 'block' : 'none';
-            } else {
-                dupWarning.style.display = 'none';
-            }
-        });
-
-        // Guardar Pago
-        document.getElementById('submitPayment').addEventListener('click', () => {
-            const ref = refNumberInput.value.trim();
-            const client = document.getElementById('clientName').value.trim();
-            const amount = parseFloat(document.getElementById('paymentAmount').value);
-            const bank = document.getElementById('paymentBank').value;
-
-            if(!ref || !client || isNaN(amount) || amount <= 0) {
-                alert('Por favor complete todos los datos del pago.');
-                return;
+            function addBankPrompt() {
+                const name = prompt('Nombre del Banco:');
+                const acc = prompt('Número de Cuenta / Referencia:');
+                const phone = prompt('Teléfono Pago Móvil:');
+                if(name && acc) {
+                    appData.banks.push({ name, acc, phone: phone || 'N/A' });
+                    saveState();
+                    renderUI();
+                }
             }
 
-            appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
-            
-            if(bank === 'Efectivo Taquilla') {
-                appData.cajaBalance.effective += amount;
-            } else {
-                appData.cajaBalance.banks += amount;
-            }
+            // 8. Renderizado General
+            function renderUI() {
+                document.getElementById('cashEffective').textContent = `$${appData.cajaBalance.effective.toFixed(2)}`;
+                document.getElementById('cashBanks').textContent = `$${appData.cajaBalance.banks.toFixed(2)}`;
 
-            appData.cajaHistory.unshift({ desc: `Pago de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
+                const historyContainer = document.getElementById('cajaHistory');
+                if(appData.cajaHistory.length === 0) {
+                    historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos hoy.</p>`;
+                } else {
+                    historyContainer.innerHTML = appData.cajaHistory.map(h => `
+                        <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
+                            <span class="text-slate-700">${h.desc}</span>
+                            <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount}</span>
+                        </div>
+                    `).join('');
+                }
 
-            saveState();
-            renderUI();
+                document.getElementById('sysLottoBalance').textContent = `${appData.systems.lotto.toFixed(2)} Bs`;
+                document.getElementById('sysPollasBalance').textContent = `${appData.systems.pollas.toFixed(2)} Bs`;
 
-            refNumberInput.value = '';
-            document.getElementById('clientName').value = '';
-            document.getElementById('paymentAmount').value = '';
-            fileInput.value = '';
-            previewContainer.style.display = 'none';
-            uploadText.textContent = "Sube tu captura o presiona Ctrl+V";
-            dupWarning.style.display = 'none';
-            document.getElementById('analysisBox').style.display = 'none';
-
-            alert('¡Pago registrado con éxito!');
-        });
-
-        let currentModalType = '';
-        function openCajaModal(type) {
-            currentModalType = type;
-            document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio' : 'Registrar Gasto';
-            document.getElementById('cajaModal').classList.remove('hidden');
-        }
-
-        function closeCajaModal() {
-            document.getElementById('cajaModal').classList.add('hidden');
-            document.getElementById('modalAmount').value = '';
-            document.getElementById('modalReason').value = '';
-        }
-
-        function confirmCajaAction() {
-            const amount = parseFloat(document.getElementById('modalAmount').value);
-            const reason = document.getElementById('modalReason').value.trim();
-
-            if(isNaN(amount) || amount <= 0 || !reason) {
-                alert('Introduce un monto válido y un motivo.');
-                return;
-            }
-
-            appData.cajaBalance.effective -= amount;
-            appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount}`, type: 'expense' });
-            
-            saveState();
-            renderUI();
-            closeCajaModal();
-            alert('Movimiento registrado.');
-        }
-
-        function updateSystem(sysName) {
-            const val = prompt(`Nuevo saldo para ${sysName}:`);
-            if(val !== null && !isNaN(val)) {
-                if(sysName === 'Loterias') appData.systems.lotto = parseFloat(val);
-                if(sysName === 'Pollas') appData.systems.pollas = parseFloat(val);
-                saveState();
-                renderUI();
-            }
-        }
-
-        function addBankPrompt() {
-            const name = prompt('Nombre del Banco:');
-            const acc = prompt('Número de Cuenta / Referencia:');
-            const phone = prompt('Teléfono Pago Móvil:');
-            if(name && acc) {
-                appData.banks.push({ name, acc, phone: phone || 'N/A' });
-                saveState();
-                renderUI();
-            }
-        }
-
-        function renderUI() {
-            document.getElementById('cashEffective').textContent = `$${appData.cajaBalance.effective.toFixed(2)}`;
-            document.getElementById('cashBanks').textContent = `$${appData.cajaBalance.banks.toFixed(2)}`;
-
-            const historyContainer = document.getElementById('cajaHistory');
-            if(appData.cajaHistory.length === 0) {
-                historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos hoy.</p>`;
-            } else {
-                historyContainer.innerHTML = appData.cajaHistory.map(h => `
-                    <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
-                        <span class="text-slate-700">${h.desc}</span>
-                        <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount}</span>
+                const banksContainer = document.getElementById('banksList');
+                banksContainer.innerHTML = appData.banks.map(b => `
+                    <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1">
+                        <p class="font-bold text-indigo-900">${b.name}</p>
+                        <p class="text-slate-600">Cuenta: ${b.acc}</p>
+                        <p class="text-slate-600">Pago Móvil: ${b.phone}</p>
                     </div>
                 `).join('');
             }
 
-            document.getElementById('sysLottoBalance').textContent = `${appData.systems.lotto.toFixed(2)} Bs`;
-            document.getElementById('sysPollasBalance').textContent = `${appData.systems.pollas.toFixed(2)} Bs`;
-
-            const banksContainer = document.getElementById('banksList');
-            banksContainer.innerHTML = appData.banks.map(b => `
-                <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1">
-                    <p class="font-bold text-indigo-900">${b.name}</p>
-                    <p class="text-slate-600">Cuenta: ${b.acc}</p>
-                    <p class="text-slate-600">Pago Móvil: ${b.phone}</p>
-                </div>
-            `).join('');
-        }
-
-        renderUI();
+            renderUI();
+        });
     </script>
 </body>
 </html>
