@@ -22,9 +22,9 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-grow max-w-md mx-auto w-full p-4 mb-16">
+    <main class="flex-grow max-w-md mx-auto w-full p-4 mb-20">
 
-        <!-- SECCIÓN 1: REGISTRAR PAGO (VALIDACIÓN DE REFERENCIAS) -->
+        <!-- SECCIÓN 1: REGISTRAR PAGO Y VALIDAR COMPROBANTE -->
         <div id="seccion-pago" class="space-y-4">
             <div class="bg-white p-6 rounded-2xl shadow-md text-center border border-sky-100">
                 <h2 class="text-lg font-semibold text-sky-800 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Registrar Pago Recibido</h2>
@@ -32,7 +32,7 @@
                 <div class="border-2 border-dashed border-sky-300 rounded-xl p-6 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer relative" id="drop-zone">
                     <div id="loading-indicator" class="hidden">
                         <i class="fa-solid fa-spinner fa-spin text-3xl text-sky-600 mb-2"></i>
-                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante multibanco...</p>
+                        <p class="text-sm text-sky-800 font-bold">Leyendo comprobante y validando agencia...</p>
                     </div>
                     <div id="upload-prompt">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
@@ -42,36 +42,57 @@
                 </div>
             </div>
 
-            <!-- Formulario para Guardar si la referencia es nueva -->
+            <!-- Formulario para Guardar si el comprobante es válido -->
             <div id="form-referencia" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 hidden space-y-3">
-                <h3 class="text-sm font-bold text-slate-700">Detalles del Comprobante</h3>
-                <input type="text" id="input-ref" placeholder="Número de Referencia" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-slate-100 font-bold" readonly>
-                <input type="text" id="input-cliente-pago" placeholder="Nombre del Cliente" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <input type="number" id="input-monto" placeholder="Monto (VES / USD)" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR PAGO</button>
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-emerald-800 text-xs font-bold text-center">
+                    <i class="fa-solid fa-circle-check mr-1"></i> ¡Comprobante verificado a nombre de la Agencia!
+                </div>
+                <h3 class="text-sm font-bold text-slate-700">Completar Datos del Pago</h3>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Referencia / Operación</label>
+                    <input type="text" id="input-ref" class="w-full p-3 border rounded-xl text-sm bg-slate-100 font-bold" readonly>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Nombre del Cliente</label>
+                    <input type="text" id="input-cliente-pago" placeholder="Ej. Juan Pérez" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Monto del Pago (Bs / USD)</label>
+                    <input type="number" step="0.01" id="input-monto" placeholder="Ej. 200.00" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                </div>
+                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR Y SUMAR A SALDO</button>
             </div>
         </div>
 
-        <!-- SECCIÓN 2: CAJA RÁPIDA Y SALDOS -->
+        <!-- SECCIÓN 2: CAJA RÁPIDA Y SALDOS DE CLIENTES -->
         <div id="seccion-caja" class="space-y-4 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 space-y-4">
-                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-wallet mr-2"></i>Caja Rápida</h2>
+                <h2 class="text-lg font-semibold text-sky-800 text-center"><i class="fa-solid fa-wallet mr-2"></i>Caja Rápida de Clientes</h2>
                 
-                <input type="text" id="caja-cliente" placeholder="Nombre del Cliente" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500">
+                <!-- Selector de clientes registrados -->
+                <div>
+                    <label class="text-xs text-slate-500 font-bold mb-1 block">Selecciona un Cliente:</label>
+                    <select id="select-cliente-caja" onchange="seleccionarClienteCaja()" class="w-full p-3 border rounded-xl text-sm bg-slate-50 font-semibold focus:ring-2 focus:ring-sky-500">
+                        <option value="">-- Elige un cliente con saldo --</option>
+                    </select>
+                </div>
 
-                <div class="text-center bg-sky-50 p-4 rounded-xl">
-                    <span class="text-xs text-slate-500 uppercase tracking-wider block font-bold">Saldo Actual</span>
-                    <span id="caja-saldo" class="text-3xl font-extrabold text-sky-900">0</span>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <input type="text" id="caja-cliente" placeholder="Nombre del Cliente Activo" class="w-full p-2.5 border rounded-xl text-sm bg-white font-bold mb-3" readonly>
+                    <div class="text-center">
+                        <span class="text-xs text-slate-500 uppercase tracking-wider block font-bold">Saldo Disponible</span>
+                        <span id="caja-saldo" class="text-3xl font-extrabold text-sky-900">0.00</span>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="modificarSaldo('pago')" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-700"><i class="fa-solid fa-plus mr-1"></i> Pago</button>
-                    <button onclick="modificarSaldo('premio')" class="bg-emerald-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-800"><i class="fa-solid fa-plus mr-1"></i> Premio</button>
-                    <button onclick="modificarSaldo('jugada')" class="bg-rose-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-rose-700"><i class="fa-solid fa-minus mr-1"></i> Jugada</button>
-                    <button onclick="modificarSaldo('transf')" class="bg-rose-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-rose-800"><i class="fa-solid fa-minus mr-1"></i> Transf</button>
+                    <button onclick="modificarSaldo('pago')" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-700 shadow"><i class="fa-solid fa-plus mr-1"></i> + Ingresar Pago</button>
+                    <button onclick="modificarSaldo('premio')" class="bg-emerald-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-800 shadow"><i class="fa-solid fa-plus mr-1"></i> + Premio</button>
+                    <button onclick="modificarSaldo('jugada')" class="bg-rose-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-rose-700 shadow"><i class="fa-solid fa-minus mr-1"></i> - Jugada</button>
+                    <button onclick="modificarSaldo('transf')" class="bg-slate-700 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-slate-800 shadow"><i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Retirar / Vaciar</button>
                 </div>
 
-                <button onclick="copiarWhatsApp()" class="w-full bg-sky-700 text-white py-3 rounded-xl font-semibold text-sm hover:bg-sky-800"><i class="fa-brands fa-whatsapp mr-2"></i> Copiar a WhatsApp</button>
+                <button onclick="copiarWhatsApp()" class="w-full bg-sky-700 text-white py-3 rounded-xl font-semibold text-sm hover:bg-sky-800 shadow"><i class="fa-brands fa-whatsapp mr-2"></i> Copiar Mensaje WhatsApp</button>
                 <button onclick="limpiarCaja()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold hover:bg-slate-300">Limpiar Pantalla</button>
             </div>
         </div>
@@ -101,7 +122,7 @@
     </main>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-lg max-w-md mx-auto">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-lg max-w-md mx-auto z-50">
         <button onclick="cambiarTab('pago')" class="text-sky-600 text-xl px-4 py-1" id="nav-pago"><i class="fa-solid fa-house"></i></button>
         <button onclick="cambiarTab('caja')" class="text-slate-400 text-xl px-4 py-1" id="nav-caja"><i class="fa-solid fa-sack-dollar"></i></button>
         <button onclick="cambiarTab('datos')" class="text-slate-400 text-xl px-4 py-1" id="nav-datos"><i class="fa-solid fa-credit-card"></i></button>
@@ -113,6 +134,13 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_iehKAY4RUZriA8reFLHDfg_N8gdTdA8';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let listaClientesCache = [];
+
+        // Cargar clientes al iniciar
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarClientesSaldos();
+        });
 
         function cambiarTab(tab) {
             document.getElementById('seccion-pago').classList.add('hidden');
@@ -129,6 +157,7 @@
             } else if(tab === 'caja') {
                 document.getElementById('seccion-caja').classList.remove('hidden');
                 document.getElementById('nav-caja').className = "text-sky-600 text-xl px-4 py-1";
+                cargarClientesSaldos();
             } else if(tab === 'datos') {
                 document.getElementById('seccion-datos').classList.remove('hidden');
                 document.getElementById('nav-datos').className = "text-sky-600 text-xl px-4 py-1";
@@ -151,13 +180,12 @@
             mostrarCargando(true);
             document.getElementById('form-referencia').classList.add('hidden');
 
-            // Seguridad por si la librería se traba: máximo 12 segundos
             let timeoutTriggered = false;
             const timer = setTimeout(() => {
                 timeoutTriggered = true;
                 mostrarCargando(false);
-                alert("⚠️ El lector tardó demasiado procesando esta imagen. Intenta con otra captura más clara.");
-            }, 12000);
+                alert("⚠️ El lector tardó procesando la imagen. Intenta con otra captura nítida.");
+            }, 25000);
 
             try {
                 const resultadoOCR = await Tesseract.recognize(imageFile, 'es');
@@ -165,15 +193,32 @@
                 clearTimeout(timer);
 
                 const textoLeido = resultadoOCR.data.text;
+                const textoLimpio = textoLeido.replace(/\s+/g, ' ').toUpperCase();
+
+                // 1. VALIDAR SI LOS DATOS SON DE LA AGENCIA
+                const esDeLaAgencia = 
+                    textoLimpio.includes('04124489363') || 
+                    textoLimpio.includes('18274410') || 
+                    textoLimpio.includes('7201') || 
+                    textoLimpio.includes('HAROLD') || 
+                    textoLimpio.includes('GALEA');
+
+                if (!esDeLaAgencia) {
+                    mostrarCargando(false);
+                    alert("❌ ¡ALERTA! Estos datos no corresponden a la agencia (Verifica el número, cédula o beneficiario del comprobante).");
+                    return;
+                }
+
+                // 2. EXTRAER NÚMERO DE REFERENCIA
                 let referenciaEncontrada = extraerNumeroReferencia(textoLeido);
 
                 if (!referenciaEncontrada) {
                     mostrarCargando(false);
-                    alert("⚠️ No se pudo ubicar el número de referencia en este comprobante. Verifica que se vea nítido.");
+                    alert("⚠️ El comprobante es válido de la agencia, pero no se pudo leer automáticamente el número de referencia. Escríbelo manualmente si lo deseas.");
                     return;
                 }
 
-                // Consultar Supabase
+                // 3. VERIFICAR SI YA FUE USADO EN SUPABASE
                 const { data, error } = await supabaseClient
                     .from('referencias_pagos')
                     .select('*')
@@ -183,11 +228,11 @@
                 mostrarCargando(false);
 
                 if (data) {
-                    alert(`❌ ¡ALERTA DE PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue registrada anteriormente por el cliente: "${data.cliente}".`);
+                    alert(`❌ ¡PAGO REPETIDO!\n\nLa referencia ${referenciaEncontrada} ya fue registrada con anterioridad por el cliente: "${data.cliente}".`);
                 } else {
                     document.getElementById('input-ref').value = referenciaEncontrada;
                     document.getElementById('form-referencia').classList.remove('hidden');
-                    alert(`✅ ¡Comprobante leído con éxito!\nReferencia detectada: ${referenciaEncontrada}`);
+                    alert(`✅ ¡Comprobante verificado con éxito!\nReferencia detectada: ${referenciaEncontrada}`);
                 }
 
             } catch (err) {
@@ -195,22 +240,18 @@
                 clearTimeout(timer);
                 mostrarCargando(false);
                 console.error(err);
-                alert("❌ Ocurrió un error leyendo el comprobante.");
+                alert("❌ Ocurrió un error procesando el comprobante.");
             }
         }
 
         function extraerNumeroReferencia(texto) {
             const textoLimpio = texto.replace(/\r?\n/g, ' ');
-
-            // 1. Palabras clave comunes en bancos (Banesco, Provincial, Venezuela, etc.)
-            const regexEtiquetas = /(?:referencia|operaci[oó]n|ref\.?|nro\.?)\D*?(\d{4,12})/i;
+            const regexEtiquetas = /(?:referencia|operaci[oó]n|ref\.?|nro\.?)\D*?(\d{4,15})/i;
             const match = textoLimpio.match(regexEtiquetas);
             if (match && match[1]) {
                 return match[1];
             }
-
-            // 2. Búsqueda secundaria de números largos típicos de transacciones
-            const numeros = textoLimpio.match(/\b\d{6,12}\b/g);
+            const numeros = textoLimpio.match(/\b\d{6,15}\b/g);
             if (numeros && numeros.length > 0) {
                 return numeros[0];
             }
@@ -237,26 +278,126 @@
 
         async function guardarPago() {
             const ref = document.getElementById('input-ref').value;
-            const cliente = document.getElementById('input-cliente-pago').value;
-            const monto = document.getElementById('input-monto').value;
+            const cliente = document.getElementById('input-cliente-pago').value.trim();
+            const monto = parseFloat(document.getElementById('input-monto').value);
 
-            if(!ref || !cliente || !monto) {
-                alert('Por favor completa todos los campos.');
+            if(!ref || !cliente || isNaN(monto)) {
+                alert('Por favor completa todos los campos correctamente.');
                 return;
             }
 
+            // Guardar referencia
             const { error } = await supabaseClient
                 .from('referencias_pagos')
                 .insert([{ referencia: ref, cliente: cliente, monto: monto }]);
 
             if(error) {
-                alert('Error al guardar: ' + error.message);
+                alert('Error al guardar pago: ' + error.message);
+                return;
+            }
+
+            // Actualizar o crear saldo del cliente en tabla saldos_clientes
+            await actualizarSaldoEnBaseDatos(cliente, monto, 'ingresar');
+
+            alert('¡Pago registrado con éxito y sumado al saldo del cliente!');
+            document.getElementById('form-referencia').classList.add('hidden');
+            document.getElementById('input-ref').value = '';
+            document.getElementById('input-cliente-pago').value = '';
+            document.getElementById('input-monto').value = '';
+            
+            cargarClientesSaldos();
+        }
+
+        async function cargarClientesSaldos() {
+            const { data, error } = await supabaseClient
+                .from('saldos_clientes')
+                .select('*');
+
+            if(error) {
+                console.error("Error cargando saldos:", error);
+                return;
+            }
+
+            listaClientesCache = data || [];
+            const select = document.getElementById('select-cliente-caja');
+            select.innerHTML = '<option value="">-- Elige un cliente --</option>';
+
+            listaClientesCache.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.nombre;
+                opt.textContent = `${c.nombre} (Saldo: ${c.saldo})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function seleccionarClienteCaja() {
+            const nombreSeleccionado = document.getElementById('select-cliente-caja').value;
+            if(!nombreSeleccionado) {
+                document.getElementById('caja-cliente').value = '';
+                document.getElementById('caja-saldo').innerText = '0.00';
+                return;
+            }
+
+            const clienteEncontrado = listaClientesCache.find(c => c.nombre === nombreSeleccionado);
+            if(clienteEncontrado) {
+                document.getElementById('caja-cliente').value = clienteEncontrado.nombre;
+                document.getElementById('caja-saldo').innerText = clienteEncontrado.saldo.toFixed(2);
+            }
+        }
+
+        async function modificarSaldo(tipo) {
+            const clienteNombre = document.getElementById('caja-cliente').value;
+            if(!clienteNombre) {
+                alert('Por favor selecciona primero un cliente de la lista.');
+                return;
+            }
+
+            const montoStr = prompt(`Ingresa el monto para ${tipo.toUpperCase()}:`);
+            if(!montoStr) return;
+            const monto = parseFloat(montoStr);
+            if(isNaN(monto) || monto <= 0) {
+                alert('Monto inválido.');
+                return;
+            }
+
+            let saldoActual = parseFloat(document.getElementById('caja-saldo').innerText);
+            let nuevoSaldo = saldoActual;
+
+            if(tipo === 'pago' || tipo === 'premio') {
+                nuevoSaldo += monto;
+            } else if(tipo === 'jugada') {
+                nuevoSaldo -= monto;
+            } else if(tipo === 'transf') {
+                nuevoSaldo = 0; // Vaciar / Retirar todo
+            }
+
+            document.getElementById('caja-saldo').innerText = nuevoSaldo.toFixed(2);
+
+            // Guardar en Supabase
+            await actualizarSaldoEnBaseDatos(clienteNombre, nuevoSaldo, 'fijar');
+            cargarClientesSaldos();
+            alert(`¡Saldo actualizado correctamente! Nuevo saldo: ${nuevoSaldo.toFixed(2)}`);
+        }
+
+        async function actualizarSaldoEnBaseDatos(nombreCliente, montoAccion, modo) {
+            // Verificar si el cliente ya existe en saldos_clientes
+            const { data: existente } = await supabaseClient
+                .from('saldos_clientes')
+                .select('*')
+                .eq('nombre', nombreCliente)
+                .single();
+
+            if(existente) {
+                let saldoFinal = modo === 'ingresar' ? existente.saldo + montoAccion : montoAccion;
+                await supabaseClient
+                    .from('saldos_clientes')
+                    .update({ saldo: saldoFinal })
+                    .eq('nombre', nombreCliente);
             } else {
-                alert('¡Pago guardado y registrado con éxito!');
-                document.getElementById('form-referencia').classList.add('hidden');
-                document.getElementById('input-ref').value = '';
-                document.getElementById('input-cliente-pago').value = '';
-                document.getElementById('input-monto').value = '';
+                let saldoInicial = modo === 'ingresar' ? montoAccion : 0;
+                await supabaseClient
+                    .from('saldos_clientes')
+                    .insert([{ nombre: nombreCliente, saldo: saldoInicial }]);
             }
         }
 
@@ -269,28 +410,15 @@
         function copiarWhatsApp() {
             const cliente = document.getElementById('caja-cliente').value || 'Cliente';
             const saldo = document.getElementById('caja-saldo').innerText;
-            const mensaje = `Hola ${cliente}, tu saldo actual en Centro de Apuestas Harold José es: ${saldo}. ¡Muchísima suerte!`;
+            const mensaje = `Hola ${cliente}, tu saldo actual en Centro de Apuestas Harold José es: ${saldo} Bs. ¡Muchísima suerte!`;
             navigator.clipboard.writeText(mensaje);
             alert('¡Mensaje copiado para enviar por WhatsApp!');
         }
 
         function limpiarCaja() {
+            document.getElementById('select-cliente-caja').value = '';
             document.getElementById('caja-cliente').value = '';
-            document.getElementById('caja-saldo').innerText = '0';
-        }
-
-        function modificarSaldo(tipo) {
-            const montoStr = prompt("Ingresa el monto:");
-            if(!montoStr) return;
-            const monto = parseFloat(montoStr);
-            let saldoActual = parseFloat(document.getElementById('caja-saldo').innerText);
-
-            if(tipo === 'pago' || tipo === 'premio') {
-                saldoActual += monto;
-            } else {
-                saldoActual -= monto;
-            }
-            document.getElementById('caja-saldo').innerText = saldoActual;
+            document.getElementById('caja-saldo').innerText = '0.00';
         }
     </script>
 </body>
