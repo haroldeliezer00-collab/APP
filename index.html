@@ -2,291 +2,195 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Agencia Harold José - Control Total</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Apuestas Harold José</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Tesseract liviano por CDN optimizado -->
-    <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
-    <style>
-        /* Optimización táctil para móviles */
-        button, select, input { touch-action: manipulation; }
-    </style>
 </head>
-<body class="bg-sky-50 text-slate-800 min-h-screen flex flex-col justify-between">
+<body class="bg-slate-100 text-slate-800 pb-20">
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-30">
-        <h1 class="text-lg font-bold text-sky-900">Centro de Apuestas <span class="text-sky-600">Harold José</span></h1>
-        <p class="text-[11px] text-slate-500">Sistema Integral de Pagos, Sistemas y Bancos</p>
+    <!-- Encabezado -->
+    <header class="bg-white shadow-sm py-4 px-4 text-center sticky top-0 z-50">
+        <h1 class="text-xl font-bold text-sky-900">Centro de Apuestas Harold José</h1>
+        <p class="text-xs text-slate-500">Sistema Integral de Pagos, Sistemas y Bancos</p>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-md mx-auto w-full p-3 mb-24">
+    <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- SECCIÓN 1: REGISTRAR PAGO Y VALIDAR (PAGOS) -->
-        <div id="seccion-pago" class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-md text-center border border-sky-100">
-                <h2 class="text-base font-semibold text-sky-800 mb-3"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Registrar Pago Recibido</h2>
+        <!-- ================= VISTA: PAGOS ================= -->
+        <section id="view-pagos" class="view-section space-y-4">
+            <!-- Registrar Pago Recibido -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Recibido
+                </h2>
                 
-                <div class="border-2 border-dashed border-sky-300 rounded-xl p-5 bg-sky-50/50 active:bg-sky-100 transition cursor-pointer relative" id="drop-zone">
-                    <div id="upload-prompt">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
-                        <p class="text-xs text-slate-600 font-medium">Toca aquí para elegir captura o sube tu archivo</p>
-                        <button class="mt-2 bg-sky-600 text-white text-xs py-2 px-4 rounded-xl font-semibold shadow">Seleccionar Captura</button>
+                <!-- Área de Carga de Archivo -->
+                <div id="uploadArea" class="border-2 border-dashed border-sky-300 rounded-xl p-6 text-center bg-sky-50/50 cursor-pointer hover:bg-sky-50 transition">
+                    <div class="text-sky-600 text-3xl mb-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                    <p id="uploadText" class="text-xs text-slate-600 font-medium mb-3">Toca aquí para elegir captura o sube tu archivo</p>
+                    <button type="button" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow transition pointer-events-none">
+                        Seleccionar Captura
+                    </button>
+                    <!-- Input oculto para manejar archivos desde el teléfono -->
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
                 </div>
-                <!-- Mensaje de estado OCR y Antifraude -->
-                <div id="estado-lectura" class="mt-3 text-xs font-semibold hidden p-3 rounded-xl border"></div>
+
+                <!-- Contenedor de Vista Previa -->
+                <div id="previewContainer" class="hidden mt-3 text-center">
+                    <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
+                    <p id="fileName" class="text-xs text-slate-500 mt-1 font-medium"></p>
+                </div>
             </div>
 
-            <!-- Formulario de Registro -->
-            <div id="form-referencia" class="bg-white p-4 rounded-2xl shadow-md border border-sky-100 space-y-3">
-                <div class="bg-sky-50 p-2 rounded-xl border border-sky-200 text-sky-900 text-xs font-bold text-center">
-                    <i class="fa-solid fa-bolt mr-1"></i> Lector Móvil Optimizado
+            <!-- Formulario de Datos -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-sky-600"></i> Lector Móvil Optimizado
                 </div>
+
                 <div>
-                    <label class="text-xs text-slate-500 font-semibold">Número de Referencia / Operación</label>
-                    <input type="text" id="input-ref" placeholder="Ej. 006851779829" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 bg-slate-50 font-bold text-sky-900">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
+                    <input type="text" id="refNumber" placeholder="Ej. 006851779829" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
+
                 <div>
-                    <label class="text-xs text-slate-500 font-semibold">Nombre del Cliente</label>
-                    <input type="text" id="input-cliente-pago" placeholder="Ej. Edgar" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del Cliente</label>
+                    <input type="text" id="clientName" placeholder="Ej. Edgar" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
+
                 <div>
-                    <label class="text-xs text-slate-500 font-semibold">Monto del Pago (Bs / USD)</label>
-                    <input type="number" step="0.01" id="input-monto" placeholder="Ej. 800.00" class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 font-semibold">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto del Pago (Bs / USD)</label>
+                    <input type="number" id="paymentAmount" placeholder="0.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
-                <button onclick="guardarPago()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold shadow hover:bg-sky-700 transition">GUARDAR PAGO</button>
+
+                <button type="button" id="submitPayment" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow transition">
+                    Guardar y Registrar Pago
+                </button>
             </div>
-        </div>
+        </section>
 
-        <!-- SECCIÓN 2: CAJA RÁPIDA Y SALDOS DE CLIENTES -->
-        <div id="seccion-caja" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 space-y-3">
-                <h2 class="text-base font-semibold text-sky-800 text-center"><i class="fa-solid fa-wallet mr-2"></i>Caja Rápida de Clientes</h2>
-                
-                <div>
-                    <label class="text-xs text-slate-500 font-bold mb-1 block">Selecciona un Cliente:</label>
-                    <select id="select-cliente-caja" onchange="seleccionarClienteCaja()" class="w-full p-3 border rounded-xl text-sm bg-slate-50 font-semibold focus:ring-2 focus:ring-sky-500">
-                        <option value="">-- Elige un cliente --</option>
-                    </select>
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <input type="text" id="caja-cliente" placeholder="Nombre del Cliente Activo" class="w-full p-2.5 border rounded-xl text-sm bg-white font-bold mb-2" readonly>
-                    <div class="text-center">
-                        <span class="text-xs text-slate-500 uppercase tracking-wider block font-bold">Saldo Disponible</span>
-                        <span id="caja-saldo" class="text-3xl font-extrabold text-sky-900">0.00</span>
+        <!-- ================= VISTA: CAJA ================= -->
+        <section id="view-caja" class="view-section space-y-4" style="display: none;">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
+                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
+                <p class="text-xs text-slate-500 mt-1">Control diario de ingresos, egresos y arqueo de caja de la taquilla.</p>
+                <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Efectivo Disponible:</span>
+                        <span class="text-slate-800 font-bold">$0.00 / 0.00 Bs</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-500">Pagos Móviles / Bancos:</span>
+                        <span class="text-slate-800 font-bold">$0.00 / 0.00 Bs</span>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="modificarSaldo('pago')" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-xs hover:bg-emerald-700 shadow"><i class="fa-solid fa-plus mr-1"></i> + Ingresar Pago</button>
-                    <button onclick="modificarSaldo('premio')" class="bg-emerald-700 text-white py-2.5 rounded-xl font-medium text-xs hover:bg-emerald-800 shadow"><i class="fa-solid fa-plus mr-1"></i> + Premio</button>
-                    <button onclick="modificarSaldo('jugada')" class="bg-rose-600 text-white py-2.5 rounded-xl font-medium text-xs hover:bg-rose-700 shadow"><i class="fa-solid fa-minus mr-1"></i> - Jugada</button>
-                    <button onclick="modificarSaldo('transf')" class="bg-slate-700 text-white py-2.5 rounded-xl font-medium text-xs hover:bg-slate-800 shadow"><i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Vaciar Saldo</button>
-                </div>
-
-                <button onclick="copiarWhatsApp()" class="w-full bg-sky-700 text-white py-3 rounded-xl font-semibold text-xs hover:bg-sky-800 shadow"><i class="fa-brands fa-whatsapp mr-2"></i> Copiar Mensaje WhatsApp</button>
-                <button onclick="limpiarCaja()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold">Limpiar Pantalla</button>
-
-                <hr class="border-slate-200 my-1">
-                <button onclick="cierreDeDia()" class="w-full bg-rose-600 text-white py-3 rounded-xl font-semibold text-xs hover:bg-rose-700 shadow"><i class="fa-solid fa-power-off mr-1"></i> Cierre de Día (Reiniciar Todo)</button>
             </div>
-        </div>
+        </section>
 
-        <!-- SECCIÓN 3: CONTROL DE SISTEMAS DE VENTA (DIARIO / SEMANAL) -->
-        <div id="seccion-sistemas" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-2xl shadow-md border border-sky-100 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-base font-bold text-sky-800"><i class="fa-solid fa-chart-line mr-2"></i>Control Sistemas</h2>
-                    <button onclick="abrirModalSistema()" class="bg-sky-600 text-white text-xs px-3 py-2 rounded-xl font-semibold shadow"><i class="fa-solid fa-plus mr-1"></i> Nuevo</button>
-                </div>
-
-                <!-- Selector de Día -->
-                <div>
-                    <label class="text-xs text-slate-500 font-bold mb-1 block">Selecciona el Día:</label>
-                    <select id="select-dia-sistema" onchange="cambiarDiaSistema()" class="w-full p-2.5 border rounded-xl text-sm bg-sky-50 font-bold text-sky-900 focus:ring-2 focus:ring-sky-500">
-                        <option value="LUNES">LUNES</option>
-                        <option value="MARTES">MARTES</option>
-                        <option value="MIERCOLES">MIÉRCOLES</option>
-                        <option value="JUEVES">JUEVES</option>
-                        <option value="VIERNES">VIERNES</option>
-                        <option value="SABADO">SÁBADO</option>
-                        <option value="DOMINGO">DOMINGO</option>
-                    </select>
-                </div>
-
-                <!-- Lista de Sistemas para el Día -->
-                <div id="contenedor-sistemas" class="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-                    <!-- Se llena dinámicamente -->
-                </div>
-
-                <!-- Resumen del Día -->
-                <div class="bg-sky-900 text-white p-3 rounded-xl space-y-1 text-xs">
-                    <p class="font-bold border-b border-sky-700 pb-1 text-center text-sky-200 uppercase">Resumen Día: <span id="lbl-dia-actual">LUNES</span></p>
-                    <div class="flex justify-between"><span>Total Ventas:</span> <span id="res-total-ventas" class="font-bold">0.00 Bs</span></div>
-                    <div class="flex justify-between"><span>Total Premios:</span> <span id="res-total-premios" class="font-bold">0.00 Bs</span></div>
-                    <div class="flex justify-between"><span>Comisión (Tu Ganancia):</span> <span id="res-total-comision" class="font-bold text-emerald-400">0.00 Bs</span></div>
-                    <div class="flex justify-between text-sm border-t border-sky-700 pt-1 font-extrabold text-amber-300"><span>Neto (Dueño Sistema):</span> <span id="res-total-neto">0.00 Bs</span></div>
-                </div>
-
-                <button onclick="guardarControlSistemas()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm shadow hover:bg-emerald-700"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar Cambios del Día</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 4: CONTROL DE BANCOS Y BALANCE GLOBAL -->
-        <div id="seccion-bancos" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-md border border-sky-100 space-y-3">
-                <h2 class="text-base font-semibold text-sky-800 text-center"><i class="fa-solid fa-building-columns mr-2"></i>Bancos y Balance Global</h2>
-                
-                <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <div>
-                        <label class="text-xs text-slate-500 font-semibold">Saldo Cuenta 1 (Banco)</label>
-                        <input type="number" step="0.01" id="banco-cta1" oninput="calcularBalanceGlobal()" placeholder="0.00" class="w-full p-2.5 border rounded-xl text-sm bg-white font-bold text-sky-900">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-500 font-semibold">Saldo Cuenta 2 (Banco)</label>
-                        <input type="number" step="0.01" id="banco-cta2" oninput="calcularBalanceGlobal()" placeholder="0.00" class="w-full p-2.5 border rounded-xl text-sm bg-white font-bold text-sky-900">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-500 font-semibold">Saldo Cuenta 3 (Banco)</label>
-                        <input type="number" step="0.01" id="banco-cta3" oninput="calcularBalanceGlobal()" placeholder="0.00" class="w-full p-2.5 border rounded-xl text-sm bg-white font-bold text-sky-900">
-                    </div>
-                </div>
-
-                <!-- Tarjeta de Resumen Global -->
-                <div class="bg-sky-800 text-white p-4 rounded-2xl text-center space-y-2 shadow">
-                    <span class="text-[11px] uppercase tracking-wider text-sky-200 font-bold block">Total en Bancos</span>
-                    <span id="lbl-total-bancos" class="text-2xl font-extrabold text-white block">0.00 Bs</span>
-                    <hr class="border-sky-700 my-1">
-                    <span class="text-[11px] uppercase tracking-wider text-sky-200 font-bold block">Saldo Clientes Activos (Taquilla)</span>
-                    <span id="lbl-total-taquilla" class="text-lg font-bold text-emerald-300 block">0.00 Bs</span>
-                    <hr class="border-sky-700 my-1">
-                    <span class="text-[11px] uppercase tracking-wider text-amber-300 font-bold block">Balance Global Neto</span>
-                    <span id="lbl-balance-global" class="text-2xl font-black text-amber-400 block">0.00 Bs</span>
-                </div>
-
-                <button onclick="guardarBancosDB()" class="w-full bg-sky-600 text-white py-3 rounded-xl font-semibold text-xs shadow hover:bg-sky-700"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar Saldos Bancarios</button>
-
-                <div class="bg-sky-50 p-3 rounded-xl space-y-1 text-[11px] border border-sky-200">
-                    <p class="font-bold text-sky-900"><i class="fa-solid fa-mobile-screen mr-1"></i> DATOS AGENCIA</p>
-                    <p>Banco Venezuela (0102) | Tel: 04124489363</p>
-                    <p>Cédula: V18274410 | Titular: Harold Eliezer Galea Sanchez</p>
-                    <p>Cuenta: 01020613810000317201</p>
+        <!-- ================= VISTA: SISTEMAS ================= -->
+        <section id="view-sistemas" class="view-section space-y-4" style="display: none;">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
+                <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
+                <p class="text-xs text-slate-500 mt-1">Gestión y control de animalitos, loterías, terminales y pollas.</p>
+                <div class="mt-4 p-3 bg-sky-50 rounded-xl border border-sky-100 text-xs text-sky-800 font-medium">
+                    Animalitos, Loterías, Terminales y Pollas Millonarias activos.
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- ================= VISTA: BANCOS ================= -->
+        <section id="view-bancos" class="view-section space-y-4" style="display: none;">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
+                <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
+                <p class="text-xs text-slate-500 mt-1">Monitoreo de saldos y cuentas bancarias asociadas al centro de apuestas.</p>
+            </div>
+        </section>
 
     </main>
 
-    <!-- Modal para Agregar Nuevo Sistema -->
-    <div id="modal-sistema" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xs w-full p-5 space-y-3 shadow-xl">
-            <h3 class="text-base font-bold text-sky-900"><i class="fa-solid fa-plus-circle mr-1"></i> Nuevo Sistema</h3>
-            <div>
-                <label class="text-xs text-slate-500 font-semibold">Nombre del Sistema</label>
-                <input type="text" id="nuevo-sis-nombre" placeholder="Ej. RULETA VIP" class="w-full p-2.5 border rounded-xl text-sm font-semibold uppercase">
-            </div>
-            <div>
-                <label class="text-xs text-slate-500 font-semibold">Porcentaje de Comisión (%)</label>
-                <input type="number" step="0.1" id="nuevo-sis-porc" placeholder="Ej. 14" class="w-full p-2.5 border rounded-xl text-sm font-bold">
-            </div>
-            <div class="flex space-x-2 pt-2">
-                <button onclick="cerrarModalSistema()" class="w-1/2 bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold">Cancelar</button>
-                <button onclick="crearNuevoSistema()" class="w-1/2 bg-sky-600 text-white py-2.5 rounded-xl text-xs font-semibold">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation Bar Optimizada para Táctil -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2.5 shadow-xl max-w-md mx-auto z-40">
-        <button type="button" onclick="cambiarTab('pago')" class="text-sky-600 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none" id="nav-pago">
-            <i class="fa-solid fa-house text-base"></i><span class="text-[10px] font-bold">Pagos</span>
+    <!-- Barra de Navegación Inferior Fija -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2 shadow-lg z-50">
+        <button data-target="pagos" class="nav-btn flex flex-col items-center text-sky-600 transition">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Pagos</span>
         </button>
-        <button type="button" onclick="cambiarTab('caja')" class="text-slate-400 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none" id="nav-caja">
-            <i class="fa-solid fa-sack-dollar text-base"></i><span class="text-[10px] font-bold">Caja</span>
+        <button data-target="caja" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition">
+            <i class="fa-solid fa-wallet text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Caja</span>
         </button>
-        <button type="button" onclick="cambiarTab('sistemas')" class="text-slate-400 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none" id="nav-sistemas">
-            <i class="fa-solid fa-chart-line text-base"></i><span class="text-[10px] font-bold">Sistemas</span>
+        <button data-target="sistemas" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition">
+            <i class="fa-solid fa-chart-line text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Sistemas</span>
         </button>
-        <button type="button" onclick="cambiarTab('bancos')" class="text-slate-400 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none" id="nav-bancos">
-            <i class="fa-solid fa-building-columns text-base"></i><span class="text-[10px] font-bold">Bancos</span>
+        <button data-target="bancos" class="nav-btn flex flex-col items-center text-slate-400 hover:text-sky-600 transition">
+            <i class="fa-solid fa-building-columns text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Bancos</span>
         </button>
     </nav>
 
-    <!-- Script Robusto y Compatible Móvil / PC -->
+    <!-- JavaScript Integrado -->
     <script>
-        const SUPABASE_URL = 'https://wlvqucxgahfvrygbqawd.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdnF1Y3hnYWhmdnJ5Z2JxYXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0ODk5MTAsImV4cCI6MjEwMTA2NTkxMH0.6aHVQBKbHauGsAJ5LFnRQFoe2-w8vfxoPOSLyVn8vOo';
-        
-        const headersSupabase = {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Control del menú inferior (Cambio de vistas)
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const sections = document.querySelectorAll('.view-section');
 
-        let listaClientesCache = [];
-        let datosPropiosVerificados = false;
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = button.getAttribute('data-target');
 
-        let listaSistemasConfig = [
-            { id: 'premier_com', nombre: 'PREMIER COM', porcentaje: 14 },
-            { id: 'premier_telf', nombre: 'PREMIER TELF', porcentaje: 14 },
-            { id: 'matrix_comp', nombre: 'MATRIX COMP', porcentaje: 14 },
-            { id: 'matrix_telf', nombre: 'MATRIX TELF', porcentaje: 14 },
-            { id: 'maxplay_com', nombre: 'MAXPLAY COM', porcentaje: 14 },
-            { id: 'maxplay_telf', nombre: 'MAXPLAY TELF', porcentaje: 14 },
-            { id: 'srq_polla', nombre: 'SRQ POLLA', porcentaje: 14 },
-            { id: 'srq_ruletones', nombre: 'SRQ RULETONES', porcentaje: 14 },
-            { id: 'pozo', nombre: 'POZO', porcentaje: 14 },
-            { id: 'winbig_animalitos', nombre: 'WINBIG ANIMALITOS', porcentaje: 14 },
-            { id: 'winbig_pollas', nombre: 'WINBIG POLLAS', porcentaje: 14 },
-            { id: 'winbig_bingo', nombre: 'WINBIG BINGO', porcentaje: 14 },
-            { id: 'atenas', nombre: 'ATENAS', porcentaje: 12 }
-        ];
+                    sections.forEach(sec => sec.style.display = 'none');
 
-        window.addEventListener('DOMContentLoaded', () => {
-            cargarClientesSaldos();
-            renderizarSistemasDia();
-            cargarBancosDB();
-        });
+                    const activeSection = document.getElementById(`view-${target}`);
+                    if (activeSection) {
+                        activeSection.style.display = 'block';
+                    }
 
-        function cambiarTab(tab) {
-            ['pago', 'caja', 'sistemas', 'bancos'].forEach(t => {
-                const sec = document.getElementById(`seccion-${t}`);
-                const nav = document.getElementById(`nav-${t}`);
-                if (sec) sec.classList.add('hidden');
-                if (nav) nav.className = "text-slate-400 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none";
+                    navButtons.forEach(btn => {
+                        btn.classList.remove('text-sky-600');
+                        btn.classList.add('text-slate-400');
+                    });
+                    button.classList.remove('text-slate-400');
+                    button.classList.add('text-sky-600');
+
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
             });
 
-            const targetSec = document.getElementById(`seccion-${tab}`);
-            const targetNav = document.getElementById(`nav-${tab}`);
-            if (targetSec) targetSec.classList.remove('hidden');
-            if (targetNav) targetNav.className = "text-sky-600 text-lg px-3 py-1 flex flex-col items-center cursor-pointer select-none";
+            // 2. Control de selección y previsualización de imágenes desde el celular
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const fileNameText = document.getElementById('fileName');
+            const uploadText = document.getElementById('uploadText');
 
-            if(tab === 'caja') cargarClientesSaldos();
-            if(tab === 'bancos') calcularBalanceGlobal();
-            window.scrollTo(0, 0);
-        }
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
 
-        // --- MÓDULO OCR COMPRIMIDO PARA MÓVILES ---
-        function comprimirYRedimensionarImagen(file, maxWidth) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > maxWidth) {
-                            height = Math.round((height * maxWidth) / width);
-                            width = maxWidth;
-                        }
-                        canvas.width = width;
-                        canvas.height = heig
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    uploadText.textContent = "¡Captura cargada con éxito!";
+                    fileNameText.textContent = file.name;
+
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imagePreview.src = event.target.result;
+                        previewContainer.classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
