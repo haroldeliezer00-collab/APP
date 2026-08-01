@@ -21,13 +21,15 @@
         .btn-success { background: var(--accent); color: white; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-danger { background: #ef4444; color: white; }
+        .btn-premio { background: #d97706; color: white; }
         .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
         .box-stat span { display: block; font-size: 10px; color: #64748b; }
         .box-stat strong { font-size: 13px; color: var(--primary); }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 12px; }
-        .history-item.retiro { border-left-color: #ef4444; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
+        .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
+        .history-item.premio { border-left-color: #d97706; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
         .nav-item.active { color: #0284c7; }
         .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
@@ -75,13 +77,17 @@
     <div id="view-caja" class="view-section">
         <div class="card">
             <div class="card-title">📊 Panel de Caja y Global</div>
-            <div class="grid-caja">
-                <div class="box-stat"><span>Suma Total (Cuentas + Pronosticador):</span> <strong id="lblSumaTotal">0.00 Bs</strong></div>
+            <div class="grid-caja" style="margin-bottom: 8px;">
+                <div class="box-stat"><span>Suma Total (Cuentas + Pronost.):</span> <strong id="lblSumaTotal">0.00 Bs</strong></div>
                 <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
             </div>
-            <div class="grid-caja">
-                <div class="box-stat"><span>Total Premios Pagados:</span> <strong style="color: #d97706;">0.00 Bs</strong></div>
-                <div class="box-stat"><span>Total Gastos Registrados:</span> <strong style="color: #ef4444;">0.00 Bs</strong></div>
+            <div class="grid-caja" style="margin-bottom: 12px;">
+                <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
+                <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn btn-premio" onclick="registrarPremioModal()">🏆 Pagar Premio</button>
+                <button class="btn btn-danger" onclick="registrarGastoModal()">❌ Registrar Gasto</button>
             </div>
         </div>
 
@@ -89,7 +95,7 @@
         <div class="card" style="background: #1e1b4b; color: white;">
             <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span id="lblPronosticador" style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:11px; color:#000;">0.00 Bs</span></div>
             <div style="background: #312e81; padding: 10px; border-radius: 6px; border: 1px solid #4338ca; margin-bottom: 8px;">
-                <label style="color: #e2e8f0; font-size:10px;">🛡️ Gestión Saldo Pronosticador (Ingreso / Envío)</label>
+                <label style="color: #e2e8f0; font-size:10px;">🛡️ Gestión Saldo Pronosticador (Aparte)</label>
                 <div class="form-group" style="margin-top:6px;">
                     <input type="text" id="pronoRef" placeholder="Referencia o Concepto" style="background:#1e1b4b; color:white; border-color:#4338ca;">
                 </div>
@@ -103,7 +109,7 @@
             </div>
         </div>
 
-        <!-- Historial de Movimientos de Taquilla -->
+        <!-- Historial de Movimientos -->
         <div class="card">
             <div class="card-title">📜 Historial de Movimientos <button onclick="sincronizarConNube()" style="margin-left:auto; font-size:10px; padding:3px 6px;" class="btn btn-warning">🔄 Sincronizar Nube</button></div>
             <div id="historialLista" style="max-height: 250px; overflow-y: auto;">
@@ -163,15 +169,19 @@
 
     function buscarDuplicado(ref) {
         if (!ref) return null;
-        let refLimpia = ref.toString().trim();
-        return historialGlobal.find(item => item.referencia && item.referencia.toString().trim() === refLimpia);
+        let refLimpia = ref.toString().trim().toLowerCase();
+        // Combinamos localStorage y historialGlobal para blindar contra duplicados offline/online
+        let localData = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
+        let combinado = [...historialGlobal, ...localData];
+        
+        return combinado.find(item => item.referencia && item.referencia.toString().trim().toLowerCase() === refLimpia);
     }
 
     function procesarOCR(file) {
         const alertBox = document.getElementById('alertBox');
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🔍 Leyendo comprobante (referencia y monto)...';
+        alertBox.innerText = '🔍 Leyendo comprobante...';
 
         Tesseract.recognize(file, 'spa').then(({ data: { text } }) => {
             let refEncontrada = "";
@@ -205,7 +215,7 @@
             let existente = buscarDuplicado(refEncontrada);
             if(existente) {
                 alertBox.className = 'alert-error';
-                alertBox.innerText = `⛔ ¡ALERTA DE DUPLICADO! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}" (${existente.tipo || 'Pago'} - ${existente.fecha || ''} ${existente.hora || ''}).`;
+                alertBox.innerText = `⛔ ¡ALERTA! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}" (${existente.tipo || 'Pago'} - ${existente.fecha || ''} ${existente.hora || ''}).`;
             } else {
                 alertBox.className = 'alert-success';
                 alertBox.innerText = '¡Comprobante leído con éxito! Referencia libre.';
@@ -218,11 +228,6 @@
     }
 
     function sincronizarConNube() {
-        const alertBox = document.getElementById('alertBox');
-        alertBox.style.display = 'block';
-        alertBox.className = 'alert-loading';
-        alertBox.innerText = '🔄 Sincronizando con Google Sheets...';
-
         fetch(GOOGLE_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
@@ -231,10 +236,8 @@
                 localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
             }
             actualizarInterfazCaja();
-            alertBox.style.display = 'none';
         })
         .catch(() => {
-            alertBox.style.display = 'none';
             actualizarInterfazCaja();
         });
     }
@@ -256,46 +259,24 @@
         if(existente) {
             alertBox.style.display = 'block';
             alertBox.className = 'alert-error';
-            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya fue registrada previamente por "${existente.cliente || 'Desconocido'}" a las ${existente.hora || ''}. No se puede reutilizar.`;
+            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya fue registrada por "${existente.cliente || 'Desconocido'}" a las ${existente.hora || ''} (${existente.tipo}).`;
             return;
         }
 
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🛡️ Guardando pago en Google Sheets...';
+        alertBox.innerText = '🛡️ Guardando pago en la nube...';
 
-        const datos = { referencia: ref, cliente: cliente, monto: monto, tipo: "Ingreso Taquilla" };
+        const datos = { 
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: ref, 
+            cliente: cliente, 
+            monto: monto, 
+            tipo: "Ingreso Taquilla" 
+        };
 
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(datos)
-        })
-        .then(() => {
-            alertBox.className = 'alert-success';
-            alertBox.innerText = '¡Pago registrado en la nube con éxito!';
-            
-            historialGlobal.push({
-                fecha: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString(),
-                referencia: ref,
-                cliente: cliente,
-                monto: monto,
-                tipo: "Ingreso Taquilla"
-            });
-            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
-            actualizarInterfazCaja();
-
-            document.getElementById('referencia').value = '';
-            document.getElementById('cliente').value = '';
-            document.getElementById('monto').value = '';
-            document.getElementById('fileName').innerText = 'No se ha seleccionado archivo';
-        })
-        .catch(() => {
-            alertBox.className = 'alert-error';
-            alertBox.innerText = 'Error al enviar a la nube.';
-        });
+        enviarANubeYActualizar(datos);
     }
 
     function guardarPronosticador(tipoAccion) {
@@ -322,31 +303,89 @@
         alertBox.className = 'alert-loading';
         alertBox.innerText = '🛡️ Procesando operación de pronosticador...';
 
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: ref,
+            cliente: "Pronosticador",
+            monto: monto,
+            tipo: tipoAccion
+        };
+
+        enviarANubeYActualizar(datos, () => {
+            document.getElementById('pronoRef').value = '';
+            document.getElementById('pronoMonto').value = '';
+        });
+    }
+
+    function registrarPremioModal() {
+        let concepto = prompt("Indica el beneficiario o concepto del premio:");
+        if (!concepto) return;
+        let montoStr = prompt("Monto del premio en Bs:");
+        let monto = parseFloat(montoStr);
+        if (isNaN(monto) || monto <= 0) {
+            alert("Monto inválido.");
+            return;
+        }
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: "PREMIO-" + Math.floor(100000 + Math.random() * 900000),
+            cliente: "Premio: " + concepto,
+            monto: monto,
+            tipo: "Premio Pagado"
+        };
+        enviarANubeYActualizar(datos);
+    }
+
+    function registrarGastoModal() {
+        let concepto = prompt("Descripción del gasto:");
+        if (!concepto) return;
+        let montoStr = prompt("Monto del gasto en Bs:");
+        let monto = parseFloat(montoStr);
+        if (isNaN(monto) || monto <= 0) {
+            alert("Monto inválido.");
+            return;
+        }
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: "GASTO-" + Math.floor(100000 + Math.random() * 900000),
+            cliente: "Gasto: " + concepto,
+            monto: monto,
+            tipo: "Gasto Registrado"
+        };
+        enviarANubeYActualizar(datos);
+    }
+
+    function enviarANubeYActualizar(datos, callback) {
+        const alertBox = document.getElementById('alertBox');
+
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ referencia: ref, cliente: "Pronosticador", monto: monto, tipo: tipoAccion })
+            body: JSON.stringify(datos)
         }).then(() => {
             alertBox.className = 'alert-success';
-            alertBox.innerText = '¡Operación de pronosticador guardada con éxito!';
+            alertBox.innerText = '¡Operación registrada con éxito!';
 
-            historialGlobal.push({
-                fecha: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString(),
-                referencia: ref,
-                cliente: "Pronosticador",
-                monto: monto,
-                tipo: tipoAccion
-            });
+            historialGlobal.push(datos);
             localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
             actualizarInterfazCaja();
 
-            document.getElementById('pronoRef').value = '';
-            document.getElementById('pronoMonto').value = '';
+            if(datos.tipo === "Ingreso Taquilla") {
+                document.getElementById('referencia').value = '';
+                document.getElementById('cliente').value = '';
+                document.getElementById('monto').value = '';
+                document.getElementById('fileName').innerText = 'No se ha seleccionado archivo';
+            }
+            if(callback) callback();
         }).catch(() => {
             alertBox.className = 'alert-error';
-            alertBox.innerText = 'Error al registrar operación.';
+            alertBox.innerText = 'Error al enviar a la nube.';
         });
     }
 
@@ -354,11 +393,18 @@
         const contenedor = document.getElementById('historialLista');
         if (!historialGlobal || historialGlobal.length === 0) {
             contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay movimientos registrados.</div>';
+            document.getElementById('lblSumaTotal').innerText = "0.00 Bs";
+            document.getElementById('lblSaldoNeto').innerText = "0.00 Bs";
+            document.getElementById('lblPremios').innerText = "0.00 Bs";
+            document.getElementById('lblGastos').innerText = "0.00 Bs";
+            document.getElementById('lblPronosticador').innerText = "0.00 Bs";
             return;
         }
 
         let sumaTaquilla = 0;
         let sumaPronosticador = 0;
+        let totalPremios = 0;
+        let totalGastos = 0;
         let html = '';
 
         [...historialGlobal].reverse().forEach(item => {
@@ -375,8 +421,18 @@
                 signo = "-";
                 colorMonto = "#ef4444";
                 claseItem += " retiro";
+            } else if(tipo === "Premio Pagado") {
+                totalPremios += m;
+                signo = "-";
+                colorMonto = "#d97706";
+                claseItem += " premio";
+            } else if(tipo === "Gasto Registrado") {
+                totalGastos += m;
+                signo = "-";
+                colorMonto = "#ef4444";
+                claseItem += " gasto";
             } else {
-                sumaTaquilla += m; // Ingresos de taquilla habituales
+                sumaTaquilla += m; // Ingreso Taquilla por defecto
             }
 
             html += `<div class="${claseItem}">
@@ -388,8 +444,12 @@
         contenedor.innerHTML = html;
 
         let sumaTotalGlobal = sumaTaquilla + sumaPronosticador;
+        let saldoNeto = sumaTotalGlobal - totalPremios - totalGastos;
+
         document.getElementById('lblSumaTotal').innerText = sumaTotalGlobal.toFixed(2) + " Bs";
-        document.getElementById('lblSaldoNeto').innerText = sumaTotalGlobal.toFixed(2) + " Bs";
+        document.getElementById('lblSaldoNeto').innerText = saldoNeto.toFixed(2) + " Bs";
+        document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
+        document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
         document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
     }
 </script>
