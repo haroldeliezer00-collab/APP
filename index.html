@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.11</title>
+    <title>Centro de Apuestas Harold José v4.12 Unificado</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 pb-28">
 
-    <!-- Encabezado con Botón de Sincronización Manual y Forzada -->
+    <!-- Encabezado con Sincronización Forzada -->
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
             <button type="button" id="btnManualSync" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm">
@@ -20,7 +20,7 @@
             </button>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
-                <p class="text-[9px] text-slate-500">Control Inteligente Anti-Fraude v4.11</p>
+                <p class="text-[9px] text-slate-500">Unificado v4.12 (PC y Teléfono)</p>
             </div>
             <div class="w-12"></div>
         </div>
@@ -304,10 +304,11 @@
         </button>
     </nav>
 
-    <!-- JavaScript v4.11 con Sincronización al Despertar y Anti-Fraude Estricto de Cuentas -->
+    <!-- JavaScript v4.12 Unificado -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV49Data/data';
+            const STORAGE_KEY = 'haroldJoseUnifiedData';
             const syncText = document.getElementById('syncText');
             const syncIcon = document.getElementById('syncIcon');
             const btnManualSync = document.getElementById('btnManualSync');
@@ -342,9 +343,9 @@
                 ]
             };
 
-            // Cargar datos locales iniciales
+            // Cargar datos locales iniciales con la llave unificada
             try {
-                const saved = localStorage.getItem('haroldJoseDataV411');
+                const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     appData = { ...appData, ...parsed };
@@ -354,7 +355,7 @@
             // Función para guardar en la nube
             async function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV411', JSON.stringify(appData));
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                 } catch(e) {}
 
                 syncText.textContent = 'Guardando...';
@@ -376,7 +377,7 @@
                 }
             }
 
-            // Función robusta para descargar de la nube
+            // Función para descargar de la nube
             async function fetchCloudData(isManual = false) {
                 if (isManual) {
                     syncText.textContent = 'Sincronizando...';
@@ -388,7 +389,7 @@
                         const cloudData = await response.json();
                         if (cloudData && typeof cloudData === 'object' && cloudData.accounts) {
                             appData = { ...appData, ...cloudData };
-                            try { localStorage.setItem('haroldJoseDataV411', JSON.stringify(appData)); } catch(e){}
+                            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e){}
                             renderUI();
                             syncText.textContent = 'Sincronizado';
                             syncIcon.className = "fa-solid fa-cloud-arrow-up";
@@ -412,19 +413,19 @@
             // Descarga inicial automática
             fetchCloudData(false);
 
-            // Sincronización automática periódica cada 8 segundos
+            // Sincronización automática periódica cada 5 segundos
             setInterval(() => {
                 fetchCloudData(false);
-            }, 8000);
+            }, 5000);
 
-            // Sincronización instantánea al volver a enfocar la app (despertar el teléfono)
+            // Sincronización instantánea al volver a enfocar la pantalla o pestaña
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
                     fetchCloudData(false);
                 }
             });
 
-            // Navegación de vistas con auto-fetch al cambiar de pestaña
+            // Navegación de vistas con auto-fetch
             function switchTab(tabName) {
                 document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
                 const target = document.getElementById(`view-${tabName}`);
@@ -455,7 +456,7 @@
                 alert('¡Datos de receptor guardados correctamente!');
             });
 
-            // OCR Taquilla y Validación Anti-Fraude Estricta (Cuentas y Teléfono)
+            // OCR Taquilla y Validación Anti-Fraude Estricta
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
@@ -476,7 +477,6 @@
                 isDataValid = true;
                 isOwnerValid = true;
 
-                // 1. Revisar duplicados de referencia
                 if (cleanRef) {
                     const existePago = appData.payments.find(p => p.ref === cleanRef);
                     const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
@@ -493,7 +493,6 @@
                     dupWarning.style.display = 'none';
                 }
 
-                // 2. Validación Estricta Anti-Fraude (Destino / Cuenta / Teléfono / Cédula)
                 if (fullText) {
                     let matchFound = false;
                     const cedulaConfig = (appData.misDatos.cedula || '').trim();
@@ -502,7 +501,6 @@
                     if (cedulaConfig && fullText.includes(cedulaConfig)) matchFound = true;
                     if (telefonoConfig && fullText.includes(telefonoConfig)) matchFound = true;
 
-                    // Revisar contra todas las cuentas registradas (cuenta completa o últimos 4 dígitos ej 7201)
                     if (appData.accounts && appData.accounts.length > 0) {
                         appData.accounts.forEach(acc => {
                             const accNum = (acc.accountNumber || '').trim();
@@ -777,7 +775,7 @@
                 cajaModal.classList.remove('hidden');
             }
 
-            // Gestión de Cuentas (Nombre y Número de Cuenta para OCR)
+            // Gestión de Cuentas
             document.getElementById('btnAddAccount').addEventListener('click', async () => {
                 const name = prompt('Nombre de la cuenta (Ej. Cuenta 4, Ahorros, etc.):');
                 if (name) {
@@ -947,7 +945,7 @@
                     `).join('');
                 }
 
-                // Cuentas (con campos editables para Número de Cuenta / Destino)
+                // Cuentas
                 const accountsContainer = document.getElementById('accountsList');
                 accountsContainer.innerHTML = appData.accounts.map((acc, accIndex) => `
                     <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-2">
