@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José</title>
+    <title>Centro de Apuestas Harold José v4.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
@@ -12,10 +12,10 @@
 
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v4.2 PRO CONTROL</span>
+            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v4.3 PRO ULTIMATE</span>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
-                <p class="text-[9px] text-slate-500">Sistema de Pagos y Clientes</p>
+                <p class="text-[9px] text-slate-500">Control Inteligente de Pagos y Sistemas</p>
             </div>
             <div class="w-10"></div>
         </div>
@@ -71,14 +71,15 @@
                     <select id="paymentBank" class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <option value="Banco de Venezuela">Banco de Venezuela (0102)</option>
                         <option value="Banesco">Banesco (0134)</option>
-                        <option value="Fondo Común">Fondo Común</option>
-                        <option value="Mercantil">Mercantil</option>
+                        <option value="Banco Exterior">Banco Exterior (0115)</option>
+                        <option value="Mercantil">Mercantil (0105)</option>
+                        <option value="Banco del Tesoro">Banco del Tesoro (0163)</option>
                         <option value="Efectivo Taquilla">Efectivo Taquilla</option>
                     </select>
                 </div>
 
                 <button type="button" id="submitPayment" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow transition">
-                    Guardar y Registrar Pago
+                    Guardar Pago y Actualizar Cliente
                 </button>
             </div>
         </section>
@@ -122,7 +123,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h2 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-chart-line text-sky-600"></i> Sistemas y Loterías</h2>
-                        <p class="text-[10px] text-slate-500">Control diario unificado y acumulado semanal</p>
+                        <p class="text-[10px] text-slate-500">Control diario y desglose semanal por sistema</p>
                     </div>
                     <button type="button" id="btnAddSystem" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
                         <i class="fa-solid fa-plus"></i> Sistema
@@ -135,9 +136,17 @@
                 <div id="systemsByDayContainer" class="space-y-3 mt-2">
                     </div>
 
+                <div class="mt-6 space-y-3 border-t border-slate-200 pt-4">
+                    <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-sky-600"></i> Resumen de Todos los Sistemas (Lunes a Domingo)
+                    </h3>
+                    <div id="systemsWeeklyBreakdown" class="space-y-3">
+                        </div>
+                </div>
+
                 <div class="bg-sky-900 text-white p-4 rounded-2xl space-y-2 text-xs mt-6 shadow-md">
                     <p class="font-bold border-b border-sky-700 pb-1.5 text-center flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-calculator text-amber-300"></i> RESUMEN SEMANAL ACUMULADO GENERAL (LUNES A DOMINGO)
+                        <i class="fa-solid fa-calculator text-amber-300"></i> RESUMEN GENERAL ACUMULADO (LUNES A DOMINGO)
                     </p>
                     <div class="flex justify-between"><span>Ventas Totales:</span> <strong id="globalVentas">0.00 Bs</strong></div>
                     <div class="flex justify-between"><span>Premios Totales:</span> <strong id="globalPremios">0.00 Bs</strong></div>
@@ -154,7 +163,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h2 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-users text-indigo-600"></i> Control de Clientes y Saldos</h2>
-                        <p class="text-[10px] text-slate-500">Cuentas corrientes, jugadas, premios y WhatsApp</p>
+                        <p class="text-[10px] text-slate-500">Cuentas corrientes, jugadas y mensajes para WhatsApp</p>
                     </div>
                     <button type="button" id="btnAddClient" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
                         <i class="fa-solid fa-user-plus"></i> Cliente
@@ -236,18 +245,19 @@
                 ],
                 banks: [
                     { name: 'Banco de Venezuela', acc: '01020613810000317201', phone: '0412-4489363', holder: 'Harold Eliezer Galea Sanchez (V-18274410)' },
-                    { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000', holder: 'Harold José' }
+                    { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000', holder: 'Harold José' },
+                    { name: 'Banco Exterior', acc: '0115-****-0000', phone: '0412-0000000', holder: 'Harold José' }
                 ]
             };
 
             try {
-                const saved = localStorage.getItem('haroldJoseDataV42');
+                const saved = localStorage.getItem('haroldJoseDataV43');
                 if (saved) appData = JSON.parse(saved);
             } catch(e) { console.error("Error al leer storage", e); }
 
             function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV42', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV43', JSON.stringify(appData));
                 } catch(e) { console.error("Error al guardar storage", e); }
             }
 
@@ -272,7 +282,7 @@
             document.getElementById('nav-clientes').addEventListener('click', () => switchTab('clientes'));
             document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
 
-            // OCR y Validaciones Avanzadas
+            // OCR y Validaciones Avanzadas (Mejorado contra teléfonos y malos captures)
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
@@ -294,7 +304,7 @@
 
                 const existente = appData.payments.find(p => p.ref === cleanRef);
                 if (existente) {
-                    dupWarningText.textContent = `¡Pago ya utilizado por el cliente "${existente.client}" el ${existente.date} (Monto: Bs. ${existente.amount})!`;
+                    dupWarningText.textContent = `¡Pago ya utilizado por el cliente "${existente.client}" el ${existente.date} (Monto: Bs.${existente.amount})!`;
                     dupWarning.style.display = 'block';
                 } else {
                     dupWarning.style.display = 'none';
@@ -343,13 +353,23 @@
                         const text = result.data.text;
                         console.log("OCR Detectado:", text);
 
-                        const refMatch = text.match(/(?:operaci[oó]n|referencia|comprobante|n[uú]mero)[^\d]*(\d{6,15})/i);
+                        // Extracción inteligente de referencia evitando teléfonos
+                        const textClean = text.replace(/[\n\r]+/g, ' ');
                         let encontrada = '';
+                        
+                        const refMatch = textClean.match(/(?:ref|referencia|operaci[oó]n|nro|número|transacci[oó]n)[^\d]*(\d{4,12})/i);
                         if (refMatch && refMatch[1]) {
                             encontrada = refMatch[1];
                         } else {
-                            const fallback = text.match(/\b\d{8,12}\b/);
-                            if (fallback) encontrada = fallback[0];
+                            const numbers = textClean.match(/\b\d{4,10}\b/g);
+                            if (numbers) {
+                                const validNums = numbers.filter(n => !n.startsWith('04') && !n.startsWith('02') && n.length >= 4 && n.length <= 10);
+                                if (validNums.length > 0) {
+                                    encontrada = validNums[0];
+                                } else if (numbers.length > 0) {
+                                    encontrada = numbers[0];
+                                }
+                            }
                         }
 
                         if (encontrada) {
@@ -382,14 +402,14 @@
                 }
             });
 
-            // Guardar Pago
+            // Guardar Pago y Agregar/Actualizar Cliente Automáticamente
             document.getElementById('submitPayment').addEventListener('click', () => {
                 const ref = refNumberInput.value.trim();
-                const client = document.getElementById('clientName').value.trim();
+                const clientNameInput = document.getElementById('clientName').value.trim();
                 const amount = parseFloat(document.getElementById('paymentAmount').value);
                 const bank = document.getElementById('paymentBank').value;
 
-                if (!ref || !client || isNaN(amount) || amount <= 0) {
+                if (!ref || !clientNameInput || isNaN(amount) || amount <= 0) {
                     alert('Por favor complete la Referencia, Nombre del Cliente y el Monto en Bs.');
                     return;
                 }
@@ -400,14 +420,22 @@
                     return;
                 }
 
-                appData.payments.push({ ref, client, amount, bank, date: new Date().toLocaleDateString() });
+                appData.payments.push({ ref, client: clientNameInput, amount, bank, date: new Date().toLocaleDateString() });
                 if (bank === 'Efectivo Taquilla') {
                     appData.cajaBalance.effective += amount;
                 } else {
                     appData.cajaBalance.banks += amount;
                 }
 
-                appData.cajaHistory.unshift({ desc: `Pago Bs. ${amount} de ${client} (${bank})`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+                appData.cajaHistory.unshift({ desc: `Pago Bs. ${amount} de ${clientNameInput} (${bank})`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+
+                let clienteExistente = appData.clients.find(c => c.name.toLowerCase() === clientNameInput.toLowerCase());
+                if (clienteExistente) {
+                    clienteExistente.balance += amount;
+                } else {
+                    appData.clients.push({ name: clientNameInput, phone: '', balance: amount });
+                }
+
                 saveState();
                 renderUI();
 
@@ -419,7 +447,7 @@
                 uploadText.textContent = "Sube captura o presiona Ctrl+V aquí";
                 dupWarning.style.display = 'none';
                 authWarning.style.display = 'none';
-                alert('¡Pago registrado con éxito y protegido contra duplicados!');
+                alert('¡Pago registrado con éxito y cliente actualizado automáticamente!');
             });
 
             // Modal Caja
@@ -436,7 +464,7 @@
                     return;
                 }
                 appData.cajaBalance.effective -= amount;
-                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
+                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}:${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
                 saveState();
                 renderUI();
                 cajaModal.classList.add('hidden');
@@ -485,10 +513,10 @@
                 }
             };
 
-            // Gestión de Clientes (Cuenta Corriente / WhatsApp)
+            // Gestión de Clientes (Copiar Mensaje WhatsApp)
             document.getElementById('btnAddClient').addEventListener('click', () => {
                 const name = prompt('Nombre del Cliente:');
-                const phone = prompt('Teléfono WhatsApp (Ej. 584120000000):');
+                const phone = prompt('Teléfono (Opcional):');
                 if (name) {
                     appData.clients.push({ name: name.trim(), phone: phone || '', balance: 0 });
                     saveState();
@@ -512,12 +540,17 @@
                 renderUI();
             };
 
-            window.sendWhatsApp = function(cIndex) {
+            window.copyWhatsAppMessage = function(cIndex) {
                 const c = appData.clients[cIndex];
-                const estado = c.balance >= 0 ? `Saldo a favor / positivo: Bs. ${c.balance.toFixed(2)}` : `Saldo pendiente / negativo: Bs. ${Math.abs(c.balance).toFixed(2)}`;
-                const msg = `Hola *${c.name}*, le escribimos del Centro de Apuestas Harold José. Su estado de cuenta actual es: *${estado}*. ¡Gracias por preferirnos!`;
-                const url = `https://api.whatsapp.com/send?phone=${c.phone}&text=${encodeURIComponent(msg)}`;
-                window.open(url, '_blank');
+                const estado = c.balance >= 0 ? `saldo a favor de Bs. ${c.balance.toFixed(2)}` : `saldo pendiente de Bs. ${Math.abs(c.balance).toFixed(2)}`;
+                const msg = `¡Hola, *${c.name}*! Gracias por jugar con nosotros y por su confianza. Le informamos que su estado de cuenta actual presenta un ${estado}. ¡Mucho éxito en sus próximas jugadas! 🎲✨`;
+                
+                navigator.clipboard.writeText(msg).then(() => {
+                    alert(`¡Mensaje copiado al portapapeles para ${c.name}!\n\n${msg}`);
+                }).catch(err => {
+                    console.error('Error al copiar', err);
+                    alert('No se pudo copiar automáticamente, pero aquí tienes el mensaje:\n\n' + msg);
+                });
             };
 
             window.deleteClient = function(cIndex) {
@@ -584,99 +617,4 @@
                                         <h3 class="text-xs font-bold text-sky-900">${sys.name} <span class="text-[10px] text-slate-500 font-normal">(${sys.commissionRate}%)</span></h3>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[10px] text-slate-600">Neto (${appData.selectedDay}): <strong class="${neto >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${neto.toFixed(2)} Bs</strong></span>
-                                        <button type="button" onclick="deleteSystem(${sIndex})" class="text-rose-400 hover:text-rose-600 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block">Ventas (${appData.selectedDay})</label>
-                                        <input type="number" step="0.01" value="${ventas || ''}" onchange="updateSysDay(${sIndex}, 'ventas', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block">Premios (${appData.selectedDay})</label>
-                                        <input type="number" step="0.01" value="${premios || ''}" onchange="updateSysDay(${sIndex}, 'premios', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
-                                    </div>
-                                </div>
-                                <div class="flex justify-between text-[10px] text-slate-500 pt-0.5 px-1">
-                                    <span>Comisión (${sys.commissionRate}%): <strong>${comision.toFixed(2)} Bs</strong></span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                let gVentas = 0, gPremios = 0, gComisiones = 0, gNeto = 0;
-                appData.systems.forEach(sys => {
-                    daysList.forEach(day => {
-                        const d = sys.days[day] || { ventas: 0, premios: 0 };
-                        const v = d.ventas;
-                        const p = d.premios;
-                        const c = (v * sys.commissionRate) / 100;
-                        const n = v - p - c;
-                        gVentas += v;
-                        gPremios += p;
-                        gComisiones += c;
-                        gNeto += n;
-                    });
-                });
-
-                document.getElementById('globalVentas').textContent = `${gVentas.toFixed(2)} Bs`;
-                document.getElementById('globalPremios').textContent = `${gPremios.toFixed(2)} Bs`;
-                document.getElementById('globalComisiones').textContent = `${gComisiones.toFixed(2)} Bs`;
-                document.getElementById('globalNeto').textContent = `${gNeto.toFixed(2)} Bs`;
-
-                const clientsContainer = document.getElementById('clientsContainer');
-                if (appData.clients.length === 0) {
-                    clientsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay clientes registrados.</p>`;
-                } else {
-                    clientsContainer.innerHTML = appData.clients.map((c, cIndex) => `
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                            <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
-                                <div>
-                                    <h3 class="text-xs font-bold text-indigo-900">${c.name}</h3>
-                                    <p class="text-[10px] text-slate-500">Tel: ${c.phone || 'Sin WhatsApp'}</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold ${c.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
-                                        ${c.balance >= 0 ? `Favor: Bs. ${c.balance.toFixed(2)}` : `Debe: Bs. ${Math.abs(c.balance).toFixed(2)}`}
-                                    </span>
-                                    <button type="button" onclick="deleteClient(${cIndex})" class="text-rose-400 hover:text-rose-600 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1.5">
-                                <button type="button" onclick="clientAction(${cIndex}, 'jugada')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold py-2 rounded-xl border border-rose-200">
-                                    <i class="fa-solid fa-dice"></i> Jugada
-                                </button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'premio')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold py-2 rounded-xl border border-amber-200">
-                                    <i class="fa-solid fa-trophy"></i> Premio
-                                </button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'abono')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold py-2 rounded-xl border border-emerald-200">
-                                    <i class="fa-solid fa-money-bill-wave"></i> Abono
-                                </button>
-                            </div>
-                            ${c.phone ? `
-                                <button type="button" onclick="sendWhatsApp(${cIndex})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-2 rounded-xl shadow mt-1">
-                                    <i class="fa-brands fa-whatsapp text-sm"></i> Enviar Estado por WhatsApp
-                                </button>
-                            ` : ''}
-                        </div>
-                    `).join('');
-                }
-
-                const banksContainer = document.getElementById('banksList');
-                banksContainer.innerHTML = appData.banks.map(b => `
-                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
-                        <p class="font-bold text-indigo-900">${b.name}</p>
-                        <p class="text-slate-700"><strong>Cuenta:</strong> ${b.acc}</p>
-                        <p class="text-slate-700"><strong>Pago Móvil:</strong> ${b.phone}</p>
-                        <p class="text-[10px] text-slate-500"><strong>Titular:</strong> ${b.holder}</p>
-                    </div>
-                `).join('');
-            }
-
-            renderUI();
-        });
-    </script>
-</body>
-</html>
+                                        <span class="text-
