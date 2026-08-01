@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.10</title>
+    <title>Centro de Apuestas Harold José v4.11</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,7 +20,7 @@
             </button>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
-                <p class="text-[9px] text-slate-500">Control Inteligente de Pagos y Cuentas v4.10</p>
+                <p class="text-[9px] text-slate-500">Control Inteligente Anti-Fraude v4.11</p>
             </div>
             <div class="w-12"></div>
         </div>
@@ -51,14 +51,14 @@
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador Anti-Fraude (Suma a Cuenta 1)
+                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador Anti-Fraude Estricto (Suma a Cuenta 1)
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
                     <input type="text" id="refNumber" placeholder="Lectura automática o manual" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-bold text-sky-900">
                     <p id="dupWarning" class="text-[11px] text-red-600 font-bold mt-1.5 hidden bg-red-50 p-2 rounded-lg border border-red-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="dupWarningText">Pago ya utilizado</span></p>
-                    <p id="ownerWarning" class="text-[11px] text-amber-700 font-bold mt-1.5 hidden bg-amber-50 p-2 rounded-lg border border-amber-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="ownerWarningText">El comprobante no coincide con tus datos de receptor.</span></p>
+                    <p id="ownerWarning" class="text-[11px] text-rose-700 font-bold mt-1.5 hidden bg-rose-50 p-2 rounded-lg border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="ownerWarningText">¡Alerta! El destino o datos no coinciden.</span></p>
                 </div>
 
                 <div>
@@ -229,23 +229,23 @@
                 <div class="flex items-center gap-2 border-b border-sky-700 pb-2">
                     <i class="fa-solid fa-id-card text-amber-300 text-base"></i>
                     <div>
-                        <h2 class="text-xs font-bold text-white">Tus Datos de Receptor (Pago Móvil / Cuentas)</h2>
-                        <p class="text-[10px] text-sky-200">El OCR usará esto para verificar que el pago vaya a tu nombre</p>
+                        <h2 class="text-xs font-bold text-white">Tus Datos de Receptor (Pago Móvil / Cédula)</h2>
+                        <p class="text-[10px] text-sky-200">El OCR usará esto para verificar que el pago vaya a tu nombre/teléfono</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] text-sky-200 mb-0.5">Cédula / RIF</label>
-                        <input type="text" id="configCedula" placeholder="Ej. 15123456" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
+                        <input type="text" id="configCedula" placeholder="Ej. 18274410" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] text-sky-200 mb-0.5">Teléfono Pago Móvil</label>
-                        <input type="text" id="configTelefono" placeholder="Ej. 04121234567" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
+                        <input type="text" id="configTelefono" placeholder="Ej. 04124489363" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-[10px] text-sky-200 mb-0.5">Banco / Alias Receptor</label>
-                    <input type="text" id="configBanco" placeholder="Ej. Banesco / Harold José" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-white focus:outline-none">
+                    <input type="text" id="configBanco" placeholder="Ej. Banco de Venezuela / Harold" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-white focus:outline-none">
                 </div>
                 <button type="button" id="btnSaveConfig" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow">
                     Guardar Tus Datos Anti-Fraude
@@ -254,8 +254,8 @@
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Cuentas (Cuenta 1, 2, 3...)</h2>
-                <p class="text-xs text-slate-500 mt-1">La Cuenta 1 recibe automáticamente los pagos de taquilla. Las demás se ajustan manual aquí.</p>
+                <h2 class="text-base font-bold text-slate-700">Cuentas y Números Destino</h2>
+                <p class="text-xs text-slate-500 mt-1">Configura aquí tus números de cuenta (ej. 0102...7201) para que el OCR valide las transferencias correctamente.</p>
                 
                 <div id="accountsList" class="mt-4 space-y-3 text-left text-xs"></div>
 
@@ -304,7 +304,7 @@
         </button>
     </nav>
 
-    <!-- JavaScript v4.10 con Auto-Sincronización Inteligente entre Dispositivos -->
+    <!-- JavaScript v4.11 con Sincronización al Despertar y Anti-Fraude Estricto de Cuentas -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV49Data/data';
@@ -314,9 +314,9 @@
 
             let appData = {
                 misDatos: {
-                    cedula: '',
-                    telefono: '',
-                    banco: ''
+                    cedula: '18274410',
+                    telefono: '04124489363',
+                    banco: 'Banco de Venezuela'
                 },
                 payments: [],
                 cajaHistory: [],
@@ -336,15 +336,15 @@
                     { name: 'Carlos', phone: '584140000000', balance: 0 }
                 ],
                 accounts: [
-                    { name: 'Cuenta 1 (Principal)', balance: 0 },
-                    { name: 'Cuenta 2', balance: 0 },
-                    { name: 'Cuenta 3', balance: 0 }
+                    { name: 'Cuenta 1 (Principal - BDV)', accountNumber: '01020613810000317201', balance: 0 },
+                    { name: 'Cuenta 2', accountNumber: '', balance: 0 },
+                    { name: 'Cuenta 3', accountNumber: '', balance: 0 }
                 ]
             };
 
-            // Cargar datos locales iniciales para render rápido
+            // Cargar datos locales iniciales
             try {
-                const saved = localStorage.getItem('haroldJoseDataV410');
+                const saved = localStorage.getItem('haroldJoseDataV411');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     appData = { ...appData, ...parsed };
@@ -354,7 +354,7 @@
             // Función para guardar en la nube
             async function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV410', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV411', JSON.stringify(appData));
                 } catch(e) {}
 
                 syncText.textContent = 'Guardando...';
@@ -388,7 +388,7 @@
                         const cloudData = await response.json();
                         if (cloudData && typeof cloudData === 'object' && cloudData.accounts) {
                             appData = { ...appData, ...cloudData };
-                            try { localStorage.setItem('haroldJoseDataV410', JSON.stringify(appData)); } catch(e){}
+                            try { localStorage.setItem('haroldJoseDataV411', JSON.stringify(appData)); } catch(e){}
                             renderUI();
                             syncText.textContent = 'Sincronizado';
                             syncIcon.className = "fa-solid fa-cloud-arrow-up";
@@ -409,13 +409,20 @@
 
             btnManualSync.addEventListener('click', () => fetchCloudData(true));
             
-            // Descarga inicial automática al abrir
+            // Descarga inicial automática
             fetchCloudData(false);
 
-            // Sincronización automática periódica cada 10 segundos en segundo plano
+            // Sincronización automática periódica cada 8 segundos
             setInterval(() => {
                 fetchCloudData(false);
-            }, 10000);
+            }, 8000);
+
+            // Sincronización instantánea al volver a enfocar la app (despertar el teléfono)
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    fetchCloudData(false);
+                }
+            });
 
             // Navegación de vistas con auto-fetch al cambiar de pestaña
             function switchTab(tabName) {
@@ -430,8 +437,6 @@
                     }
                 });
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                // Traer datos frescos al cambiar de pestaña
                 fetchCloudData(false);
             }
 
@@ -441,16 +446,16 @@
             document.getElementById('nav-clientes').addEventListener('click', () => switchTab('clientes'));
             document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
 
-            // Guardar configuración de receptor propia
+            // Guardar configuración receptor
             document.getElementById('btnSaveConfig').addEventListener('click', async () => {
                 appData.misDatos.cedula = document.getElementById('configCedula').value.trim();
                 appData.misDatos.telefono = document.getElementById('configTelefono').value.trim();
                 appData.misDatos.banco = document.getElementById('configBanco').value.trim();
                 await saveState();
-                alert('¡Datos de receptor guardados!');
+                alert('¡Datos de receptor guardados correctamente!');
             });
 
-            // OCR Taquilla y Validación Anti-Fraude
+            // OCR Taquilla y Validación Anti-Fraude Estricta (Cuentas y Teléfono)
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
@@ -471,6 +476,7 @@
                 isDataValid = true;
                 isOwnerValid = true;
 
+                // 1. Revisar duplicados de referencia
                 if (cleanRef) {
                     const existePago = appData.payments.find(p => p.ref === cleanRef);
                     const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
@@ -487,15 +493,29 @@
                     dupWarning.style.display = 'none';
                 }
 
-                if (fullText && (appData.misDatos.cedula || appData.misDatos.telefono)) {
-                    const cedulaConfig = appData.misDatos.cedula.trim();
-                    const telefonoConfig = appData.misDatos.telefono.trim();
-                    
-                    let matchCedula = cedulaConfig ? fullText.includes(cedulaConfig) : true;
-                    let matchTelefono = telefonoConfig ? fullText.includes(telefonoConfig) : true;
+                // 2. Validación Estricta Anti-Fraude (Destino / Cuenta / Teléfono / Cédula)
+                if (fullText) {
+                    let matchFound = false;
+                    const cedulaConfig = (appData.misDatos.cedula || '').trim();
+                    const telefonoConfig = (appData.misDatos.telefono || '').trim();
 
-                    if ((cedulaConfig && !matchCedula) || (telefonoConfig && !matchTelefono)) {
-                        ownerWarningText.textContent = `¡Cuidado! El comprobante no muestra tu Cédula o Teléfono configurado.`;
+                    if (cedulaConfig && fullText.includes(cedulaConfig)) matchFound = true;
+                    if (telefonoConfig && fullText.includes(telefonoConfig)) matchFound = true;
+
+                    // Revisar contra todas las cuentas registradas (cuenta completa o últimos 4 dígitos ej 7201)
+                    if (appData.accounts && appData.accounts.length > 0) {
+                        appData.accounts.forEach(acc => {
+                            const accNum = (acc.accountNumber || '').trim();
+                            if (accNum) {
+                                if (fullText.includes(accNum)) matchFound = true;
+                                const last4 = accNum.slice(-4);
+                                if (last4 && fullText.includes(last4)) matchFound = true;
+                            }
+                        });
+                    }
+
+                    if (!matchFound && (cedulaConfig || telefonoConfig || (appData.accounts && appData.accounts.length > 0))) {
+                        ownerWarningText.textContent = `¡ALERTA ANTIFRAUDE! El destino o datos del comprobante NO coinciden con tus cuentas registradas.`;
                         ownerWarning.style.display = 'block';
                         isOwnerValid = false;
                     } else {
@@ -644,7 +664,7 @@
                     return;
                 }
                 if (!isOwnerValid) {
-                    if (!confirm('Advertencia: El comprobante no coincide con tus datos de receptor. ¿Deseas guardarlo?')) {
+                    if (!confirm('¡PELIGRO! El comprobante no coincide con tus cuentas o teléfono. ¿Deseas guardarlo de todos modos?')) {
                         return;
                     }
                 }
@@ -757,15 +777,25 @@
                 cajaModal.classList.remove('hidden');
             }
 
-            // Gestión de Cuentas
+            // Gestión de Cuentas (Nombre y Número de Cuenta para OCR)
             document.getElementById('btnAddAccount').addEventListener('click', async () => {
                 const name = prompt('Nombre de la cuenta (Ej. Cuenta 4, Ahorros, etc.):');
                 if (name) {
-                    appData.accounts.push({ name: name.trim(), balance: 0 });
+                    appData.accounts.push({ name: name.trim(), accountNumber: '', balance: 0 });
                     await saveState();
                     renderUI();
                 }
             });
+
+            window.updateAccountName = async function(accIndex, val) {
+                appData.accounts[accIndex].name = val.trim();
+                await saveState();
+            };
+
+            window.updateAccountNumber = async function(accIndex, val) {
+                appData.accounts[accIndex].accountNumber = val.trim();
+                await saveState();
+            };
 
             window.updateAccountBalance = async function(accIndex, val) {
                 appData.accounts[accIndex].balance = parseFloat(val) || 0;
@@ -917,13 +947,17 @@
                     `).join('');
                 }
 
-                // Cuentas
+                // Cuentas (con campos editables para Número de Cuenta / Destino)
                 const accountsContainer = document.getElementById('accountsList');
                 accountsContainer.innerHTML = appData.accounts.map((acc, accIndex) => `
-                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1.5">
+                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-2">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-indigo-900">${acc.name} ${accIndex === 0 ? '(Recibe Taquilla)' : ''}</span>
+                            <input type="text" value="${acc.name}" onchange="updateAccountName(${accIndex}, this.value)" class="font-bold text-indigo-900 bg-transparent border-b border-indigo-200 text-xs w-3/4 focus:outline-none">
                             <button type="button" onclick="deleteAccount(${accIndex})" class="text-rose-400 hover:text-rose-600 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 block">Número de Cuenta (o últimos 4 dígitos ej. 7201)</label>
+                            <input type="text" value="${acc.accountNumber || ''}" onchange="updateAccountNumber(${accIndex}, this.value)" placeholder="Ej. 01020613810000317201" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-bold text-indigo-900">
                         </div>
                         <div>
                             <label class="text-[10px] text-slate-500 block">Saldo Actual (Bs)</label>
