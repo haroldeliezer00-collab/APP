@@ -3,1080 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.12 Unificado</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Tesseract.js para OCR automático -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 pb-28">
+    <title>Centro de Apuestas Harold José - Control Total Unificado</title>
+    <style>
+        :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .container { max-width: 600px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 15px; }
+        header h1 { margin: 0; font-size: 20px; color: var(--primary); }
+        header p { margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: bold; }
+        
+        .config-box { background: #eff6ff; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bfdbfe; font-size: 11px; }
+        .config-box input { width: 100%; padding: 6px; border: 1px solid #93c5fd; border-radius: 4px; margin-top: 4px; box-sizing: border-box; }
 
-    <!-- Encabezado con Sincronización Forzada -->
-    <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
-        <div class="flex justify-between items-center max-w-md mx-auto">
-            <button type="button" id="btnManualSync" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm">
-                <i class="fa-solid fa-cloud-arrow-up" id="syncIcon"></i> <span id="syncText">Sincronizado</span>
-            </button>
-            <div>
-                <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
-                <p class="text-[9px] text-slate-500">Unificado v4.12 (PC y Teléfono)</p>
-            </div>
-            <div class="w-12"></div>
-        </div>
+        .card { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 3px; color: #475569; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
+        
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-success { background: var(--accent); color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-primary { background: #4f46e5; color: white; }
+        
+        .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
+        .box-stat span { display: block; font-size: 10px; color: #64748b; }
+        .box-stat strong { font-size: 13px; color: var(--primary); }
+
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--primary); font-size: 13px; }
+        .client-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+        .client-actions button { padding: 5px; font-size: 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
+        
+        .days-bar { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
+        .day-btn { padding: 6px 12px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 15px; cursor: pointer; white-space: nowrap; font-weight: bold; }
+        .day-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+
+        .status-sync { text-align: center; font-size: 11px; color: #10b981; font-weight: bold; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Harold José</h1>
+        <p>Control Total Unificado (PC y Teléfono)</p>
     </header>
 
-    <main class="max-w-md mx-auto p-4 space-y-4">
+    <!-- Enlace de Google Sheets -->
+    <div class="config-box">
+        <label>Enlace de Conexión (Google Script / Nube):</label>
+        <input type="text" id="apiUrl" placeholder="Pega aquí tu enlace de Apps Script...">
+    </div>
 
-        <!-- ================= VISTA: PAGOS & OCR (TAQUILLA) ================= -->
-        <section id="view-pagos" class="tab-view space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Taquilla
-                </h2>
-                
-                <div class="border-2 border-dashed border-sky-300 rounded-xl p-4 text-center bg-sky-50/50 space-y-2">
-                    <div class="text-sky-600 text-2xl">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> aquí</p>
-                    <input type="file" id="fileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
-                </div>
+    <div id="statusSync" class="status-sync"></div>
 
-                <div id="previewContainer" class="hidden mt-3 text-center space-y-3">
-                    <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
-                    <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
-                </div>
+    <!-- 1. PANEL DE CAJA Y GLOBAL -->
+    <div class="card">
+        <div class="card-title">📊 Panel de Caja y Global</div>
+        <div class="grid-caja">
+            <div class="box-stat"><span>Suma Total (Cuentas + Pronosticador):</span> <strong id="lblTotalCuentas">0.00 Bs</strong></div>
+            <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
+        </div>
+        <div class="grid-caja">
+            <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
+            <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
+        </div>
+        <div style="display: flex; gap: 5px; margin-top: 8px;">
+            <button class="btn btn-warning" style="font-size: 12px; padding: 8px;" onclick="alert('Módulo de Premios activo')">🏆 Pagar Premio</button>
+            <button class="btn btn-danger" style="font-size: 12px; padding: 8px;" onclick="alert('Módulo de Gastos activo')">⛔ Registrar Gasto</button>
+        </div>
+    </div>
+
+    <!-- 2. REGISTRAR PAGO TAQUILLA (ANTI-FRAUDE) -->
+    <div class="card" style="border-top: 4px solid var(--accent);">
+        <div class="card-title">🛡️ Registrar Pago Taquilla (Validador Anti-Fraude)</div>
+        
+        <div class="form-group">
+            <label>Tipo de Operación</label>
+            <select id="tipo">
+                <option value="Ingreso">Ingreso / Pago Taquilla</option>
+                <option value="Premio">Pago de Premio</option>
+                <option value="Gasto">Gasto Registrado</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Número de Referencia / Operación</label>
+            <input type="text" id="referencia" placeholder="Ej. 00684939">
+        </div>
+
+        <div class="form-group">
+            <label>Nombre del Cliente</label>
+            <input type="text" id="cliente" placeholder="Ej. Norys Luzon / Edgar">
+        </div>
+
+        <div class="form-group">
+            <label>Monto del Pago (Bolívares - Bs)</label>
+            <input type="number" id="monto" placeholder="Ej. 400.00">
+        </div>
+
+        <button class="btn btn-success" onclick="guardarMovimiento()">Guardar en Google Sheets</button>
+    </div>
+
+    <!-- 3. CUENTAS Y NÚMEROS DESTINO (BANCOS) -->
+    <div class="card">
+        <div class="card-title">🏦 Cuentas y Números Destino (Bancos)</div>
+        <div class="form-group">
+            <label>Cuenta 1 (Principal - BDV)</label>
+            <input type="text" value="01020613810000317201">
+            <input type="number" id="banco1Saldo" value="400" style="margin-top: 4px;" placeholder="Saldo Actual (Bs)">
+        </div>
+        <div class="form-group">
+            <label>Cuenta 2</label>
+            <input type="text" placeholder="Ej. 0102...">
+            <input type="number" value="0.00" style="margin-top: 4px;">
+        </div>
+    </div>
+
+    <!-- 4. CONTROL DE CLIENTES Y SALDOS -->
+    <div class="card">
+        <div class="card-title">👥 Control de Clientes y Saldos</div>
+        
+        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+                <span>Norys Luzon</span>
+                <span style="color: #10b981;">Favor: Bs. 400.00</span>
             </div>
-
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador Anti-Fraude Estricto (Suma a Cuenta 1)
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
-                    <input type="text" id="refNumber" placeholder="Lectura automática o manual" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-bold text-sky-900">
-                    <p id="dupWarning" class="text-[11px] text-red-600 font-bold mt-1.5 hidden bg-red-50 p-2 rounded-lg border border-red-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="dupWarningText">Pago ya utilizado</span></p>
-                    <p id="ownerWarning" class="text-[11px] text-rose-700 font-bold mt-1.5 hidden bg-rose-50 p-2 rounded-lg border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="ownerWarningText">¡Alerta! El destino o datos no coinciden.</span></p>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del Cliente</label>
-                    <input type="text" id="clientName" placeholder="Nombre o alias" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto del Pago (Bolívares - Bs)</label>
-                    <input type="number" step="0.01" id="paymentAmount" placeholder="Ej. 500.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <button type="button" id="submitPayment" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow transition">
-                    Guardar Pago Taquilla
-                </button>
+            <div class="client-actions">
+                <button style="background: #f43f5e;" onclick="alert('Jugada para Norys')">Jugada</button>
+                <button style="background: #fbbf24;" onclick="alert('Premio para Norys')">Premio</button>
+                <button style="background: #34d399;" onclick="alert('Abono para Norys')">Abono</button>
+                <button style="background: #059669;" onclick="window.open('https://wa.me/')">WhatsApp</button>
             </div>
-        </section>
+        </div>
 
-        <!-- ================= VISTA: CAJA ================= -->
-        <section id="view-caja" class="tab-view space-y-4" style="display: none;">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Global</h2>
-                
-                <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2.5">
-                    <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
-                        <span class="text-slate-500">Suma Total (Cuentas + Pronosticador):</span>
-                        <span id="boxTotalCuentas" class="text-sky-800 font-bold">0.00 Bs</span>
-                    </div>
-                    <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-500">Total Premios Pagados:</span>
-                        <span id="boxPremios" class="text-amber-600 font-bold">0.00 Bs</span>
-                    </div>
-                    <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
-                        <span class="text-slate-500">Total Gastos Registrados:</span>
-                        <span id="boxGastos" class="text-rose-600 font-bold">0.00 Bs</span>
-                    </div>
-                    <div class="flex justify-between text-xs font-bold pt-1 text-sm">
-                        <span class="text-slate-700">Saldo Disponible Neto:</span>
-                        <span id="boxDisponible" class="text-emerald-700 font-bold">0.00 Bs</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mt-4">
-                    <button type="button" id="btnPremio" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
-                        <i class="fa-solid fa-trophy"></i> Pagar Premio
-                    </button>
-                    <button type="button" id="btnGasto" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow">
-                        <i class="fa-solid fa-minus-circle"></i> Registrar Gasto
-                    </button>
-                </div>
+        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+                <span>Edgar</span>
+                <span style="color: #64748b;">Favor: Bs. 0.00</span>
             </div>
-
-            <!-- Módulo Saldo Pronosticador con OCR Anti-Fraude -->
-            <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-sm space-y-3">
-                <div class="flex justify-between items-center border-b border-indigo-700 pb-2">
-                    <div>
-                        <h3 class="text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-tie text-amber-300"></i> Control Saldo Pronosticador</h3>
-                        <p class="text-[10px] text-indigo-200">Manejo de pagos, comprobantes y retiros</p>
-                    </div>
-                    <span id="pronosticoSaldoBadge" class="text-xs font-bold bg-amber-400 text-indigo-950 px-2.5 py-1 rounded-lg">0.00 Bs</span>
-                </div>
-
-                <!-- OCR / Subir Comprobante Pronosticador -->
-                <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700 space-y-2">
-                    <label class="block text-[11px] font-bold text-amber-300"><i class="fa-solid fa-shield-halved"></i> Registrar Ingreso Pronosticador con Comprobante (OCR)</label>
-                    <div class="border border-dashed border-indigo-500 rounded-xl p-2.5 text-center bg-indigo-900/40 space-y-1">
-                        <p id="pronosticoUploadText" class="text-[10px] text-indigo-200">Sube captura o pega imagen (<span class="bg-indigo-800 px-1 rounded">Ctrl+V</span>)</p>
-                        <input type="file" id="pronosticoFileInput" accept="image/*" class="w-full text-[10px] text-indigo-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-amber-500 file:text-indigo-950 hover:file:bg-amber-400 cursor-pointer">
-                    </div>
-                    <div id="pronosticoPreviewContainer" class="hidden text-center space-y-1">
-                        <img id="pronosticoImagePreview" src="" alt="Preview" class="max-h-28 mx-auto rounded border border-indigo-600">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-indigo-300 mb-0.5">Referencia</label>
-                        <input type="text" id="pronosticoRef" placeholder="Número de referencia" class="w-full text-xs p-2 rounded-lg bg-indigo-950 border border-indigo-700 text-amber-300 font-bold focus:outline-none">
-                        <p id="pronosticoDupWarning" class="text-[10px] text-rose-300 font-bold mt-1 hidden bg-rose-950/80 p-1.5 rounded border border-rose-800"><i class="fa-solid fa-triangle-exclamation"></i> <span id="pronosticoDupText">Referencia ya usada</span></p>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-indigo-300 mb-0.5">Monto en Bs</label>
-                        <input type="number" step="0.01" id="pronosticoAmountInput" placeholder="Ej. 2300.00" class="w-full text-xs p-2 rounded-lg bg-indigo-950 border border-indigo-700 text-white focus:outline-none">
-                    </div>
-                    <button type="button" id="btnPronosticoSaveOCR" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow">
-                        Agregar Ingreso Pronosticador
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button type="button" id="btnPronosticoIngresoManual" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2 px-2 rounded-xl shadow">
-                        <i class="fa-solid fa-plus-circle"></i> Ingreso Manual
-                    </button>
-                    <button type="button" id="btnPronosticoPago" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold py-2 px-2 rounded-xl shadow">
-                        <i class="fa-solid fa-paper-plane"></i> Pagar / Enviar
-                    </button>
-                </div>
-
-                <div id="pronosticoHistory" class="space-y-1.5 text-[11px] max-h-36 overflow-y-auto mt-2 pt-1 border-t border-indigo-800">
-                    <p class="text-indigo-300 text-center py-1">Sin movimientos recientes.</p>
-                </div>
+            <div class="client-actions">
+                <button style="background: #f43f5e;">Jugada</button>
+                <button style="background: #fbbf24;">Premio</button>
+                <button style="background: #34d399;">Abono</button>
+                <button style="background: #059669;">WhatsApp</button>
             </div>
+        </div>
 
-            <!-- Movimientos de Taquilla -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-xs font-bold text-slate-700 mb-2">Historial de Movimientos de Taquilla</h3>
-                <div id="cajaHistory" class="space-y-2 text-xs">
-                    <p class="text-slate-400 text-center py-2">No hay movimientos registrados.</p>
-                </div>
+        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+                <span>Carlos</span>
+                <span style="color: #64748b;">Favor: Bs. 0.00</span>
             </div>
-        </section>
-
-        <!-- ================= VISTA: SISTEMAS ================= -->
-        <section id="view-sistemas" class="tab-view space-y-4" style="display: none;">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-chart-line text-sky-600"></i> Sistemas y Loterías</h2>
-                        <p class="text-[10px] text-slate-500">Control diario y desglose semanal por sistema</p>
-                    </div>
-                    <button type="button" id="btnAddSystem" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
-                        <i class="fa-solid fa-plus"></i> Sistema
-                    </button>
-                </div>
-
-                <div id="daysTabsContainer" class="flex overflow-x-auto gap-1.5 py-1.5 no-scrollbar border-b border-slate-100 pb-2"></div>
-                <div id="systemsByDayContainer" class="space-y-3 mt-2"></div>
-
-                <div class="mt-6 space-y-3 border-t border-slate-200 pt-4">
-                    <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <i class="fa-solid fa-list-check text-sky-600"></i> Resumen de Todos los Sistemas
-                    </h3>
-                    <div id="systemsWeeklyBreakdown" class="space-y-3"></div>
-                </div>
-
-                <div class="bg-sky-900 text-white p-4 rounded-2xl space-y-2 text-xs mt-6 shadow-md">
-                    <p class="font-bold border-b border-sky-700 pb-1.5 text-center flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-calculator text-amber-300"></i> RESUMEN GENERAL ACUMULADO
-                    </p>
-                    <div class="flex justify-between"><span>Ventas Totales:</span> <strong id="globalVentas">0.00 Bs</strong></div>
-                    <div class="flex justify-between"><span>Premios Totales:</span> <strong id="globalPremios">0.00 Bs</strong></div>
-                    <div class="flex justify-between"><span>Comisiones Totales:</span> <strong id="globalComisiones">0.00 Bs</strong></div>
-                    <div class="flex justify-between border-t border-sky-700 pt-2 font-bold text-amber-300 text-sm">
-                        <span>Saldo Neto Global:</span> <span id="globalNeto">0.00 Bs</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= VISTA: CLIENTES ================= -->
-        <section id="view-clientes" class="tab-view space-y-4" style="display: none;">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-users text-indigo-600"></i> Control de Clientes y Saldos</h2>
-                        <p class="text-[10px] text-slate-500">Cuentas corrientes, jugadas y WhatsApp</p>
-                    </div>
-                    <button type="button" id="btnAddClient" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
-                        <i class="fa-solid fa-user-plus"></i> Cliente
-                    </button>
-                </div>
-                <div id="clientsContainer" class="space-y-3 mt-2"></div>
-            </div>
-        </section>
-
-        <!-- ================= VISTA: CUENTAS BANCARIAS Y DATOS RECEPTOR ================= -->
-        <section id="view-bancos" class="tab-view space-y-4" style="display: none;">
-            <!-- Configuración de Tus Datos para Validación OCR Anti-Fraude -->
-            <div class="bg-sky-900 text-white p-4 rounded-2xl shadow-sm space-y-3">
-                <div class="flex items-center gap-2 border-b border-sky-700 pb-2">
-                    <i class="fa-solid fa-id-card text-amber-300 text-base"></i>
-                    <div>
-                        <h2 class="text-xs font-bold text-white">Tus Datos de Receptor (Pago Móvil / Cédula)</h2>
-                        <p class="text-[10px] text-sky-200">El OCR usará esto para verificar que el pago vaya a tu nombre/teléfono</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] text-sky-200 mb-0.5">Cédula / RIF</label>
-                        <input type="text" id="configCedula" placeholder="Ej. 18274410" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-sky-200 mb-0.5">Teléfono Pago Móvil</label>
-                        <input type="text" id="configTelefono" placeholder="Ej. 04124489363" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-amber-300 font-bold focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-sky-200 mb-0.5">Banco / Alias Receptor</label>
-                    <input type="text" id="configBanco" placeholder="Ej. Banco de Venezuela / Harold" class="w-full text-xs p-2 rounded-lg bg-sky-950 border border-sky-700 text-white focus:outline-none">
-                </div>
-                <button type="button" id="btnSaveConfig" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow">
-                    Guardar Tus Datos Anti-Fraude
-                </button>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Cuentas y Números Destino</h2>
-                <p class="text-xs text-slate-500 mt-1">Configura aquí tus números de cuenta (ej. 0102...7201) para que el OCR valide las transferencias correctamente.</p>
-                
-                <div id="accountsList" class="mt-4 space-y-3 text-left text-xs"></div>
-
-                <button type="button" id="btnAddAccount" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow">
-                    <i class="fa-solid fa-plus"></i> Agregar Otra Cuenta
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Modal General para Caja / Pronosticador -->
-    <div id="cajaModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-lg space-y-3">
-            <h3 id="modalTitle" class="text-sm font-bold text-slate-700">Registrar Movimiento</h3>
-            <input type="number" step="0.01" id="modalAmount" placeholder="Monto en Bs" class="w-full text-xs p-3 rounded-xl border border-slate-200">
-            <input type="text" id="modalReason" placeholder="Motivo / Descripción / Referencia" class="w-full text-xs p-3 rounded-xl border border-slate-200">
-            <div class="flex gap-2">
-                <button type="button" id="modalCancel" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
-                <button type="button" id="modalSave" class="w-1/2 bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">Guardar</button>
+            <div class="client-actions">
+                <button style="background: #f43f5e;">Jugada</button>
+                <button style="background: #fbbf24;">Premio</button>
+                <button style="background: #34d399;">Abono</button>
+                <button style="background: #059669;">WhatsApp</button>
             </div>
         </div>
     </div>
 
-    <!-- Navegación Inferior -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 shadow-2xl z-50">
-        <button type="button" id="nav-pagos" class="flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition">
-            <i class="fa-solid fa-house text-lg"></i>
-            <span class="text-[10px] mt-1">Pagos</span>
-        </button>
-        <button type="button" id="nav-caja" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
-            <i class="fa-solid fa-wallet text-lg"></i>
-            <span class="text-[10px] mt-1">Caja</span>
-        </button>
-        <button type="button" id="nav-sistemas" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
-            <i class="fa-solid fa-chart-line text-lg"></i>
-            <span class="text-[10px] mt-1">Sistemas</span>
-        </button>
-        <button type="button" id="nav-clientes" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
-            <i class="fa-solid fa-users text-lg"></i>
-            <span class="text-[10px] mt-1">Clientes</span>
-        </button>
-        <button type="button" id="nav-bancos" class="flex flex-col items-center text-slate-400 flex-1 py-1 transition">
-            <i class="fa-solid fa-building-columns text-lg"></i>
-            <span class="text-[10px] mt-1">Cuentas</span>
-        </button>
-    </nav>
-
-    <!-- JavaScript v4.12 Unificado -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV49Data/data';
-            const STORAGE_KEY = 'haroldJoseUnifiedData';
-            const syncText = document.getElementById('syncText');
-            const syncIcon = document.getElementById('syncIcon');
-            const btnManualSync = document.getElementById('btnManualSync');
-
-            let appData = {
-                misDatos: {
-                    cedula: '18274410',
-                    telefono: '04124489363',
-                    banco: 'Banco de Venezuela'
-                },
-                payments: [],
-                cajaHistory: [],
-                pronosticador: {
-                    balance: 0,
-                    history: []
-                },
-                selectedDay: 'Lunes',
-                systems: [
-                    { name: 'Maxplay', commissionRate: 14, days: { Lunes: {ventas:0, premios:0}, Martes: {ventas:0, premios:0}, Miércoles: {ventas:0, premios:0}, Jueves: {ventas:0, premios:0}, Viernes: {ventas:0, premios:0}, Sábado: {ventas:0, premios:0}, Domingo: {ventas:0, premios:0} } },
-                    { name: 'Matrix Comp', commissionRate: 14, days: { Lunes: {ventas:0, premios:0}, Martes: {ventas:0, premios:0}, Miércoles: {ventas:0, premios:0}, Jueves: {ventas:0, premios:0}, Viernes: {ventas:0, premios:0}, Sábado: {ventas:0, premios:0}, Domingo: {ventas:0, premios:0} } },
-                    { name: 'SRQ Polla', commissionRate: 14, days: { Lunes: {ventas:0, premios:0}, Martes: {ventas:0, premios:0}, Miércoles: {ventas:0, premios:0}, Jueves: {ventas:0, premios:0}, Viernes: {ventas:0, premios:0}, Sábado: {ventas:0, premios:0}, Domingo: {ventas:0, premios:0} } },
-                    { name: 'Atenas', commissionRate: 12, days: { Lunes: {ventas:0, premios:0}, Martes: {ventas:0, premios:0}, Miércoles: {ventas:0, premios:0}, Jueves: {ventas:0, premios:0}, Viernes: {ventas:0, premios:0}, Sábado: {ventas:0, premios:0}, Domingo: {ventas:0, premios:0} } }
-                ],
-                clients: [
-                    { name: 'Edgar', phone: '584120000000', balance: 0 },
-                    { name: 'Carlos', phone: '584140000000', balance: 0 }
-                ],
-                accounts: [
-                    { name: 'Cuenta 1 (Principal - BDV)', accountNumber: '01020613810000317201', balance: 0 },
-                    { name: 'Cuenta 2', accountNumber: '', balance: 0 },
-                    { name: 'Cuenta 3', accountNumber: '', balance: 0 }
-                ]
-            };
-
-            // Cargar datos locales iniciales con la llave unificada
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    appData = { ...appData, ...parsed };
-                }
-            } catch(e) {}
-
-            // Función para guardar en la nube
-            async function saveState() {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                } catch(e) {}
-
-                syncText.textContent = 'Guardando...';
-                syncIcon.className = "fa-solid fa-rotate fa-spin";
-
-                try {
-                    const response = await fetch(SYNC_URL, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(appData)
-                    });
-                    if (response.ok) {
-                        syncText.textContent = 'Sincronizado';
-                        syncIcon.className = "fa-solid fa-cloud-arrow-up";
-                    }
-                } catch(e) {
-                    syncText.textContent = 'Modo Local';
-                    syncIcon.className = "fa-solid fa-triangle-exclamation";
-                }
-            }
-
-            // Función para descargar de la nube
-            async function fetchCloudData(isManual = false) {
-                if (isManual) {
-                    syncText.textContent = 'Sincronizando...';
-                    syncIcon.className = "fa-solid fa-rotate fa-spin";
-                }
-                try {
-                    const response = await fetch(SYNC_URL);
-                    if (response.ok) {
-                        const cloudData = await response.json();
-                        if (cloudData && typeof cloudData === 'object' && cloudData.accounts) {
-                            appData = { ...appData, ...cloudData };
-                            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e){}
-                            renderUI();
-                            syncText.textContent = 'Sincronizado';
-                            syncIcon.className = "fa-solid fa-cloud-arrow-up";
-                            if (isManual) alert('¡Datos actualizados desde la nube correctamente!');
-                        }
-                    } else if (response.status === 404) {
-                        await saveState();
-                        if (isManual) alert('¡Nube inicializada con éxito!');
-                    } else if (isManual) {
-                        alert('No se pudieron descargar los datos.');
-                    }
-                } catch(e) {
-                    syncText.textContent = 'Modo Local';
-                    syncIcon.className = "fa-solid fa-triangle-exclamation";
-                    if (isManual) alert('Error al conectar con la nube.');
-                }
-            }
-
-            btnManualSync.addEventListener('click', () => fetchCloudData(true));
-            
-            // Descarga inicial automática
-            fetchCloudData(false);
-
-            // Sincronización automática periódica cada 5 segundos
-            setInterval(() => {
-                fetchCloudData(false);
-            }, 5000);
-
-            // Sincronización instantánea al volver a enfocar la pantalla o pestaña
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    fetchCloudData(false);
-                }
-            });
-
-            // Navegación de vistas con auto-fetch
-            function switchTab(tabName) {
-                document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
-                const target = document.getElementById(`view-${tabName}`);
-                if (target) target.style.display = 'block';
-
-                ['pagos', 'caja', 'sistemas', 'clientes', 'bancos'].forEach(b => {
-                    const btn = document.getElementById(`nav-${b}`);
-                    if (btn) {
-                        btn.className = b === tabName ? "flex flex-col items-center text-sky-600 font-bold flex-1 py-1 transition" : "flex flex-col items-center text-slate-400 flex-1 py-1 transition";
-                    }
-                });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                fetchCloudData(false);
-            }
-
-            document.getElementById('nav-pagos').addEventListener('click', () => switchTab('pagos'));
-            document.getElementById('nav-caja').addEventListener('click', () => switchTab('caja'));
-            document.getElementById('nav-sistemas').addEventListener('click', () => switchTab('sistemas'));
-            document.getElementById('nav-clientes').addEventListener('click', () => switchTab('clientes'));
-            document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
-
-            // Guardar configuración receptor
-            document.getElementById('btnSaveConfig').addEventListener('click', async () => {
-                appData.misDatos.cedula = document.getElementById('configCedula').value.trim();
-                appData.misDatos.telefono = document.getElementById('configTelefono').value.trim();
-                appData.misDatos.banco = document.getElementById('configBanco').value.trim();
-                await saveState();
-                alert('¡Datos de receptor guardados correctamente!');
-            });
-
-            // OCR Taquilla y Validación Anti-Fraude Estricta
-            const fileInput = document.getElementById('fileInput');
-            const previewContainer = document.getElementById('previewContainer');
-            const imagePreview = document.getElementById('imagePreview');
-            const fileNameText = document.getElementById('fileName');
-            const uploadText = document.getElementById('uploadText');
-            const refNumberInput = document.getElementById('refNumber');
-            const dupWarning = document.getElementById('dupWarning');
-            const dupWarningText = document.getElementById('dupWarningText');
-            const ownerWarning = document.getElementById('ownerWarning');
-            const ownerWarningText = document.getElementById('ownerWarningText');
-
-            let isDataValid = true;
-            let isOwnerValid = true;
-            let currentOcrText = '';
-
-            function validarComprobanteCompleto(refText, fullText = '') {
-                const cleanRef = refText.trim();
-                isDataValid = true;
-                isOwnerValid = true;
-
-                if (cleanRef) {
-                    const existePago = appData.payments.find(p => p.ref === cleanRef);
-                    const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
-
-                    if (existePago || existePronostico) {
-                        const origen = existePago ? `Taquilla` : `Pronosticador`;
-                        dupWarningText.textContent = `¡Referencia ya utilizada en ${origen}!`;
-                        dupWarning.style.display = 'block';
-                        isDataValid = false;
-                    } else {
-                        dupWarning.style.display = 'none';
-                    }
-                } else {
-                    dupWarning.style.display = 'none';
-                }
-
-                if (fullText) {
-                    let matchFound = false;
-                    const cedulaConfig = (appData.misDatos.cedula || '').trim();
-                    const telefonoConfig = (appData.misDatos.telefono || '').trim();
-
-                    if (cedulaConfig && fullText.includes(cedulaConfig)) matchFound = true;
-                    if (telefonoConfig && fullText.includes(telefonoConfig)) matchFound = true;
-
-                    if (appData.accounts && appData.accounts.length > 0) {
-                        appData.accounts.forEach(acc => {
-                            const accNum = (acc.accountNumber || '').trim();
-                            if (accNum) {
-                                if (fullText.includes(accNum)) matchFound = true;
-                                const last4 = accNum.slice(-4);
-                                if (last4 && fullText.includes(last4)) matchFound = true;
-                            }
-                        });
-                    }
-
-                    if (!matchFound && (cedulaConfig || telefonoConfig || (appData.accounts && appData.accounts.length > 0))) {
-                        ownerWarningText.textContent = `¡ALERTA ANTIFRAUDE! El destino o datos del comprobante NO coinciden con tus cuentas registradas.`;
-                        ownerWarning.style.display = 'block';
-                        isOwnerValid = false;
-                    } else {
-                        ownerWarning.style.display = 'none';
-                    }
-                } else {
-                    ownerWarning.style.display = 'none';
-                }
-            }
-
-            refNumberInput.addEventListener('input', () => validarComprobanteCompleto(refNumberInput.value, currentOcrText));
-
-            async function procesarOCRGenerico(file, onResult, statusElement) {
-                if (!file) return;
-                statusElement.textContent = "Leyendo comprobante con IA...";
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const base64Img = e.target.result;
-                    try {
-                        const result = await Tesseract.recognize(base64Img, 'spa', {
-                            logger: m => {
-                                if (m.status === 'recognizing text') {
-                                    statusElement.textContent = `Leyendo: ${Math.round(m.progress * 100)}%`;
-                                }
-                            }
-                        });
-                        const textClean = result.data.text.replace(/[\n\r]+/g, ' ');
-                        currentOcrText = textClean;
-                        
-                        let encontrada = '';
-                        const refMatch = textClean.match(/(?:ref|referencia|operaci[oó]n|nro|número|transacci[oó]n)[^\d]*(\d{4,12})/i);
-                        if (refMatch && refMatch[1]) {
-                            encontrada = refMatch[1];
-                        } else {
-                            const numbers = textClean.match(/\b\d{4,10}\b/g);
-                            if (numbers) {
-                                const validNums = numbers.filter(n => !n.startsWith('04') && !n.startsWith('02') && n.length >= 4 && n.length <= 10);
-                                encontrada = validNums.length > 0 ? validNums[0] : numbers[0];
-                            }
-                        }
-                        onResult(encontrada || '', base64Img, textClean);
-                        statusElement.textContent = "¡Comprobante escaneado con éxito!";
-                    } catch (err) {
-                        statusElement.textContent = "Error al leer imagen. Ingresa manual.";
-                        onResult('', base64Img, '');
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files[0]) {
-                    fileNameText.textContent = e.target.files[0].name;
-                    previewContainer.style.display = 'block';
-                    imagePreview.src = URL.createObjectURL(e.target.files[0]);
-                    procesarOCRGenerico(e.target.files[0], (ref, img, fullText) => {
-                        if(ref) refNumberInput.value = ref;
-                        validarComprobanteCompleto(refNumberInput.value, fullText);
-                    }, uploadText);
-                }
-            });
-
-            // OCR Pronosticador
-            const pronosticoFileInput = document.getElementById('pronosticoFileInput');
-            const pronosticoPreviewContainer = document.getElementById('pronosticoPreviewContainer');
-            const pronosticoImagePreview = document.getElementById('pronosticoImagePreview');
-            const pronosticoUploadText = document.getElementById('pronosticoUploadText');
-            const pronosticoRefInput = document.getElementById('pronosticoRef');
-            const pronosticoDupWarning = document.getElementById('pronosticoDupWarning');
-            const pronosticoDupText = document.getElementById('pronosticoDupText');
-
-            let isPronosticoValid = true;
-
-            function verificarPronosticoRef(refText) {
-                const cleanRef = refText.trim();
-                isPronosticoValid = true;
-                if (!cleanRef) {
-                    pronosticoDupWarning.style.display = 'none';
-                    return;
-                }
-                const existePago = appData.payments.find(p => p.ref === cleanRef);
-                const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
-
-                if (existePago || existePronostico) {
-                    pronosticoDupText.textContent = `¡Referencia ya utilizada anteriormente!`;
-                    pronosticoDupWarning.style.display = 'block';
-                    isPronosticoValid = false;
-                } else {
-                    pronosticoDupWarning.style.display = 'none';
-                }
-            }
-
-            pronosticoRefInput.addEventListener('input', () => verificarPronosticoRef(pronosticoRefInput.value));
-
-            pronosticoFileInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files[0]) {
-                    pronosticoPreviewContainer.style.display = 'block';
-                    pronosticoImagePreview.src = URL.createObjectURL(e.target.files[0]);
-                    procesarOCRGenerico(e.target.files[0], (ref) => {
-                        if(ref) pronosticoRefInput.value = ref;
-                        verificarPronosticoRef(pronosticoRefInput.value);
-                    }, pronosticoUploadText);
-                }
-            });
-
-            // Portapapeles global (Ctrl+V)
-            window.addEventListener('paste', (e) => {
-                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                for (let item of items) {
-                    if (item.kind === 'file' && item.type.startsWith('image/')) {
-                        const blob = item.getAsFile();
-                        if (blob) {
-                            if (document.getElementById('view-pagos').style.display !== 'none') {
-                                fileNameText.textContent = "captura_portapapeles.jpg";
-                                previewContainer.style.display = 'block';
-                                imagePreview.src = URL.createObjectURL(blob);
-                                procesarOCRGenerico(blob, (ref, img, fullText) => {
-                                    if(ref) refNumberInput.value = ref;
-                                    validarComprobanteCompleto(refNumberInput.value, fullText);
-                                }, uploadText);
-                            } else if (document.getElementById('view-caja').style.display !== 'none') {
-                                pronosticoPreviewContainer.style.display = 'block';
-                                pronosticoImagePreview.src = URL.createObjectURL(blob);
-                                procesarOCRGenerico(blob, (ref) => {
-                                    if(ref) pronosticoRefInput.value = ref;
-                                    verificarPronosticoRef(pronosticoRefInput.value);
-                                }, pronosticoUploadText);
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Guardar Pago Taquilla
-            document.getElementById('submitPayment').addEventListener('click', async () => {
-                const ref = refNumberInput.value.trim();
-                const clientNameInput = document.getElementById('clientName').value.trim();
-                const amount = parseFloat(document.getElementById('paymentAmount').value);
-
-                if (!ref || !clientNameInput || isNaN(amount) || amount <= 0) {
-                    alert('Complete la Referencia, Nombre del Cliente y el Monto en Bs.');
-                    return;
-                }
-                if (!isDataValid) {
-                    alert('¡ACCIÓN BLOQUEADA! Esta referencia ya fue registrada.');
-                    return;
-                }
-                if (!isOwnerValid) {
-                    if (!confirm('¡PELIGRO! El comprobante no coincide con tus cuentas o teléfono. ¿Deseas guardarlo de todos modos?')) {
-                        return;
-                    }
-                }
-
-                appData.payments.push({ ref, client: clientNameInput, amount, date: new Date().toLocaleDateString() });
-                appData.cajaHistory.unshift({ desc: `Pago taquilla de ${clientNameInput}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
-
-                if (appData.accounts.length > 0) {
-                    appData.accounts[0].balance += amount;
-                }
-
-                let clienteExistente = appData.clients.find(c => c.name.toLowerCase() === clientNameInput.toLowerCase());
-                if (clienteExistente) {
-                    clienteExistente.balance += amount;
-                } else {
-                    appData.clients.push({ name: clientNameInput, phone: '', balance: amount });
-                }
-
-                await saveState();
-                renderUI();
-
-                refNumberInput.value = '';
-                document.getElementById('clientName').value = '';
-                document.getElementById('paymentAmount').value = '';
-                fileInput.value = '';
-                previewContainer.style.display = 'none';
-                uploadText.textContent = "Sube captura o presiona Ctrl+V aquí";
-                dupWarning.style.display = 'none';
-                ownerWarning.style.display = 'none';
-                isDataValid = true;
-                isOwnerValid = true;
-                alert('¡Pago de taquilla registrado y sincronizado en la nube!');
-            });
-
-            // Guardar Ingreso Pronosticador con OCR
-            document.getElementById('btnPronosticoSaveOCR').addEventListener('click', async () => {
-                const ref = pronosticoRefInput.value.trim();
-                const amount = parseFloat(document.getElementById('pronosticoAmountInput').value);
-
-                if (!ref || isNaN(amount) || amount <= 0) {
-                    alert('Ingrese la Referencia y el Monto en Bs.');
-                    return;
-                }
-                if (!isPronosticoValid) {
-                    alert('¡ACCIÓN BLOQUEADA! Esta referencia ya fue utilizada.');
-                    return;
-                }
-
-                appData.pronosticador.balance += amount;
-                appData.pronosticador.history.unshift({ desc: `Ingreso con comprobante (Ref: ${ref})`, amount: `+${amount.toFixed(2)}`, type: 'income', ref });
-                appData.cajaHistory.unshift({ desc: `Ingreso Pronosticador Ref ${ref}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
-
-                await saveState();
-                renderUI();
-
-                pronosticoRefInput.value = '';
-                document.getElementById('pronosticoAmountInput').value = '';
-                pronosticoFileInput.value = '';
-                pronosticoPreviewContainer.style.display = 'none';
-                pronosticoDupWarning.style.display = 'none';
-                isPronosticoValid = true;
-                alert('¡Ingreso del pronosticador guardado y sincronizado!');
-            });
-
-            // Modales Caja
-            let currentModalType = '';
-            const cajaModal = document.getElementById('cajaModal');
-            
-            document.getElementById('btnPremio').addEventListener('click', () => openCajaModal('premio'));
-            document.getElementById('btnGasto').addEventListener('click', () => openCajaModal('gasto'));
-            document.getElementById('btnPronosticoIngresoManual').addEventListener('click', () => openCajaModal('pronostico_ingreso'));
-            document.getElementById('btnPronosticoPago').addEventListener('click', () => openCajaModal('pronostico_pago'));
-            document.getElementById('modalCancel').addEventListener('click', () => cajaModal.classList.add('hidden'));
-            
-            document.getElementById('modalSave').addEventListener('click', async () => {
-                const amount = parseFloat(document.getElementById('modalAmount').value);
-                const reason = document.getElementById('modalReason').value.trim();
-                if (isNaN(amount) || amount <= 0 || !reason) {
-                    alert('Introduce un monto válido y un motivo.');
-                    return;
-                }
-
-                if (currentModalType === 'premio' || currentModalType === 'gasto') {
-                    const tipoDesc = currentModalType === 'premio' ? 'Premio Pagado' : 'Gasto Registrado';
-                    appData.cajaHistory.unshift({ desc: `${tipoDesc}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
-                } else if (currentModalType === 'pronostico_ingreso') {
-                    appData.pronosticador.balance += amount;
-                    appData.pronosticador.history.unshift({ desc: `Ingreso Manual: ${reason}`, amount: `+${amount.toFixed(2)}`, type: 'income', ref: '' });
-                } else if (currentModalType === 'pronostico_pago') {
-                    appData.pronosticador.balance -= amount;
-                    appData.pronosticador.history.unshift({ desc: `Pago/Retiro: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense', ref: '' });
-                }
-
-                await saveState();
-                renderUI();
-                cajaModal.classList.add('hidden');
-                document.getElementById('modalAmount').value = '';
-                document.getElementById('modalReason').value = '';
-            });
-
-            function openCajaModal(type) {
-                currentModalType = type;
-                let title = '';
-                if (type === 'premio') title = 'Pagar / Restar Premio (Bs)';
-                else if (type === 'gasto') title = 'Registrar Gasto (Bs)';
-                else if (type === 'pronostico_ingreso') title = 'Ingreso Manual Pronosticador (Bs)';
-                else if (type === 'pronostico_pago') title = 'Pagar o Enviar al Pronosticador (Bs)';
-
-                document.getElementById('modalTitle').textContent = title;
-                cajaModal.classList.remove('hidden');
-            }
-
-            // Gestión de Cuentas
-            document.getElementById('btnAddAccount').addEventListener('click', async () => {
-                const name = prompt('Nombre de la cuenta (Ej. Cuenta 4, Ahorros, etc.):');
-                if (name) {
-                    appData.accounts.push({ name: name.trim(), accountNumber: '', balance: 0 });
-                    await saveState();
-                    renderUI();
-                }
-            });
-
-            window.updateAccountName = async function(accIndex, val) {
-                appData.accounts[accIndex].name = val.trim();
-                await saveState();
-            };
-
-            window.updateAccountNumber = async function(accIndex, val) {
-                appData.accounts[accIndex].accountNumber = val.trim();
-                await saveState();
-            };
-
-            window.updateAccountBalance = async function(accIndex, val) {
-                appData.accounts[accIndex].balance = parseFloat(val) || 0;
-                await saveState();
-                renderUI();
-            };
-
-            window.deleteAccount = async function(accIndex) {
-                if (appData.accounts.length <= 1) {
-                    alert('Debes mantener al menos una cuenta.');
-                    return;
-                }
-                if (confirm('¿Eliminar esta cuenta?')) {
-                    appData.accounts.splice(accIndex, 1);
-                    await saveState();
-                    renderUI();
-                }
-            };
-
-            // Sistemas
-            document.getElementById('btnAddSystem').addEventListener('click', async () => {
-                const name = prompt('Nombre del Sistema:');
-                const rate = prompt('Porcentaje de Comisión (%):');
-                if (name && rate !== null && !isNaN(rate)) {
-                    appData.systems.push({
-                        name: name.trim(),
-                        commissionRate: parseFloat(rate),
-                        days: { Lunes: {ventas:0, premios:0}, Martes: {ventas:0, premios:0}, Miércoles: {ventas:0, premios:0}, Jueves: {ventas:0, premios:0}, Viernes: {ventas:0, premios:0}, Sábado: {ventas:0, premios:0}, Domingo: {ventas:0, premios:0} }
-                    });
-                    await saveState();
-                    renderUI();
-                }
-            });
-
-            window.setDay = function(day) {
-                appData.selectedDay = day;
-                renderUI();
-            };
-
-            window.updateSysDay = async function(sysIndex, field, value) {
-                const val = parseFloat(value) || 0;
-                appData.systems[sysIndex].days[appData.selectedDay][field] = val;
-                await saveState();
-                renderUI();
-            };
-
-            window.deleteSystem = async function(sysIndex) {
-                if (confirm('¿Eliminar este sistema?')) {
-                    appData.systems.splice(sysIndex, 1);
-                    await saveState();
-                    renderUI();
-                }
-            };
-
-            // Clientes
-            document.getElementById('btnAddClient').addEventListener('click', async () => {
-                const name = prompt('Nombre del Cliente:');
-                const phone = prompt('Teléfono (Opcional):');
-                if (name) {
-                    appData.clients.push({ name: name.trim(), phone: phone || '', balance: 0 });
-                    await saveState();
-                    renderUI();
-                }
-            });
-
-            window.clientAction = async function(cIndex, type) {
-                const amount = prompt(`Monto en Bs:`);
-                const val = parseFloat(amount);
-                if (isNaN(val) || val <= 0) return;
-
-                if (type === 'jugada') appData.clients[cIndex].balance -= val;
-                else if (type === 'premio') appData.clients[cIndex].balance += val;
-                else if (type === 'abono') appData.clients[cIndex].balance += val;
-                
-                await saveState();
-                renderUI();
-            };
-
-            window.copyWhatsAppMessage = function(cIndex) {
-                const c = appData.clients[cIndex];
-                const estado = c.balance >= 0 ? `saldo a favor de Bs. ${c.balance.toFixed(2)}` : `saldo pendiente de Bs. ${Math.abs(c.balance).toFixed(2)}`;
-                const msg = `¡Hola, *${c.name}*! Le informamos que su estado de cuenta actual presenta un ${estado}. ¡Mucho éxito en sus próximas jugadas! 🎲✨`;
-                navigator.clipboard.writeText(msg).then(() => alert(`¡Mensaje copiado para ${c.name}!`));
-            };
-
-            window.deleteClient = async function(cIndex) {
-                if (confirm('¿Eliminar cliente?')) {
-                    appData.clients.splice(cIndex, 1);
-                    await saveState();
-                    renderUI();
-                }
-            };
-
-            // Renderizado Global
-            function renderUI() {
-                if (appData.misDatos) {
-                    if (document.getElementById('configCedula') && !document.getElementById('configCedula').value) {
-                        document.getElementById('configCedula').value = appData.misDatos.cedula || '';
-                        document.getElementById('configTelefono').value = appData.misDatos.telefono || '';
-                        document.getElementById('configBanco').value = appData.misDatos.banco || '';
-                    }
-                }
-
-                let totalCuentas = 0;
-                appData.accounts.forEach(acc => { totalCuentas += acc.balance; });
-                totalCuentas += (appData.pronosticador.balance || 0);
-
-                let totalPremios = 0;
-                let totalGastos = 0;
-                appData.cajaHistory.forEach(h => {
-                    const val = parseFloat(h.amount.replace('+', '').replace('-', '')) || 0;
-                    if (h.type === 'expense') {
-                        if (h.desc.toLowerCase().includes('premio')) totalPremios += val;
-                        else totalGastos += val;
-                    }
-                });
-
-                const saldoDisponible = totalCuentas - totalPremios - totalGastos;
-
-                document.getElementById('boxTotalCuentas').textContent = `${totalCuentas.toFixed(2)} Bs`;
-                document.getElementById('boxPremios').textContent = `${totalPremios.toFixed(2)} Bs`;
-                document.getElementById('boxGastos').textContent = `${totalGastos.toFixed(2)} Bs`;
-                document.getElementById('boxDisponible').textContent = `${saldoDisponible.toFixed(2)} Bs`;
-
-                // Pronosticador
-                document.getElementById('pronosticoSaldoBadge').textContent = `${appData.pronosticador.balance.toFixed(2)} Bs`;
-                const pronosticoHistory = document.getElementById('pronosticoHistory');
-                if (appData.pronosticador.history.length === 0) {
-                    pronosticoHistory.innerHTML = `<p class="text-indigo-300 text-center py-1">Sin movimientos recientes.</p>`;
-                } else {
-                    pronosticoHistory.innerHTML = appData.pronosticador.history.map(h => `
-                        <div class="flex justify-between items-center bg-indigo-800/60 p-1.5 rounded-lg">
-                            <span>${h.desc}</span>
-                            <span class="font-bold ${h.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">${h.amount} Bs</span>
-                        </div>
-                    `).join('');
-                }
-
-                // Historial Caja
-                const historyContainer = document.getElementById('cajaHistory');
-                if (appData.cajaHistory.length === 0) {
-                    historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos.</p>`;
-                } else {
-                    historyContainer.innerHTML = appData.cajaHistory.map(h => `
-                        <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="text-slate-700">${h.desc}</span>
-                            <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount} Bs</span>
-                        </div>
-                    `).join('');
-                }
-
-                // Cuentas
-                const accountsContainer = document.getElementById('accountsList');
-                accountsContainer.innerHTML = appData.accounts.map((acc, accIndex) => `
-                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <input type="text" value="${acc.name}" onchange="updateAccountName(${accIndex}, this.value)" class="font-bold text-indigo-900 bg-transparent border-b border-indigo-200 text-xs w-3/4 focus:outline-none">
-                            <button type="button" onclick="deleteAccount(${accIndex})" class="text-rose-400 hover:text-rose-600 text-xs"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-500 block">Número de Cuenta (o últimos 4 dígitos ej. 7201)</label>
-                            <input type="text" value="${acc.accountNumber || ''}" onchange="updateAccountNumber(${accIndex}, this.value)" placeholder="Ej. 01020613810000317201" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-bold text-indigo-900">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-500 block">Saldo Actual (Bs)</label>
-                            <input type="number" step="0.01" value="${acc.balance || ''}" onchange="updateAccountBalance(${accIndex}, this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-bold text-indigo-900">
-                        </div>
-                    </div>
-                `).join('');
-
-                // Días y Sistemas
-                const daysList = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-                document.getElementById('daysTabsContainer').innerHTML = daysList.map(day => `
-                    <button type="button" onclick="setDay('${day}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${appData.selectedDay === day ? 'bg-sky-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                        ${day}
-                    </button>
-                `).join('');
-
-                const systemsContainer = document.getElementById('systemsByDayContainer');
-                if (appData.systems.length === 0) {
-                    systemsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay sistemas.</p>`;
-                } else {
-                    systemsContainer.innerHTML = appData.systems.map((sys, sIndex) => {
-                        const dData = sys.days[appData.selectedDay] || { ventas: 0, premios: 0 };
-                        const ventas = dData.ventas;
-                        const premios = dData.premios;
-                        const comision = (ventas * sys.commissionRate) / 100;
-                        const neto = ventas - premios - comision;
-
-                        return `
-                            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                                <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
-                                    <h3 class="text-xs font-bold text-sky-900">${sys.name} <span class="text-[10px] text-slate-500">(${sys.commissionRate}%)</span></h3>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[10px] text-slate-600">Neto: <strong class="${neto >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${neto.toFixed(2)} Bs</strong></span>
-                                        <button type="button" onclick="deleteSystem(${sIndex})" class="text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block">Ventas</label>
-                                        <input type="number" step="0.01" value="${ventas || ''}" onchange="updateSysDay(${sIndex}, 'ventas', this.value)" class="w-full p-2 text-xs rounded-xl border bg-white font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block">Premios</label>
-                                        <input type="number" step="0.01" value="${premios || ''}" onchange="updateSysDay(${sIndex}, 'premios', this.value)" class="w-full p-2 text-xs rounded-xl border bg-white font-semibold">
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                // Resumen Semanal Sistemas
-                document.getElementById('systemsWeeklyBreakdown').innerHTML = appData.systems.map(sys => {
-                    let sV = 0, sP = 0, sC = 0, sN = 0;
-                    daysList.forEach(day => {
-                        const d = sys.days[day] || { ventas: 0, premios: 0 };
-                        const v = d.ventas; const p = d.premios;
-                        const c = (v * sys.commissionRate) / 100;
-                        sV += v; sP += p; sC += c; sN += (v - p - c);
-                    });
-                    return `
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-sky-100 space-y-1 text-xs">
-                            <div class="flex justify-between font-bold text-sky-900 border-b pb-1">
-                                <span>${sys.name}</span>
-                                <span class="${sN >= 0 ? 'text-emerald-600' : 'text-rose-600'}">Neto: Bs. ${sN.toFixed(2)}</span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1 text-[11px] text-slate-600 pt-1">
-                                <div>Ventas: <strong>${sV.toFixed(2)}</strong></div>
-                                <div>Premios: <strong>${sP.toFixed(2)}</strong></div>
-                                <div>Comisión: <strong>${sC.toFixed(2)}</strong></div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                let gV = 0, gP = 0, gC = 0, gN = 0;
-                appData.systems.forEach(sys => {
-                    daysList.forEach(day => {
-                        const d = sys.days[day] || { ventas: 0, premios: 0 };
-                        const v = d.ventas; const p = d.premios;
-                        const c = (v * sys.commissionRate) / 100;
-                        gV += v; gP += p; gC += c; gN += (v - p - c);
-                    });
-                });
-
-                document.getElementById('globalVentas').textContent = `${gV.toFixed(2)} Bs`;
-                document.getElementById('globalPremios').textContent = `${gP.toFixed(2)} Bs`;
-                document.getElementById('globalComisiones').textContent = `${gC.toFixed(2)} Bs`;
-                document.getElementById('globalNeto').textContent = `${gN.toFixed(2)} Bs`;
-
-                // Clientes
-                const clientsContainer = document.getElementById('clientsContainer');
-                if (appData.clients.length === 0) {
-                    clientsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay clientes.</p>`;
-                } else {
-                    clientsContainer.innerHTML = appData.clients.map((c, cIndex) => `
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                            <div class="flex justify-between items-center border-b pb-1.5">
-                                <span class="text-xs font-bold text-indigo-900">${c.name}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold ${c.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
-                                        ${c.balance >= 0 ? `Favor: Bs. ${c.balance.toFixed(2)}` : `Debe: Bs. ${Math.abs(c.balance).toFixed(2)}`}
-                                    </span>
-                                    <button type="button" onclick="deleteClient(${cIndex})" class="text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1.5">
-                                <button type="button" onclick="clientAction(${cIndex}, 'jugada')" class="bg-rose-50 text-rose-700 text-[10px] font-bold py-2 rounded-xl border">Jugada</button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'premio')" class="bg-amber-50 text-amber-700 text-[10px] font-bold py-2 rounded-xl border">Premio</button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'abono')" class="bg-emerald-50 text-emerald-700 text-[10px] font-bold py-2 rounded-xl border">Abono</button>
-                            </div>
-                            <button type="button" onclick="copyWhatsAppMessage(${cIndex})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-2 rounded-xl shadow mt-1">
-                                <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
-                            </button>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            renderUI();
+    <!-- 5. SISTEMAS Y LOTERÍAS -->
+    <div class="card">
+        <div class="card-title">📈 Sistemas y Loterías</div>
+        <div class="days-bar">
+            <button class="day-btn active">Lunes</button>
+            <button class="day-btn">Martes</button>
+            <button class="day-btn">Miércoles</button>
+            <button class="day-btn">Jueves</button>
+            <button class="day-btn">Viernes</button>
+            <button class="day-btn">Sábado</button>
+        </div>
+
+        <div class="item-row">
+            <div><strong>Maxplay</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
+        </div>
+        <div class="item-row">
+            <div><strong>Matrix Comp</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
+        </div>
+        <div class="item-row">
+            <div><strong>SRQ Polla</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
+        </div>
+        <div class="item-row">
+            <div><strong>Atenas</strong> <span style="font-size:10px; color:#64748b;">(12%)</span></div>
+            <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    window.onload = function() {
+        const savedUrl = localStorage.getItem('taquilla_url');
+        if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
+        cargarDatosNube();
+    };
+
+    function guardarMovimiento() {
+        const url = document.getElementById('apiUrl').value.trim();
+        const tipo = document.getElementById('tipo').value;
+        const referencia = document.getElementById('referencia').value.trim();
+        const cliente = document.getElementById('cliente').value.trim();
+        const monto = document.getElementById('monto').value.trim();
+
+        if (!url) { alert("Pega tu enlace de Google Script arriba."); return; }
+        if (!referencia || !cliente || !monto) { alert("Completa los campos de referencia, cliente y monto."); return; }
+
+        localStorage.setItem('taquilla_url', url);
+        document.getElementById('statusSync').innerText = "Sincronizando con la nube...";
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: referencia,
+            cliente: cliente,
+            monto: monto,
+            tipo: tipo
+        };
+
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        })
+        .then(() => {
+            document.getElementById('statusSync').innerText = "¡Guardado y sincronizado con éxito!";
+            document.getElementById('referencia').value = "";
+            document.getElementById('cliente').value = "";
+            document.getElementById('monto').value = "";
+            setTimeout(cargarDatosNube, 2000);
+        })
+        .catch(() => {
+            document.getElementById('statusSync').innerText = "Error de sincronización.";
         });
-    </script>
+    }
+
+    function cargarDatosNube() {
+        const url = document.getElementById('apiUrl').value.trim();
+        if (!url) return;
+
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 1) {
+                let totalIngresos = 0, totalPremios = 0, totalGastos = 0;
+                for (let i = 1; i < data.length; i++) {
+                    let fila = data[i];
+                    let monto = parseFloat(fila[4]) || 0;
+                    let tipo = fila[5] || 'Ingreso';
+                    if (tipo === 'Ingreso') totalIngresos += monto;
+                    if (tipo === 'Premio') totalPremios += monto;
+                    if (tipo === 'Gasto') totalGastos += monto;
+                }
+                document.getElementById('lblTotalCuentas').innerText = totalIngresos.toFixed(2) + " Bs";
+                document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
+                document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
+                document.getElementById('lblSaldoNeto').innerText = (totalIngresos - totalPremios - totalGastos).toFixed(2) + " Bs";
+            }
+        })
+        .catch(() => {});
+    }
+</script>
+
 </body>
 </html>
