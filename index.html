@@ -11,7 +11,7 @@
 
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v3.9 FUNCIONAL</span>
+            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v4.0 CONTROL TOTAL</span>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
                 <p class="text-[9px] text-slate-500">Sistema de Pagos y Caja</p>
@@ -40,33 +40,17 @@
                 <div id="previewContainer" class="hidden mt-3 text-center space-y-3">
                     <img id="imagePreview" src="" alt="Vista previa" class="max-h-40 mx-auto rounded-lg shadow-sm border">
                     <p id="fileName" class="text-xs text-slate-500 font-medium"></p>
-                    
-                    <button type="button" id="btnAnalizar" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar y Extraer Datos de la Captura
-                    </button>
-
-                    <div id="analysisBox" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-1">
-                        <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                            <i class="fa-solid fa-spinner fa-spin text-amber-600" id="spinnerIcon"></i>
-                            <span id="analysisText">Analizando comprobante...</span>
-                        </p>
-                        <div id="analysisResultDetails" class="text-[11px] text-amber-800 hidden space-y-0.5 mt-1 border-t border-amber-200 pt-1">
-                            <p>✅ Referencia: <span id="resRef" class="font-bold">---</span></p>
-                            <p>✅ Monto: <span id="resMonto" class="font-bold">---</span></p>
-                            <p>✅ Banco: <span id="resBanco" class="font-bold">---</span></p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-sky-600"></i> Lector y Verificador Antiduplicados
+                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Verificador y Registro de Comprobante
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
-                    <input type="text" id="refNumber" placeholder="Ej. 006851779829" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <input type="text" id="refNumber" placeholder="Ingresa los últimos dígitos o referencia" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <p id="dupWarning" class="text-[10px] text-red-500 font-bold mt-1 hidden"><i class="fa-solid fa-triangle-exclamation"></i> ¡Atención! Esta referencia ya fue registrada anteriormente.</p>
                 </div>
 
@@ -83,12 +67,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto del Pago (Bs / USD)</label>
-                    <input type="number" step="0.01" id="paymentAmount" placeholder="0.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto del Pago (Bolívares - Bs)</label>
+                    <input type="number" step="0.01" id="paymentAmount" placeholder="500.00" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Destino del Pago (Banco)</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Banco Receptor</label>
                     <select id="paymentBank" class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <option value="Banco de Venezuela">Banco de Venezuela</option>
                         <option value="Banesco">Banesco</option>
@@ -112,11 +96,11 @@
                 <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
                     <div class="flex justify-between text-xs font-medium">
                         <span class="text-slate-500">Efectivo Disponible:</span>
-                        <span id="cashEffective" class="text-slate-800 font-bold">$0.00</span>
+                        <span id="cashEffective" class="text-slate-800 font-bold">0.00 Bs</span>
                     </div>
                     <div class="flex justify-between text-xs font-medium">
                         <span class="text-slate-500">Pagos Móviles / Bancos:</span>
-                        <span id="cashBanks" class="text-slate-800 font-bold">$0.00</span>
+                        <span id="cashBanks" class="text-slate-800 font-bold">0.00 Bs</span>
                     </div>
                 </div>
 
@@ -139,34 +123,19 @@
         </section>
 
         <section id="view-sistemas" class="tab-view space-y-4" style="display: none;">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Sistemas de Apuestas</h2>
-                <p class="text-xs text-slate-500 mt-1">Gestión de animalitos, loterías y pollas.</p>
-                
-                <div class="mt-4 space-y-3 text-left">
-                    <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 flex justify-between items-center">
-                        <div>
-                            <p class="text-xs font-bold text-sky-900">Animalitos y Loterías</p>
-                            <p class="text-[10px] text-slate-500">Ventas activas</p>
-                        </div>
-                        <div class="text-right">
-                            <span id="sysLottoBalance" class="text-xs font-bold text-sky-900">0.00 Bs</span>
-                            <button type="button" id="btnUpdateLotto" class="ml-2 bg-sky-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
-                        </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-chart-line text-sky-600"></i> Sistemas y Loterías</h2>
+                        <p class="text-[10px] text-slate-500">Control de ventas, premios y comisión semanal (Lunes a Domingo)</p>
                     </div>
-
-                    <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
-                        <div>
-                            <p class="text-xs font-bold text-indigo-900">Terminales y Pollas</p>
-                            <p class="text-[10px] text-slate-500">Control de jugadas</p>
-                        </div>
-                        <div class="text-right">
-                            <span id="sysPollasBalance" class="text-xs font-bold text-indigo-900">0.00 Bs</span>
-                            <button type="button" id="btnUpdatePollas" class="ml-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded">Actualizar</button>
-                        </div>
-                    </div>
+                    <button type="button" id="btnAddSystem" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
+                        <i class="fa-solid fa-plus"></i> Nuevo Sistema
+                    </button>
                 </div>
+
+                <div id="systemsContainer" class="space-y-4 mt-3">
+                    </div>
             </div>
         </section>
 
@@ -189,7 +158,7 @@
     <div id="cajaModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-lg space-y-3">
             <h3 id="modalTitle" class="text-sm font-bold text-slate-700">Registrar Movimiento</h3>
-            <input type="number" step="0.01" id="modalAmount" placeholder="Monto (Ej. 10.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
+            <input type="number" step="0.01" id="modalAmount" placeholder="Monto en Bs (Ej. 500.00)" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <input type="text" id="modalReason" placeholder="Motivo / Descripción" class="w-full text-xs p-3 rounded-xl border border-slate-200">
             <div class="flex gap-2">
                 <button type="button" id="modalCancel" class="w-1/2 bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl">Cancelar</button>
@@ -223,7 +192,21 @@
                 payments: [],
                 cajaBalance: { effective: 0, banks: 0 },
                 cajaHistory: [],
-                systems: { lotto: 0, pollas: 0 },
+                systems: [
+                    {
+                        name: 'Lotoactivo / La Granjita',
+                        commissionRate: 15, // 15%
+                        days: {
+                            Lunes: { ventas: 0, premios: 0 },
+                            Martes: { ventas: 0, premios: 0 },
+                            Miércoles: { ventas: 0, premios: 0 },
+                            Jueves: { ventas: 0, premios: 0 },
+                            Viernes: { ventas: 0, premios: 0 },
+                            Sábado: { ventas: 0, premios: 0 },
+                            Domingo: { ventas: 0, premios: 0 }
+                        }
+                    }
+                ],
                 banks: [
                     { name: 'Banco de Venezuela', acc: '0102-****-2299', phone: '0412-4489363' },
                     { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000' }
@@ -231,7 +214,7 @@
             };
 
             try {
-                const saved = localStorage.getItem('haroldJoseDataV39');
+                const saved = localStorage.getItem('haroldJoseDataV40');
                 if (saved) {
                     appData = JSON.parse(saved);
                 }
@@ -241,13 +224,13 @@
 
             function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV39', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV40', JSON.stringify(appData));
                 } catch(e) {
                     console.error("Error al guardar localStorage", e);
                 }
             }
 
-            // 1. Navegación por pestañas segura
+            // 1. Navegación por pestañas
             function switchTab(tabName) {
                 const views = document.querySelectorAll('.tab-view');
                 views.forEach(v => v.style.display = 'none');
@@ -277,17 +260,16 @@
             document.getElementById('nav-sistemas').addEventListener('click', () => switchTab('sistemas'));
             document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
 
-            // 2. Carga de Imagen y Análisis
+            // 2. Carga de Imagen
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
             const fileNameText = document.getElementById('fileName');
             const uploadText = document.getElementById('uploadText');
-            const btnAnalizar = document.getElementById('btnAnalizar');
 
             function procesarArchivo(file, nombre) {
                 if (file) {
-                    uploadText.textContent = "¡Imagen cargada correctamente!";
+                    uploadText.textContent = "¡Captura cargada correctamente!";
                     fileNameText.textContent = nombre || file.name;
                     previewContainer.style.display = 'block';
                     
@@ -296,8 +278,6 @@
                         imagePreview.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
-
-                    ejecutarAnalisis();
                 }
             }
 
@@ -307,7 +287,6 @@
                 }
             });
 
-            // Pegar imagen con Ctrl+V
             window.addEventListener('paste', (e) => {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let item of items) {
@@ -319,41 +298,6 @@
                     }
                 }
             });
-
-            function ejecutarAnalisis() {
-                const analysisBox = document.getElementById('analysisBox');
-                const analysisText = document.getElementById('analysisText');
-                const spinnerIcon = document.getElementById('spinnerIcon');
-                const analysisResultDetails = document.getElementById('analysisResultDetails');
-
-                analysisBox.style.display = 'block';
-                spinnerIcon.style.display = 'inline-block';
-                analysisText.textContent = "Analizando comprobante y extrayendo referencia...";
-                analysisResultDetails.style.display = 'none';
-
-                setTimeout(() => {
-                    const mockRef = Math.floor(100000000 + Math.random() * 900000000).toString();
-                    const mockMonto = (Math.random() * 150 + 10).toFixed(2);
-                    const bancos = ['Banco de Venezuela', 'Banesco', 'Mercantil'];
-                    const mockBanco = bancos[Math.floor(Math.random() * bancos.length)];
-
-                    document.getElementById('refNumber').value = mockRef;
-                    document.getElementById('paymentAmount').value = mockMonto;
-                    document.getElementById('paymentBank').value = mockBanco;
-
-                    document.getElementById('resRef').textContent = mockRef;
-                    document.getElementById('resMonto').textContent = mockMonto + " Bs/USD";
-                    document.getElementById('resBanco').textContent = mockBanco;
-
-                    analysisText.textContent = "¡Comprobante analizado con éxito!";
-                    spinnerIcon.style.display = 'none';
-                    analysisResultDetails.style.display = 'block';
-
-                    document.getElementById('refNumber').dispatchEvent(new Event('input'));
-                }, 1000);
-            }
-
-            btnAnalizar.addEventListener('click', ejecutarAnalisis);
 
             // 3. Selección de Cliente
             const clientSelect = document.getElementById('clientSelect');
@@ -372,7 +316,7 @@
             const dupWarning = document.getElementById('dupWarning');
             refNumberInput.addEventListener('input', () => {
                 const val = refNumberInput.value.trim();
-                if(val.length > 3) {
+                if(val.length > 2) {
                     const exists = appData.payments.some(p => p.ref === val);
                     dupWarning.style.display = exists ? 'block' : 'none';
                 } else {
@@ -388,7 +332,7 @@
                 const bank = document.getElementById('paymentBank').value;
 
                 if(!ref || !client || isNaN(amount) || amount <= 0) {
-                    alert('Por favor complete todos los datos del pago.');
+                    alert('Por favor complete todos los datos del pago (Referencia, Cliente y Monto en Bs).');
                     return;
                 }
 
@@ -400,7 +344,7 @@
                     appData.cajaBalance.banks += amount;
                 }
 
-                appData.cajaHistory.unshift({ desc: `Pago de ${client} (${bank})`, amount: `+${amount}`, type: 'income' });
+                appData.cajaHistory.unshift({ desc: `Pago Bs. ${amount} de ${client} (${bank})`, amount: `+${amount.toFixed(2)}`, type: 'income' });
 
                 saveState();
                 renderUI();
@@ -412,9 +356,8 @@
                 previewContainer.style.display = 'none';
                 uploadText.textContent = "Sube tu captura o presiona Ctrl+V aquí";
                 dupWarning.style.display = 'none';
-                document.getElementById('analysisBox').style.display = 'none';
 
-                alert('¡Pago registrado con éxito!');
+                alert('¡Pago registrado con éxito en Bolívares!');
             });
 
             // 6. Modal y Caja
@@ -428,7 +371,7 @@
 
             function openCajaModal(type) {
                 currentModalType = type;
-                document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio' : 'Registrar Gasto';
+                document.getElementById('modalTitle').textContent = type === 'premio' ? 'Pagar / Restar Premio (Bs)' : 'Registrar Gasto (Bs)';
                 cajaModal.classList.remove('hidden');
             }
 
@@ -443,12 +386,12 @@
                 const reason = document.getElementById('modalReason').value.trim();
 
                 if(isNaN(amount) || amount <= 0 || !reason) {
-                    alert('Introduce un monto válido y un motivo.');
+                    alert('Introduce un monto válido en Bs y un motivo.');
                     return;
                 }
 
                 appData.cajaBalance.effective -= amount;
-                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount}`, type: 'expense' });
+                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
                 
                 saveState();
                 renderUI();
@@ -456,22 +399,46 @@
                 alert('Movimiento registrado.');
             }
 
-            // 7. Sistemas y Bancos
-            document.getElementById('btnUpdateLotto').addEventListener('click', () => updateSystem('Loterias'));
-            document.getElementById('btnUpdatePollas').addEventListener('click', () => updateSystem('Pollas'));
-            document.getElementById('btnAddBank').addEventListener('click', addBankPrompt);
-
-            function updateSystem(sysName) {
-                const val = prompt(`Nuevo saldo para ${sysName}:`);
-                if(val !== null && !isNaN(val)) {
-                    if(sysName === 'Loterias') appData.systems.lotto = parseFloat(val);
-                    if(sysName === 'Pollas') appData.systems.pollas = parseFloat(val);
+            // 7. Gestión de Sistemas y Control Semanal
+            document.getElementById('btnAddSystem').addEventListener('click', () => {
+                const name = prompt('Nombre del Sistema (Ej. Lotto Rey, Terminales, etc.):');
+                const rate = prompt('Porcentaje de Comisión (%) (Ej. 10 o 15):');
+                if(name && rate !== null && !isNaN(rate)) {
+                    appData.systems.push({
+                        name: name.trim(),
+                        commissionRate: parseFloat(rate),
+                        days: {
+                            Lunes: { ventas: 0, premios: 0 },
+                            Martes: { ventas: 0, premios: 0 },
+                            Miércoles: { ventas: 0, premios: 0 },
+                            Jueves: { ventas: 0, premios: 0 },
+                            Viernes: { ventas: 0, premios: 0 },
+                            Sábado: { ventas: 0, premios: 0 },
+                            Domingo: { ventas: 0, premios: 0 }
+                        }
+                    });
                     saveState();
                     renderUI();
                 }
-            }
+            });
 
-            function addBankPrompt() {
+            window.updateDayData = function(sysIndex, day, field, value) {
+                const val = parseFloat(value) || 0;
+                appData.systems[sysIndex].days[day][field] = val;
+                saveState();
+                renderUI();
+            };
+
+            window.deleteSystem = function(sysIndex) {
+                if(confirm('¿Eliminar este sistema de la lista?')) {
+                    appData.systems.splice(sysIndex, 1);
+                    saveState();
+                    renderUI();
+                }
+            };
+
+            // 8. Bancos
+            document.getElementById('btnAddBank').addEventListener('click', () => {
                 const name = prompt('Nombre del Banco:');
                 const acc = prompt('Número de Cuenta / Referencia:');
                 const phone = prompt('Teléfono Pago Móvil:');
@@ -480,13 +447,14 @@
                     saveState();
                     renderUI();
                 }
-            }
+            });
 
-            // 8. Renderizado General
+            // 9. Renderizado General
             function renderUI() {
-                document.getElementById('cashEffective').textContent = `$${appData.cajaBalance.effective.toFixed(2)}`;
-                document.getElementById('cashBanks').textContent = `$${appData.cajaBalance.banks.toFixed(2)}`;
+                document.getElementById('cashEffective').textContent = `${appData.cajaBalance.effective.toFixed(2)} Bs`;
+                document.getElementById('cashBanks').textContent = `${appData.cajaBalance.banks.toFixed(2)} Bs`;
 
+                // Historial Caja
                 const historyContainer = document.getElementById('cajaHistory');
                 if(appData.cajaHistory.length === 0) {
                     historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos hoy.</p>`;
@@ -494,14 +462,88 @@
                     historyContainer.innerHTML = appData.cajaHistory.map(h => `
                         <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
                             <span class="text-slate-700">${h.desc}</span>
-                            <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount}</span>
+                            <span class="font-bold ${h.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${h.amount} Bs</span>
                         </div>
                     `).join('');
                 }
 
-                document.getElementById('sysLottoBalance').textContent = `${appData.systems.lotto.toFixed(2)} Bs`;
-                document.getElementById('sysPollasBalance').textContent = `${appData.systems.pollas.toFixed(2)} Bs`;
+                // Renderizar Sistemas y Resumen Semanal Lunes a Domingo
+                const systemsContainer = document.getElementById('systemsContainer');
+                if(appData.systems.length === 0) {
+                    systemsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay sistemas registrados. Agrega uno arriba.</p>`;
+                } else {
+                    systemsContainer.innerHTML = appData.systems.map((sys, sIndex) => {
+                        let totalVentasSemana = 0;
+                        let totalPremiosSemana = 0;
+                        let totalComisionSemana = 0;
+                        let totalNetoSemana = 0;
 
+                        const daysList = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+                        const daysRows = daysList.map(day => {
+                            const dData = sys.days[day] || { ventas: 0, premios: 0 };
+                            const ventas = dData.ventas;
+                            const premios = dData.premios;
+                            const comision = (ventas * sys.commissionRate) / 100;
+                            const neto = ventas - premios - comision;
+
+                            totalVentasSemana += ventas;
+                            totalPremiosSemana += premios;
+                            totalComisionSemana += comision;
+                            totalNetoSemana += neto;
+
+                            return `
+                                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                                    <div class="flex justify-between items-center font-bold text-sky-900 border-b border-slate-200 pb-1">
+                                        <span>${day}</span>
+                                        <span class="text-[10px] text-slate-500">Neto: <strong class="${neto >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${neto.toFixed(2)} Bs</strong></span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 block">Ventas (Bs)</label>
+                                            <input type="number" step="0.01" value="${ventas || ''}" onchange="updateDayData(${sIndex}, '${day}', 'ventas', this.value)" placeholder="0.00" class="w-full p-1.5 text-xs rounded border border-slate-300 bg-white">
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 block">Premios (Bs)</label>
+                                            <input type="number" step="0.01" value="${premios || ''}" onchange="updateDayData(${sIndex}, '${day}', 'premios', this.value)" placeholder="0.00" class="w-full p-1.5 text-xs rounded border border-slate-300 bg-white">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] text-slate-600 pt-0.5">
+                                        <span>Comisión (${sys.commissionRate}%): <strong>${comision.toFixed(2)} Bs</strong></span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        return `
+                            <div class="bg-white p-3 rounded-2xl border border-sky-200 shadow-sm space-y-3">
+                                <div class="flex justify-between items-center bg-sky-50 p-2.5 rounded-xl border border-sky-100">
+                                    <div>
+                                        <h3 class="text-xs font-bold text-sky-900">${sys.name}</h3>
+                                        <p class="text-[10px] text-sky-700">Comisión configurada: <strong>${sys.commissionRate}%</strong></p>
+                                    </div>
+                                    <button type="button" onclick="deleteSystem(${sIndex})" class="text-rose-500 hover:text-rose-700 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+
+                                <div class="space-y-2">
+                                    ${daysRows}
+                                </div>
+
+                                <div class="bg-sky-900 text-white p-3 rounded-xl space-y-1 text-xs">
+                                    <p class="font-bold border-b border-sky-700 pb-1 text-center"><i class="fa-solid fa-calculator"></i> RESUMEN SEMANAL ACUMULADO</p>
+                                    <div class="flex justify-between"><span>Ventas Totales:</span> <strong>${totalVentasSemana.toFixed(2)} Bs</strong></div>
+                                    <div class="flex justify-between"><span>Premios Totales:</span> <strong>${totalPremiosSemana.toFixed(2)} Bs</strong></div>
+                                    <div class="flex justify-between"><span>Comisión Total (${sys.commissionRate}%):</span> <strong>${totalComisionSemana.toFixed(2)} Bs</strong></div>
+                                    <div class="flex justify-between border-t border-sky-700 pt-1 font-bold text-amber-300">
+                                        <span>Saldo Neto Semanal:</span> <span>${totalNetoSemana.toFixed(2)} Bs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Bancos
                 const banksContainer = document.getElementById('banksList');
                 banksContainer.innerHTML = appData.banks.map(b => `
                     <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1">
