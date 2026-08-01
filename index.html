@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Harold José - Taquilla</title>
+    <!-- Librería de Reconocimiento de Texto (OCR) para leer los comprobantes automáticamente -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; padding-bottom: 70px; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; }
-        
-        /* Configuración de enlace Nube */
-        .config-box { background: #eff6ff; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bfdbfe; font-size: 11px; }
-        .config-box input { width: 100%; padding: 6px; border: 1px solid #93c5fd; border-radius: 4px; margin-top: 4px; box-sizing: border-box; }
 
         /* Tarjeta Principal */
         .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
@@ -38,21 +36,16 @@
         .nav-item.active { color: #0284c7; }
         .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
 
-        /* Mensajes de Alerta Antifraude */
+        /* Mensajes de Alerta */
         #alertBox { padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; display: none; font-weight: bold; }
         .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .alert-loading { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     </style>
 </head>
 <body onpaste="manejarPegado(event)">
 
 <div class="container">
-    
-    <!-- Configuración del enlace de Google Sheets (Tu puente a la nube) -->
-    <div class="config-box">
-        <label>Enlace de Conexión Nube (Google Apps Script):</label>
-        <input type="text" id="apiUrl" placeholder="Pega aquí tu URL de Apps Script...">
-    </div>
 
     <div id="alertBox"></div>
 
@@ -66,7 +59,7 @@
         <div class="upload-area" onclick="document.getElementById('fileInput').click()">
             <span style="font-size: 24px;">☁️</span>
             <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
-            <input type="file" id="fileInput" style="display:none;" onchange="cargarCaptura(event)">
+            <input type="file" id="fileInput" style="display:none;" onchange="cargarCapturaArchivo(event)">
             <div id="fileName" style="font-size: 11px; color: #64748b; margin-top: 4px;">No se ha seleccionado ningún archivo</div>
         </div>
 
@@ -76,7 +69,7 @@
 
         <div class="form-group">
             <label>Número de Referencia / Operación</label>
-            <input type="text" id="referencia" placeholder="Ej. 00684939">
+            <input type="text" id="referencia" placeholder="Lectura automática por OCR o manual">
         </div>
 
         <div class="form-group">
@@ -86,7 +79,7 @@
 
         <div class="form-group">
             <label>Monto del Pago (Bolívares - Bs)</label>
-            <input type="number" id="monto" placeholder="Ej. 500.00">
+            <input type="text" id="monto" placeholder="Ej. 80.00">
         </div>
 
         <button class="btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
@@ -104,45 +97,109 @@
 </nav>
 
 <script>
-    // Recordar URL de la nube en el navegador
-    window.onload = function() {
-        const savedUrl = localStorage.getItem('taquilla_url');
-        if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
-    };
+    // Enlace de Google Apps Script ya configurado y fijo permanentemente
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDq4lfs7pYccAjcPzFQ61pmz93hA4R6SG51/exec";
 
-    // Función para manejar Ctrl+V (Pegar imagen/comprobante)
+    // Manejar cuando pegas la imagen con Ctrl+V
     function manejarPegado(event) {
         const items = (event.clipboardData || event.originalEvent.clipboardData).items;
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf("image") !== -1) {
                 const blob = items[i].getAsFile();
-                document.getElementById('fileName').innerText = "Imagen pegada del portapapeles con éxito (" + blob.name + ")";
-                // Aquí se simula la lectura OCR rápida de referencia si quisieras integrarlo
+                document.getElementById('fileName').innerText = "Imagen pegada con éxito. Analizando con OCR...";
+                procesarImagenOCR(blob);
                 break;
             }
         }
     }
 
-    function cargarCaptura(event) {
+    // Manejar cuando seleccionas archivo por el botón
+    function cargarCapturaArchivo(event) {
         if(event.target.files.length > 0) {
-            document.getElementById('fileName').innerText = event.target.files[0].name;
+            const file = event.target.files[0];
+            document.getElementById('fileName').innerText = file.name + ". Analizando con OCR...";
+            procesarImagenOCR(file);
         }
+    }
+
+    // Motor OCR para leer automáticamente el comprobante de cualquier banco
+    function procesarImagenOCR(imageFile) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert-loading';
+        alertBox.innerText = '🔍 Leyendo comprobante y buscando número de operación...';
+
+        Tesseract.recognize(
+            imageFile,
+            'spa', // Idioma español
+            { 
+                logger: m => console.log(m) 
+            }
+        ).then(({ data: { text } }) => {
+            console.log("Texto detectado:", text);
+            
+            // Buscar patrones comunes de Operación o Referencia (números de 6 a 15 dígitos)
+            let referenciaEncontrada = "";
+            const lineas = text.split('\n');
+            
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i].toLowerCase();
+                if (linea.includes('operación') || linea.includes('operacion') || linea.includes('referencia') || linea.includes('ref')) {
+                    // Extraer números de esa misma línea o la siguiente
+                    let numerosEnLinea = lineas[i].match(/\d{6,15}/);
+                    if (numerosEnLinea) {
+                        referenciaEncontrada = numerosEnLinea[0];
+                        break;
+                    } else if (i + 1 < lineas.length) {
+                        let numerosSiguiente = lineas[i+1].match(/\d{6,15}/);
+                        if (numerosSiguiente) {
+                            referenciaEncontrada = numerosSiguiente[0];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Si no encontró por palabra clave, busca cualquier número largo aislado en todo el texto
+            if (!referenciaEncontrada) {
+                let generalMatch = text.match(/\d{8,14}/);
+                if (generalMatch) {
+                    referenciaEncontrada = generalMatch[0];
+                }
+            }
+
+            // Intentar detectar monto (ej: 80,00 o 500.00)
+            let montoEncontrado = "";
+            let matchMonto = text.match(/([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})\s*(?:bs|bol[ií]vares)?/i);
+            if (matchMonto) {
+                montoEncontrado = matchMonto[1].replace('.', '').replace(',', '.');
+            }
+
+            // Autocompletar campos
+            if (referenciaEncontrada) {
+                document.getElementById('referencia').value = referenciaEncontrada;
+            }
+            if (montoEncontrado) {
+                document.getElementById('monto').value = montoEncontrado;
+            }
+
+            alertBox.className = 'alert-success';
+            alertBox.innerText = referenciaEncontrada ? '¡Lectura completada con éxito! Referencia detectada: ' + referenciaEncontrada : 'Imagen leída, pero por favor verifica el número de referencia manualmente.';
+            document.getElementById('fileName').innerText = 'Comprobante cargado y leído correctamente';
+
+        }).catch(err => {
+            console.error(err);
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Error al leer la imagen automáticamente. Ingresa los datos manual.';
+        });
     }
 
     // Guardar y Validar Antifraude contra la Nube
     function guardarPagoTaquilla() {
-        const url = document.getElementById('apiUrl').value.trim();
         const referencia = document.getElementById('referencia').value.trim();
         const cliente = document.getElementById('cliente').value.trim();
         const monto = document.getElementById('monto').value.trim();
         const alertBox = document.getElementById('alertBox');
-
-        if (!url) {
-            alertBox.style.display = 'block';
-            alertBox.className = 'alert-error';
-            alertBox.innerText = '¡Falta el enlace de Google Apps Script arriba para validar contra fraudes!';
-            return;
-        }
 
         if (!referencia || !cliente || !monto) {
             alertBox.style.display = 'block';
@@ -151,10 +208,9 @@
             return;
         }
 
-        localStorage.setItem('taquilla_url', url);
         alertBox.style.display = 'block';
-        alertBox.className = 'alert-success';
-        alertBox.innerText = 'Verificando referencia en la nube (Antifraude)...';
+        alertBox.className = 'alert-loading';
+        alertBox.innerText = '🛡️ Verificando antifraude y guardando en Google Sheets...';
 
         const datos = {
             accion: "registrar",
@@ -163,10 +219,10 @@
             monto: monto
         };
 
-        // Envía los datos al script de Google Sheets para verificar duplicados en vivo
-        fetch(url, {
+        // Enviar a Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // O cors si configuras cabeceras en Google
+            mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(datos)
         })
