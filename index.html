@@ -680,4 +680,121 @@
                                         <input type="number" step="0.01" value="${ventas || ''}" onchange="updateSysDay(${sIndex}, 'ventas', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-500 block">Premios (${
+                                        <label class="text-[10px] text-slate-500 block">Premios (${appData.selectedDay})</label>
+                                        <input type="number" step="0.01" value="${premios || ''}" onchange="updateSysDay(${sIndex}, 'premios', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-[10px] text-slate-500 pt-0.5 px-1">
+                                    <span>Comisión (${sys.commissionRate}%): <strong>${comision.toFixed(2)} Bs</strong></span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Desglose Semanal por Sistema
+                const systemsWeeklyBreakdown = document.getElementById('systemsWeeklyBreakdown');
+                if (appData.systems.length === 0) {
+                    systemsWeeklyBreakdown.innerHTML = `<p class="text-xs text-slate-400 text-center">No hay sistemas.</p>`;
+                } else {
+                    systemsWeeklyBreakdown.innerHTML = appData.systems.map(sys => {
+                        let sVentas = 0, sPremios = 0, sComisiones = 0, sNeto = 0;
+                        daysList.forEach(day => {
+                            const d = sys.days[day] || { ventas: 0, premios: 0 };
+                            const v = d.ventas;
+                            const p = d.premios;
+                            const c = (v * sys.commissionRate) / 100;
+                            const n = v - p - c;
+                            sVentas += v;
+                            sPremios += p;
+                            sComisiones += c;
+                            sNeto += n;
+                        });
+
+                        return `
+                            <div class="bg-slate-50 p-3 rounded-2xl border border-sky-100 space-y-1.5 text-xs">
+                                <div class="flex justify-between font-bold text-sky-900 border-b border-slate-200 pb-1">
+                                    <span>${sys.name} (${sys.commissionRate}%)</span>
+                                    <span class="${sNeto >= 0 ? 'text-emerald-600' : 'text-rose-600'}">Neto: Bs. ${sNeto.toFixed(2)}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1 text-[11px] text-slate-600 pt-1">
+                                    <div>Ventas: <strong>${sVentas.toFixed(2)}</strong></div>
+                                    <div>Premios: <strong>${sPremios.toFixed(2)}</strong></div>
+                                    <div>Comisión: <strong>${sComisiones.toFixed(2)}</strong></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                let gVentas = 0, gPremios = 0, gComisiones = 0, gNeto = 0;
+                appData.systems.forEach(sys => {
+                    daysList.forEach(day => {
+                        const d = sys.days[day] || { ventas: 0, premios: 0 };
+                        const v = d.ventas;
+                        const p = d.premios;
+                        const c = (v * sys.commissionRate) / 100;
+                        const n = v - p - c;
+                        gVentas += v;
+                        gPremios += p;
+                        gComisiones += c;
+                        gNeto += n;
+                    });
+                });
+
+                document.getElementById('globalVentas').textContent = `${gVentas.toFixed(2)} Bs`;
+                document.getElementById('globalPremios').textContent = `${gPremios.toFixed(2)} Bs`;
+                document.getElementById('globalComisiones').textContent = `${gComisiones.toFixed(2)} Bs`;
+                document.getElementById('globalNeto').textContent = `${gNeto.toFixed(2)} Bs`;
+
+                const clientsContainer = document.getElementById('clientsContainer');
+                if (appData.clients.length === 0) {
+                    clientsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay clientes registrados.</p>`;
+                } else {
+                    clientsContainer.innerHTML = appData.clients.map((c, cIndex) => `
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
+                                <div>
+                                    <h3 class="text-xs font-bold text-indigo-900">${c.name}</h3>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold ${c.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                                        ${c.balance >= 0 ? `Favor: Bs. ${c.balance.toFixed(2)}` : `Debe: Bs. ${Math.abs(c.balance).toFixed(2)}`}
+                                    </span>
+                                    <button type="button" onclick="deleteClient(${cIndex})" class="text-rose-400 hover:text-rose-600 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <button type="button" onclick="clientAction(${cIndex}, 'jugada')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold py-2 rounded-xl border border-rose-200">
+                                    <i class="fa-solid fa-dice"></i> Jugada
+                                </button>
+                                <button type="button" onclick="clientAction(${cIndex}, 'premio')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold py-2 rounded-xl border border-amber-200">
+                                    <i class="fa-solid fa-trophy"></i> Premio
+                                </button>
+                                <button type="button" onclick="clientAction(${cIndex}, 'abono')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold py-2 rounded-xl border border-emerald-200">
+                                    <i class="fa-solid fa-money-bill-wave"></i> Abono
+                                </button>
+                            </div>
+                            <button type="button" onclick="copyWhatsAppMessage(${cIndex})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-2 rounded-xl shadow mt-1">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> Copiar Mensaje para WhatsApp
+                            </button>
+                        </div>
+                    `).join('');
+                }
+
+                const banksContainer = document.getElementById('banksList');
+                banksContainer.innerHTML = appData.banks.map(b => `
+                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
+                        <p class="font-bold text-indigo-900">${b.name}</p>
+                        <p class="text-slate-700"><strong>Cuenta:</strong> ${b.acc}</p>
+                        <p class="text-slate-700"><strong>Pago Móvil:</strong> ${b.phone}</p>
+                        <p class="text-[10px] text-slate-500"><strong>Titular:</strong> ${b.holder}</p>
+                    </div>
+                `).join('');
+            }
+
+            renderUI();
+        });
+    </script>
+</body>
+</html>
