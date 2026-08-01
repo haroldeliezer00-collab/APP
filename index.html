@@ -20,7 +20,6 @@
         .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-success { background: var(--accent); color: white; }
         .btn-warning { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
         .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
         .box-stat span { display: block; font-size: 10px; color: #64748b; }
@@ -60,7 +59,7 @@
             </div>
             <div class="form-group">
                 <label>Nombre del Cliente</label>
-                <input type="text" id="cliente" placeholder="Ej. Picapica">
+                <input type="text" id="cliente" placeholder="Ej. Marco Miguel">
             </div>
             <div class="form-group">
                 <label>Monto del Pago (Bolívares - Bs)</label>
@@ -118,9 +117,8 @@
 </nav>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDq4lfs7pYccAjcPzFQ61pmz93hA4R6SG51/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDQ4lfs7pYcCaJcPzFQ61pmz93hA4R6SG51Jk4H1JLJQEZkTkv3vkDKZPuxQ/exec";
     
-    // Historial respaldado en localStorage para garantizar velocidad y respaldo local instantáneo
     let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
 
     window.onload = function() {
@@ -134,7 +132,7 @@
         document.getElementById('view-' + vista).classList.add('active');
         elemento.classList.add('active');
         if(vista === 'caja') {
-            actualizarInterfazCaja();
+            sincronizarConNube();
         }
     }
 
@@ -184,7 +182,7 @@
             if(refEncontrada) document.getElementById('referencia').value = refEncontrada;
             if(montoEncontrado) document.getElementById('monto').value = montoEncontrado;
 
-            let duplicado = historialGlobal.some(item => item.referencia.toString().trim() === refEncontrada.toString().trim());
+            let duplicado = historialGlobal.some(item => item.referencia && item.referencia.toString().trim() === refEncontrada.toString().trim());
             if(duplicado) {
                 alertBox.className = 'alert-error';
                 alertBox.innerText = '⚠️ ¡ALERTA! La referencia ' + refEncontrada + ' ya se encuentra registrada.';
@@ -234,7 +232,7 @@
             return;
         }
 
-        let duplicado = historialGlobal.some(item => item.referencia.toString().trim() === ref.toString().trim());
+        let duplicado = historialGlobal.some(item => item.referencia && item.referencia.toString().trim() === ref.toString().trim());
         if(duplicado) {
             alertBox.style.display = 'block';
             alertBox.className = 'alert-error';
@@ -244,7 +242,7 @@
 
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🛡️ Guardando pago en la nube...';
+        alertBox.innerText = '🛡️ Guardando pago en Google Sheets...';
 
         const datos = { referencia: ref, cliente: cliente, monto: monto, tipo: "Ingreso Taquilla" };
 
@@ -256,9 +254,8 @@
         })
         .then(() => {
             alertBox.className = 'alert-success';
-            alertBox.innerText = '¡Pago registrado y guardado con éxito!';
+            alertBox.innerText = '¡Pago registrado en la nube con éxito!';
             
-            // Agregar localmente de inmediato
             historialGlobal.push({
                 fecha: new Date().toLocaleDateString(),
                 hora: new Date().toLocaleTimeString(),
@@ -328,8 +325,8 @@
             }
 
             html += `<div class="history-item">
-                <div><strong>${item.cliente}</strong><br><span style="font-size:10px; color:#64748b;">Ref: ${item.referencia} | ${item.hora || ''}</span></div>
-                <div style="text-align:right;"><strong style="color:var(--accent);">+${m.toFixed(2)} Bs</strong><br><span style="font-size:9px; background:#e0f2fe; padding:1px 4px; border-radius:3px;">${item.tipo}</span></div>
+                <div><strong>${item.cliente || 'Sin nombre'}</strong><br><span style="font-size:10px; color:#64748b;">Ref: ${item.referencia || ''} | ${item.hora || ''}</span></div>
+                <div style="text-align:right;"><strong style="color:var(--accent);">+${m.toFixed(2)} Bs</strong><br><span style="font-size:9px; background:#e0f2fe; padding:1px 4px; border-radius:3px;">${item.tipo || 'Ingreso Taquilla'}</span></div>
             </div>`;
         });
 
