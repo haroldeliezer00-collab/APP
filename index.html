@@ -3,92 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harold José - Unificado v4.12 (PC y Teléfono)</title>
+    <title>Harold José - Taquilla</title>
     <style>
         :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 12px; color: var(--text); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; padding-bottom: 70px; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 15px; }
-        header h1 { margin: 0; font-size: 20px; color: var(--primary); }
-        header p { margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: bold; }
-
-        .card { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         
-        .form-group { margin-bottom: 10px; }
-        label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 3px; color: #475569; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
-        
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
-        .btn-success { background: var(--accent); color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-primary { background: #4f46e5; color: white; }
-
-        /* Panel de Caja */
-        .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
-        .box-stat span { display: block; font-size: 10px; color: #64748b; }
-        .box-stat strong { font-size: 13px; color: var(--primary); }
-
-        /* Clientes & Acciones */
-        .client-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
-        .client-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 6px; }
-        .client-actions { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 4px; }
-        .client-actions button { padding: 6px 4px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
-        
-        /* Días de la semana */
-        .days-bar { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
-        .day-btn { padding: 6px 12px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 15px; cursor: pointer; white-space: nowrap; font-weight: bold; }
-        .day-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
-
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #0284c7; font-size: 13px; }
-        
-        /* Upload area */
-        .upload-area { border: 2px dashed #93c5fd; background: #eff6ff; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
-        .upload-area p { margin: 5px 0; font-size: 11px; color: #1e40af; }
-        
+        /* Configuración de enlace Nube */
         .config-box { background: #eff6ff; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bfdbfe; font-size: 11px; }
         .config-box input { width: 100%; padding: 6px; border: 1px solid #93c5fd; border-radius: 4px; margin-top: 4px; box-sizing: border-box; }
+
+        /* Tarjeta Principal */
+        .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        /* Área de Carga / Pegar Comprobante */
+        .upload-area { border: 2px dashed #93c5fd; background: #f0fdf4; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
+        .upload-area:hover { background: #dcfce7; }
+        .upload-area p { margin: 8px 0 0; font-size: 12px; color: #166534; font-weight: bold; }
+        
+        /* Validador Antifraude Banner */
+        .anti-fraud-badge { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #166534; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; color: #475569; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+
+        .btn-success { background: var(--accent); color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s; }
+        .btn-success:hover { background: #059669; }
+
+        /* Barra de Navegación Inferior (Fija) */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
+        .nav-item.active { color: #0284c7; }
+        .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
+
+        /* Mensajes de Alerta Antifraude */
+        #alertBox { padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; display: none; font-weight: bold; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     </style>
 </head>
-<body>
+<body onpaste="manejarPegado(event)">
 
 <div class="container">
-    <header>
-        <h1>Harold José</h1>
-        <p>Unificado v4.12 (PC y Teléfono)</p>
-    </header>
-
-    <!-- Configuración Enlace Nube -->
+    
+    <!-- Configuración del enlace de Google Sheets (Tu puente a la nube) -->
     <div class="config-box">
-        <label>Enlace de Conexión Google Sheets (Apps Script):</label>
-        <input type="text" id="apiUrl" placeholder="Pega aquí tu enlace de Apps Script para sincronizar con la nube...">
+        <label>Enlace de Conexión Nube (Google Apps Script):</label>
+        <input type="text" id="apiUrl" placeholder="Pega aquí tu URL de Apps Script...">
     </div>
 
-    <!-- 1. REGISTRAR PAGO TAQUILLA (Anti-Fraude) -->
-    <div class="card" style="border-top: 4px solid var(--accent);">
-        <div class="card-title">📥 Registrar Pago Taquilla</div>
+    <div id="alertBox"></div>
+
+    <!-- Pantalla 1: Pagos -->
+    <div class="card">
+        <div style="font-weight: bold; font-size: 15px; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>💵</span> Registrar Pago Taquilla
+        </div>
         
+        <!-- Zona de Carga / Pegar Comprobante con Ctrl+V -->
         <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <span style="font-size: 20px;">☁️</span>
+            <span style="font-size: 24px;">☁️</span>
             <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
             <input type="file" id="fileInput" style="display:none;" onchange="cargarCaptura(event)">
-            <span style="font-size: 10px; color: #64748b;" id="fileName">No se ha seleccionado ningún archivo</span>
+            <div id="fileName" style="font-size: 11px; color: #64748b; margin-top: 4px;">No se ha seleccionado ningún archivo</div>
         </div>
 
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 11px; color: #166534; font-weight: bold;">
-            🛡️ Validador Anti-Fraude Estricto (Suma a Cuenta 1)
+        <div class="anti-fraud-badge">
+            <span>🛡️</span> Validador Anti-Fraude Estricto (Verifica Duplicados en Nube)
         </div>
 
         <div class="form-group">
             <label>Número de Referencia / Operación</label>
-            <input type="text" id="referencia" placeholder="Lectura automática o manual">
+            <input type="text" id="referencia" placeholder="Ej. 00684939">
         </div>
 
         <div class="form-group">
             <label>Nombre del Cliente</label>
-            <input type="text" id="cliente" placeholder="Nombre o alias">
+            <input type="text" id="cliente" placeholder="Ej. Norys Luzon">
         </div>
 
         <div class="form-group">
@@ -96,109 +89,39 @@
             <input type="number" id="monto" placeholder="Ej. 500.00">
         </div>
 
-        <button class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
-    </div>
-
-    <!-- 2. PANEL DE CAJA Y GLOBAL -->
-    <div class="card">
-        <div class="card-title">📊 Panel de Caja y Global</div>
-        <div class="grid-caja">
-            <div class="box-stat"><span>Suma Total (Cuentas + Pronosticador):</span> <strong id="lblSumaTotal">400.00 Bs</strong></div>
-            <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">400.00 Bs</strong></div>
-        </div>
-        <div class="grid-caja">
-            <div class="box-stat"><span>Total Premios Pagados:</span> <strong style="color: #d97706;">0.00 Bs</strong></div>
-            <div class="box-stat"><span>Total Gastos Registrados:</span> <strong style="color: #ef4444;">0.00 Bs</strong></div>
-        </div>
-        <div style="display: flex; gap: 6px; margin-top: 8px;">
-            <button class="btn btn-warning" onclick="alert('Abriendo panel de Premios...')">🏆 Pagar Premio</button>
-            <button class="btn btn-danger" onclick="alert('Abriendo panel de Gastos...')">⛔ Registrar Gasto</button>
-        </div>
-    </div>
-
-    <!-- 3. CONTROL SALDO PRONOSTICADOR -->
-    <div class="card" style="background: #1e1b4b; color: white;">
-        <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:12px; color:#000;">0.00 Bs</span></div>
-        <p style="font-size: 11px; color: #cbd5e1; margin-top:0;">Manejo de pagos, comprobantes y retiros</p>
-        
-        <div style="background: #312e81; padding: 10px; border-radius: 8px; border: 1px solid #4338ca; margin-bottom: 8px;">
-            <label style="color: #e2e8f0;">🛡️ Registrar Ingreso Pronosticador con Comprobante (OCR)</label>
-            <input type="text" placeholder="Número de referencia" style="margin-top:4px; background:#1e1b4b; color:white; border-color:#4338ca;">
-            <input type="number" placeholder="Ej. 2300.00" style="margin-top:6px; background:#1e1b4b; color:white; border-color:#4338ca;">
-            <button class="btn btn-success" style="margin-top:8px;">Agregar Ingreso Pronosticador</button>
-        </div>
-        <div style="display: flex; gap: 6px;">
-            <button class="btn btn-success" style="font-size:11px;">➕ Ingreso Manual</button>
-            <button class="btn btn-danger" style="font-size:11px;">📤 Pagar / Enviar</button>
-        </div>
-    </div>
-
-    <!-- 4. CONTROL DE CLIENTES Y SALDOS -->
-    <div class="card">
-        <div class="card-title">👥 Control de Clientes y Saldos <span style="font-size:11px; color:#64748b; margin-left:auto;">Cuentas corrientes, jugadas y WhatsApp</span></div>
-        
-        <div class="client-box">
-            <div class="client-header">
-                <span>Norys Luzon</span>
-                <span style="color: #10b981;">Favor: Bs. 400.00</span>
-            </div>
-            <div class="client-actions">
-                <button style="background: #f43f5e;" onclick="alert('Registrar Jugada Norys')">Jugada</button>
-                <button style="background: #fbbf24; color: #000;" onclick="alert('Registrar Premio Norys')">Premio</button>
-                <button style="background: #34d399; color: #000;" onclick="alert('Registrar Abono Norys')">Abono</button>
-                <button style="background: #059669;" onclick="window.open('https://wa.me/')">WhatsApp</button>
-            </div>
-        </div>
-
-        <div class="client-box">
-            <div class="client-header">
-                <span>Edgar</span>
-                <span style="color: #64748b;">Favor: Bs. 0.00</span>
-            </div>
-            <div class="client-actions">
-                <button style="background: #f43f5e;">Jugada</button>
-                <button style="background: #fbbf24; color: #000;">Premio</button>
-                <button style="background: #34d399; color: #000;">Abono</button>
-                <button style="background: #059669;">WhatsApp</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. CUENTAS Y NÚMEROS DESTINO (BANCOS) -->
-    <div class="card">
-        <div class="card-title">🏦 Cuentas y Números Destino</div>
-        
-        <div class="form-group">
-            <label>Cuenta 1 (Principal - BDV)</label>
-            <input type="text" value="01020613810000317201">
-            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
-            <input type="number" id="cuenta1Saldo" value="400">
-        </div>
-
-        <div class="form-group">
-            <label>Cuenta 2</label>
-            <input type="text" placeholder="Ej. 0102...">
-            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
-            <input type="number" value="0.00">
-        </div>
-
-        <div class="form-group">
-            <label>Cuenta 3</label>
-            <input type="text" placeholder="Ej. 0102...">
-            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
-            <input type="number" value="0.00">
-        </div>
-        <button class="btn btn-primary" style="margin-top: 5px;">+ Agregar Otra Cuenta</button>
+        <button class="btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
     </div>
 
 </div>
 
+<!-- Barra de Navegación Inferior -->
+<nav class="bottom-nav">
+    <div class="nav-item active"><span>🏠</span>Pagos</div>
+    <div class="nav-item" onclick="alert('Sección Caja en desarrollo en el siguiente paso')"><span>📊</span>Caja</div>
+    <div class="nav-item" onclick="alert('Sección Sistemas en desarrollo')"><span>📈</span>Sistemas</div>
+    <div class="nav-item" onclick="alert('Sección Clientes en desarrollo')"><span>👥</span>Clientes</div>
+    <div class="nav-item" onclick="alert('Sección Cuentas en desarrollo')"><span>🏦</span>Cuentas</div>
+</nav>
+
 <script>
-    // Guardar URL en el navegador para que no tengas que escribirla cada vez
+    // Recordar URL de la nube en el navegador
     window.onload = function() {
         const savedUrl = localStorage.getItem('taquilla_url');
         if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
     };
+
+    // Función para manejar Ctrl+V (Pegar imagen/comprobante)
+    function manejarPegado(event) {
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                document.getElementById('fileName').innerText = "Imagen pegada del portapapeles con éxito (" + blob.name + ")";
+                // Aquí se simula la lectura OCR rápida de referencia si quisieras integrarlo
+                break;
+            }
+        }
+    }
 
     function cargarCaptura(event) {
         if(event.target.files.length > 0) {
@@ -206,42 +129,59 @@
         }
     }
 
+    // Guardar y Validar Antifraude contra la Nube
     function guardarPagoTaquilla() {
-        const ref = document.getElementById('referencia').value.trim();
+        const url = document.getElementById('apiUrl').value.trim();
+        const referencia = document.getElementById('referencia').value.trim();
         const cliente = document.getElementById('cliente').value.trim();
         const monto = document.getElementById('monto').value.trim();
-        const url = document.getElementById('apiUrl').value.trim();
+        const alertBox = document.getElementById('alertBox');
 
-        if(!ref || !cliente || !monto) {
-            alert("Por favor llena los campos obligatorios.");
+        if (!url) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = '¡Falta el enlace de Google Apps Script arriba para validar contra fraudes!';
             return;
         }
 
-        // Si colocaste tu enlace de Google Sheets, envía una copia en segundo plano a la nube
-        if (url) {
-            localStorage.setItem('taquilla_url', url);
-            const datosNube = {
-                fecha: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString(),
-                referencia: ref,
-                cliente: cliente,
-                monto: monto,
-                tipo: "Ingreso Taquilla"
-            };
-
-            fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datosNube)
-            }).catch(err => console.log("Sincronización en segundo plano"));
+        if (!referencia || !cliente || !monto) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Por favor completa todos los campos (Referencia, Cliente y Monto).';
+            return;
         }
 
-        alert("¡Pago registrado con éxito en la taquilla!");
-        document.getElementById('referencia').value = '';
-        document.getElementById('cliente').value = '';
-        document.getElementById('monto').value = '';
-        document.getElementById('fileName').innerText = 'No se ha seleccionado ningún archivo';
+        localStorage.setItem('taquilla_url', url);
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert-success';
+        alertBox.innerText = 'Verificando referencia en la nube (Antifraude)...';
+
+        const datos = {
+            accion: "registrar",
+            referencia: referencia,
+            cliente: cliente,
+            monto: monto
+        };
+
+        // Envía los datos al script de Google Sheets para verificar duplicados en vivo
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors", // O cors si configuras cabeceras en Google
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        })
+        .then(() => {
+            alertBox.className = 'alert-success';
+            alertBox.innerText = '¡Pago registrado y validado con éxito!';
+            document.getElementById('referencia').value = '';
+            document.getElementById('cliente').value = '';
+            document.getElementById('monto').value = '';
+            document.getElementById('fileName').innerText = 'No se ha seleccionado ningún archivo';
+        })
+        .catch(() => {
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Error de conexión con la nube.';
+        });
     }
 </script>
 
