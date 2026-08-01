@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José - Control Total Unificado</title>
+    <title>Harold José - Unificado v4.12 (PC y Teléfono)</title>
     <style>
         :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 12px; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 15px; }
         header h1 { margin: 0; font-size: 20px; color: var(--primary); }
         header p { margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: bold; }
-        
-        .config-box { background: #eff6ff; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bfdbfe; font-size: 11px; }
-        .config-box input { width: 100%; padding: 6px; border: 1px solid #93c5fd; border-radius: 4px; margin-top: 4px; box-sizing: border-box; }
 
-        .card { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         
         .form-group { margin-bottom: 10px; }
@@ -27,21 +24,29 @@
         .btn-warning { background: #f59e0b; color: white; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-primary { background: #4f46e5; color: white; }
-        
+
+        /* Panel de Caja */
         .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
         .box-stat span { display: block; font-size: 10px; color: #64748b; }
         .box-stat strong { font-size: 13px; color: var(--primary); }
 
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--primary); font-size: 13px; }
-        .client-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
-        .client-actions button { padding: 5px; font-size: 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
+        /* Clientes & Acciones */
+        .client-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .client-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+        .client-actions { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 4px; }
+        .client-actions button { padding: 6px 4px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
         
+        /* Días de la semana */
         .days-bar { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
         .day-btn { padding: 6px 12px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 15px; cursor: pointer; white-space: nowrap; font-weight: bold; }
         .day-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
 
-        .status-sync { text-align: center; font-size: 11px; color: #10b981; font-weight: bold; margin-bottom: 8px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #0284c7; font-size: 13px; }
+        
+        /* Upload area */
+        .upload-area { border: 2px dashed #93c5fd; background: #eff6ff; padding: 12px; text-align: center; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+        .upload-area p { margin: 5px 0; font-size: 11px; color: #1e40af; }
     </style>
 </head>
 <body>
@@ -49,127 +54,125 @@
 <div class="container">
     <header>
         <h1>Harold José</h1>
-        <p>Control Total Unificado (PC y Teléfono)</p>
+        <p>Unificado v4.12 (PC y Teléfono)</p>
     </header>
 
-    <!-- Enlace de Google Sheets -->
-    <div class="config-box">
-        <label>Enlace de Conexión (Google Script / Nube):</label>
-        <input type="text" id="apiUrl" placeholder="Pega aquí tu enlace de Apps Script...">
-    </div>
-
-    <div id="statusSync" class="status-sync"></div>
-
-    <!-- 1. PANEL DE CAJA Y GLOBAL -->
-    <div class="card">
-        <div class="card-title">📊 Panel de Caja y Global</div>
-        <div class="grid-caja">
-            <div class="box-stat"><span>Suma Total (Cuentas + Pronosticador):</span> <strong id="lblTotalCuentas">0.00 Bs</strong></div>
-            <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
-        </div>
-        <div class="grid-caja">
-            <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
-            <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
-        </div>
-        <div style="display: flex; gap: 5px; margin-top: 8px;">
-            <button class="btn btn-warning" style="font-size: 12px; padding: 8px;" onclick="alert('Módulo de Premios activo')">🏆 Pagar Premio</button>
-            <button class="btn btn-danger" style="font-size: 12px; padding: 8px;" onclick="alert('Módulo de Gastos activo')">⛔ Registrar Gasto</button>
-        </div>
-    </div>
-
-    <!-- 2. REGISTRAR PAGO TAQUILLA (ANTI-FRAUDE) -->
+    <!-- 1. REGISTRAR PAGO TAQUILLA (Anti-Fraude) -->
     <div class="card" style="border-top: 4px solid var(--accent);">
-        <div class="card-title">🛡️ Registrar Pago Taquilla (Validador Anti-Fraude)</div>
+        <div class="card-title">📥 Registrar Pago Taquilla</div>
         
-        <div class="form-group">
-            <label>Tipo de Operación</label>
-            <select id="tipo">
-                <option value="Ingreso">Ingreso / Pago Taquilla</option>
-                <option value="Premio">Pago de Premio</option>
-                <option value="Gasto">Gasto Registrado</option>
-            </select>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <span style="font-size: 20px;">☁️</span>
+            <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
+            <input type="file" id="fileInput" style="display:none;" onchange="cargarCaptura(event)">
+            <span style="font-size: 10px; color: #64748b;" id="fileName">No se ha seleccionado ningún archivo</span>
+        </div>
+
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 11px; color: #166534; font-weight: bold;">
+            🛡️ Validador Anti-Fraude Estricto (Suma a Cuenta 1)
         </div>
 
         <div class="form-group">
             <label>Número de Referencia / Operación</label>
-            <input type="text" id="referencia" placeholder="Ej. 00684939">
+            <input type="text" id="referencia" placeholder="Lectura automática o manual">
         </div>
 
         <div class="form-group">
             <label>Nombre del Cliente</label>
-            <input type="text" id="cliente" placeholder="Ej. Norys Luzon / Edgar">
+            <input type="text" id="cliente" placeholder="Nombre o alias">
         </div>
 
         <div class="form-group">
             <label>Monto del Pago (Bolívares - Bs)</label>
-            <input type="number" id="monto" placeholder="Ej. 400.00">
+            <input type="number" id="monto" placeholder="Ej. 500.00">
         </div>
 
-        <button class="btn btn-success" onclick="guardarMovimiento()">Guardar en Google Sheets</button>
+        <button class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
     </div>
 
-    <!-- 3. CUENTAS Y NÚMEROS DESTINO (BANCOS) -->
+    <!-- 2. PANEL DE CAJA Y GLOBAL -->
     <div class="card">
-        <div class="card-title">🏦 Cuentas y Números Destino (Bancos)</div>
-        <div class="form-group">
-            <label>Cuenta 1 (Principal - BDV)</label>
-            <input type="text" value="01020613810000317201">
-            <input type="number" id="banco1Saldo" value="400" style="margin-top: 4px;" placeholder="Saldo Actual (Bs)">
+        <div class="card-title">📊 Panel de Caja y Global</div>
+        <div class="grid-caja">
+            <div class="box-stat"><span>Suma Total (Cuentas + Pronosticador):</span> <strong id="lblSumaTotal">400.00 Bs</strong></div>
+            <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">400.00 Bs</strong></div>
         </div>
-        <div class="form-group">
-            <label>Cuenta 2</label>
-            <input type="text" placeholder="Ej. 0102...">
-            <input type="number" value="0.00" style="margin-top: 4px;">
+        <div class="grid-caja">
+            <div class="box-stat"><span>Total Premios Pagados:</span> <strong style="color: #d97706;">0.00 Bs</strong></div>
+            <div class="box-stat"><span>Total Gastos Registrados:</span> <strong style="color: #ef4444;">0.00 Bs</strong></div>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <button class="btn btn-warning" onclick="alert('Abriendo panel de Premios...')">🏆 Pagar Premio</button>
+            <button class="btn btn-danger" onclick="alert('Abriendo panel de Gastos...')">⛔ Registrar Gasto</button>
+        </div>
+    </div>
+
+    <!-- 3. CONTROL SALDO PRONOSTICADOR -->
+    <div class="card" style="background: #1e1b4b; color: white;">
+        <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:12px; color:#000;">0.00 Bs</span></div>
+        <p style="font-size: 11px; color: #cbd5e1; margin-top:0;">Manejo de pagos, comprobantes y retiros</p>
+        
+        <div style="background: #312e81; padding: 10px; border-radius: 8px; border: 1px solid #4338ca; margin-bottom: 8px;">
+            <label style="color: #e2e8f0;">🛡️ Registrar Ingreso Pronosticador con Comprobante (OCR)</label>
+            <input type="text" placeholder="Número de referencia" style="margin-top:4px; background:#1e1b4b; color:white; border-color:#4338ca;">
+            <input type="number" placeholder="Ej. 2300.00" style="margin-top:6px; background:#1e1b4b; color:white; border-color:#4338ca;">
+            <button class="btn btn-success" style="margin-top:8px;">Agregar Ingreso Pronosticador</button>
+        </div>
+        <div style="display: flex; gap: 6px;">
+            <button class="btn btn-success" style="font-size:11px;">➕ Ingreso Manual</button>
+            <button class="btn btn-danger" style="font-size:11px;">📤 Pagar / Enviar</button>
         </div>
     </div>
 
     <!-- 4. CONTROL DE CLIENTES Y SALDOS -->
     <div class="card">
-        <div class="card-title">👥 Control de Clientes y Saldos</div>
+        <div class="card-title">👥 Control de Clientes y Saldos <span style="font-size:11px; color:#64748b; margin-left:auto;">Cuentas corrientes, jugadas y WhatsApp</span></div>
         
-        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+        <div class="client-box">
+            <div class="client-header">
                 <span>Norys Luzon</span>
                 <span style="color: #10b981;">Favor: Bs. 400.00</span>
             </div>
             <div class="client-actions">
-                <button style="background: #f43f5e;" onclick="alert('Jugada para Norys')">Jugada</button>
-                <button style="background: #fbbf24;" onclick="alert('Premio para Norys')">Premio</button>
-                <button style="background: #34d399;" onclick="alert('Abono para Norys')">Abono</button>
+                <button style="background: #f43f5e;" onclick="alert('Registrar Jugada Norys')">Jugada</button>
+                <button style="background: #fbbf24; color: #000;" onclick="alert('Registrar Premio Norys')">Premio</button>
+                <button style="background: #34d399; color: #000;" onclick="alert('Registrar Abono Norys')">Abono</button>
                 <button style="background: #059669;" onclick="window.open('https://wa.me/')">WhatsApp</button>
             </div>
         </div>
 
-        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+        <div class="client-box">
+            <div class="client-header">
                 <span>Edgar</span>
                 <span style="color: #64748b;">Favor: Bs. 0.00</span>
             </div>
             <div class="client-actions">
                 <button style="background: #f43f5e;">Jugada</button>
-                <button style="background: #fbbf24;">Premio</button>
-                <button style="background: #34d399;">Abono</button>
+                <button style="background: #fbbf24; color: #000;">Premio</button>
+                <button style="background: #34d399; color: #000;">Abono</button>
                 <button style="background: #059669;">WhatsApp</button>
             </div>
         </div>
 
-        <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #4f46e5;">
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+        <div class="client-box">
+            <div class="client-header">
                 <span>Carlos</span>
                 <span style="color: #64748b;">Favor: Bs. 0.00</span>
             </div>
             <div class="client-actions">
                 <button style="background: #f43f5e;">Jugada</button>
-                <button style="background: #fbbf24;">Premio</button>
-                <button style="background: #34d399;">Abono</button>
+                <button style="background: #fbbf24; color: #000;">Premio</button>
+                <button style="background: #34d399; color: #000;">Abono</button>
                 <button style="background: #059669;">WhatsApp</button>
             </div>
         </div>
+        <button class="btn btn-primary" style="margin-top: 5px;">+ Cliente</button>
     </div>
 
     <!-- 5. SISTEMAS Y LOTERÍAS -->
     <div class="card">
-        <div class="card-title">📈 Sistemas y Loterías</div>
+        <div class="card-title">📈 Sistemas y Loterías <span style="font-size:11px; color:#64748b; margin-left:auto;">Control diario y desglose semanal</span></div>
+        
         <div class="days-bar">
             <button class="day-btn active">Lunes</button>
             <button class="day-btn">Martes</button>
@@ -180,96 +183,74 @@
         </div>
 
         <div class="item-row">
-            <div><strong>Maxplay</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <div><strong>Maxplay</strong> <span style="font-size:11px; color:#64748b;">(14%)</span></div>
             <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
         </div>
         <div class="item-row">
-            <div><strong>Matrix Comp</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <div><strong>Matrix Comp</strong> <span style="font-size:11px; color:#64748b;">(14%)</span></div>
             <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
         </div>
         <div class="item-row">
-            <div><strong>SRQ Polla</strong> <span style="font-size:10px; color:#64748b;">(14%)</span></div>
+            <div><strong>SRQ Polla</strong> <span style="font-size:11px; color:#64748b;">(14%)</span></div>
             <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
         </div>
         <div class="item-row">
-            <div><strong>Atenas</strong> <span style="font-size:10px; color:#64748b;">(12%)</span></div>
+            <div><strong>Atenas</strong> <span style="font-size:11px; color:#64748b;">(12%)</span></div>
             <strong style="color: #10b981;">Neto: 0.00 Bs</strong>
         </div>
+        <button class="btn btn-primary" style="margin-top: 8px;">+ Sistema</button>
+    </div>
+
+    <!-- 6. CUENTAS Y NÚMEROS DESTINO (BANCOS) -->
+    <div class="card">
+        <div class="card-title">🏦 Cuentas y Números Destino</div>
+        
+        <div class="form-group">
+            <label>Cuenta 1 (Principal - BDV)</label>
+            <input type="text" value="01020613810000317201">
+            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
+            <input type="number" id="cuenta1Saldo" value="400">
+        </div>
+
+        <div class="form-group">
+            <label>Cuenta 2</label>
+            <input type="text" placeholder="Ej. 0102...">
+            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
+            <input type="number" value="0.00">
+        </div>
+
+        <div class="form-group">
+            <label>Cuenta 3</label>
+            <input type="text" placeholder="Ej. 0102...">
+            <label style="margin-top: 4px;">Saldo Actual (Bs)</label>
+            <input type="number" value="0.00">
+        </div>
+        <button class="btn btn-primary" style="margin-top: 5px;">+ Agregar Otra Cuenta</button>
     </div>
 
 </div>
 
 <script>
-    window.onload = function() {
-        const savedUrl = localStorage.getItem('taquilla_url');
-        if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
-        cargarDatosNube();
-    };
-
-    function guardarMovimiento() {
-        const url = document.getElementById('apiUrl').value.trim();
-        const tipo = document.getElementById('tipo').value;
-        const referencia = document.getElementById('referencia').value.trim();
-        const cliente = document.getElementById('cliente').value.trim();
-        const monto = document.getElementById('monto').value.trim();
-
-        if (!url) { alert("Pega tu enlace de Google Script arriba."); return; }
-        if (!referencia || !cliente || !monto) { alert("Completa los campos de referencia, cliente y monto."); return; }
-
-        localStorage.setItem('taquilla_url', url);
-        document.getElementById('statusSync').innerText = "Sincronizando con la nube...";
-
-        const datos = {
-            fecha: new Date().toLocaleDateString(),
-            hora: new Date().toLocaleTimeString(),
-            referencia: referencia,
-            cliente: cliente,
-            monto: monto,
-            tipo: tipo
-        };
-
-        fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(datos)
-        })
-        .then(() => {
-            document.getElementById('statusSync').innerText = "¡Guardado y sincronizado con éxito!";
-            document.getElementById('referencia').value = "";
-            document.getElementById('cliente').value = "";
-            document.getElementById('monto').value = "";
-            setTimeout(cargarDatosNube, 2000);
-        })
-        .catch(() => {
-            document.getElementById('statusSync').innerText = "Error de sincronización.";
-        });
+    function cargarCaptura(event) {
+        if(event.target.files.length > 0) {
+            document.getElementById('fileName').innerText = event.target.files[0].name;
+        }
     }
 
-    function cargarDatosNube() {
-        const url = document.getElementById('apiUrl').value.trim();
-        if (!url) return;
+    function guardarPagoTaquilla() {
+        const ref = document.getElementById('referencia').value;
+        const cliente = document.getElementById('cliente').value;
+        const monto = document.getElementById('monto').value;
 
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.length > 1) {
-                let totalIngresos = 0, totalPremios = 0, totalGastos = 0;
-                for (let i = 1; i < data.length; i++) {
-                    let fila = data[i];
-                    let monto = parseFloat(fila[4]) || 0;
-                    let tipo = fila[5] || 'Ingreso';
-                    if (tipo === 'Ingreso') totalIngresos += monto;
-                    if (tipo === 'Premio') totalPremios += monto;
-                    if (tipo === 'Gasto') totalGastos += monto;
-                }
-                document.getElementById('lblTotalCuentas').innerText = totalIngresos.toFixed(2) + " Bs";
-                document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
-                document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
-                document.getElementById('lblSaldoNeto').innerText = (totalIngresos - totalPremios - totalGastos).toFixed(2) + " Bs";
-            }
-        })
-        .catch(() => {});
+        if(!ref || !cliente || !monto) {
+            alert("Por favor llena los campos obligatorios.");
+            return;
+        }
+        alert("¡Pago registrado con éxito en la taquilla!");
+        document.getElementById('referencia').value = '';
+        document.getElementById('cliente').value = '';
+        document.getElementById('monto').value = '';
+        document.getElementById('fileName').innerText = 'No se ha seleccionado ningún archivo';
     }
 </script>
 
