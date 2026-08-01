@@ -142,7 +142,6 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDQ4lfs7pYcCaJcPzFQ61pmz93hA4R6SG51Jk4H1JLJQEZkTkv3vkDKZPuxQ/exec";
     
-    // Carga robusta inmediata desde localStorage para evitar vacíos al recargar
     let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
 
     window.onload = function() {
@@ -165,7 +164,6 @@
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf("image") !== -1) {
                 const blob = items[i].getAsFile();
-                // Determinar contexto según la vista activa
                 const vistaCajaActiva = document.getElementById('view-caja').classList.contains('active');
                 if (vistaCajaActiva) {
                     document.getElementById('fileNameProno').innerText = "Imagen pegada. Leyendo con OCR...";
@@ -190,18 +188,30 @@
         }
     }
 
+    // Normalizador estricto anti-duplicados (elimina ceros a la izquierda, espacios y símbolos)
+    function normalizarRef(ref) {
+        if (!ref) return "";
+        let soloDigitos = ref.toString().replace(/\D/g, '');
+        return soloDigitos.replace(/^0+/, '') || soloDigitos;
+    }
+
     function buscarDuplicado(ref) {
         if (!ref) return null;
-        let refLimpia = ref.toString().trim().toLowerCase();
+        let refTarget = normalizarRef(ref);
+        if (!refTarget) return null;
+
         let localData = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
         let combinado = [...historialGlobal, ...localData];
         
-        return combinado.find(item => item.referencia && item.referencia.toString().trim().toLowerCase() === refLimpia);
+        return combinado.find(item => {
+            if (!item.referencia) return false;
+            return normalizarRef(item.referencia) === refTarget;
+        });
     }
 
     function validarReferenciaEnVivo(ref) {
         const alertBox = document.getElementById('alertBox');
-        if(!ref || ref.trim().length < 4) return;
+        if(!ref || ref.trim().length < 3) return;
 
         let existente = buscarDuplicado(ref);
         if(existente) {
@@ -243,7 +253,6 @@
                 if(matchGen) montoEncontrado = matchGen[1].replace(/\./g, '').replace(',', '.');
             }
 
-            // Asignar a los campos correctos según el destino
             if(destino === 'pronosticador') {
                 if(refEncontrada) document.getElementById('pronoRef').value = refEncontrada;
                 if(montoEncontrado) document.getElementById('pronoMonto').value = montoEncontrado;
@@ -254,10 +263,11 @@
                 document.getElementById('fileNameTaquilla').innerText = 'Imagen procesada correctamente';
             }
 
+            // Verificación absoluta contra duplicados al momento de leer el OCR
             let existente = buscarDuplicado(refEncontrada);
             if(existente) {
                 alertBox.className = 'alert-error';
-                alertBox.innerText = `⛔ ¡ALERTA! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}" (${existente.tipo || 'Pago'} - ${existente.fecha || ''} ${existente.hora || ''}).`;
+                alertBox.innerText = `⛔ ¡ALERTA DUPLICADO! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}" (${existente.tipo || 'Pago'} - ${existente.fecha || ''} ${existente.hora || ''} - ${existente.monto || '0.00'} Bs).`;
             } else {
                 alertBox.className = 'alert-success';
                 alertBox.innerText = '¡Comprobante leído con éxito! Referencia libre.';
@@ -341,7 +351,7 @@
         if(existente) {
             alertBox.style.display = 'block';
             alertBox.className = 'alert-error';
-            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya existe en el sistema (${existente.cliente || ''} - ${existente.tipo || ''}).`;
+            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya existe en el sistema (${existente.cliente || ''} - ${existente.tipo || ''} - ${existente.monto || ''} Bs).`;
             return;
         }
 
