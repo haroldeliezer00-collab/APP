@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.3</title>
+    <title>Centro de Apuestas Harold José v4.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
@@ -12,7 +12,7 @@
 
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v4.3 PRO ULTIMATE</span>
+            <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-1 rounded-lg">v4.4 PRO SECURE</span>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
                 <p class="text-[9px] text-slate-500">Control Inteligente de Pagos y Sistemas</p>
@@ -46,14 +46,14 @@
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador de Seguridad Anti-Fraude
+                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador de Seguridad Estricto (Anti-Fraude)
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Número de Referencia / Operación</label>
                     <input type="text" id="refNumber" placeholder="Lectura automática o manual" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-bold text-sky-900">
                     <p id="dupWarning" class="text-[11px] text-red-600 font-bold mt-1.5 hidden bg-red-50 p-2 rounded-lg border border-red-200"><i class="fa-solid fa-triangle-exclamation"></i> <span id="dupWarningText">Pago ya utilizado</span></p>
-                    <p id="authWarning" class="text-[11px] text-amber-600 font-bold mt-1.5 hidden bg-amber-50 p-2 rounded-lg border border-amber-200"><i class="fa-solid fa-circle-exclamation"></i> <span id="authWarningText">Verificar datos del titular o banco receptor.</span></p>
+                    <p id="authWarning" class="text-[11px] text-red-600 font-bold mt-1.5 hidden bg-red-50 p-2 rounded-lg border border-red-200"><i class="fa-solid fa-ban"></i> <span id="authWarningText">¡Bloqueado! Los datos no corresponden a tus cuentas.</span></p>
                 </div>
 
                 <div>
@@ -74,7 +74,6 @@
                         <option value="Banco Exterior">Banco Exterior (0115)</option>
                         <option value="Mercantil">Mercantil (0105)</option>
                         <option value="Banco del Tesoro">Banco del Tesoro (0163)</option>
-                        <option value="Efectivo Taquilla">Efectivo Taquilla</option>
                     </select>
                 </div>
 
@@ -86,17 +85,25 @@
 
         <section id="view-caja" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="text-amber-500 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Finanzas</h2>
+                <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
+                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Taquilla</h2>
                 
-                <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
-                    <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-500">Efectivo Disponible:</span>
-                        <span id="cashEffective" class="text-slate-800 font-bold">0.00 Bs</span>
+                <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2.5">
+                    <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
+                        <span class="text-slate-500">Saldo Taquilla (Ingresos Totales):</span>
+                        <span id="boxTaquilla" class="text-sky-800 font-bold">0.00 Bs</span>
                     </div>
                     <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-500">Pagos Móviles / Bancos:</span>
-                        <span id="cashBanks" class="text-slate-800 font-bold">0.00 Bs</span>
+                        <span class="text-slate-500">Total Premios Pagados:</span>
+                        <span id="boxPremios" class="text-amber-600 font-bold">0.00 Bs</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
+                        <span class="text-slate-500">Total Gastos Registrados:</span>
+                        <span id="boxGastos" class="text-rose-600 font-bold">0.00 Bs</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-bold pt-1 text-sm">
+                        <span class="text-slate-700">Saldo Disponible (Quedando):</span>
+                        <span id="boxDisponible" class="text-emerald-700 font-bold">0.00 Bs</span>
                     </div>
                 </div>
 
@@ -111,9 +118,9 @@
             </div>
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-xs font-bold text-slate-700 mb-2">Movimientos del Día</h3>
+                <h3 class="text-xs font-bold text-slate-700 mb-2">Movimientos de Caja</h3>
                 <div id="cajaHistory" class="space-y-2 text-xs">
-                    <p class="text-slate-400 text-center py-2">No hay movimientos registrados hoy.</p>
+                    <p class="text-slate-400 text-center py-2">No hay movimientos registrados.</p>
                 </div>
             </div>
         </section>
@@ -130,18 +137,15 @@
                     </button>
                 </div>
 
-                <div id="daysTabsContainer" class="flex overflow-x-auto gap-1.5 py-1.5 no-scrollbar border-b border-slate-100 pb-2">
-                    </div>
+                <div id="daysTabsContainer" class="flex overflow-x-auto gap-1.5 py-1.5 no-scrollbar border-b border-slate-100 pb-2"></div>
 
-                <div id="systemsByDayContainer" class="space-y-3 mt-2">
-                    </div>
+                <div id="systemsByDayContainer" class="space-y-3 mt-2"></div>
 
                 <div class="mt-6 space-y-3 border-t border-slate-200 pt-4">
                     <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-list-check text-sky-600"></i> Resumen de Todos los Sistemas (Lunes a Domingo)
                     </h3>
-                    <div id="systemsWeeklyBreakdown" class="space-y-3">
-                        </div>
+                    <div id="systemsWeeklyBreakdown" class="space-y-3"></div>
                 </div>
 
                 <div class="bg-sky-900 text-white p-4 rounded-2xl space-y-2 text-xs mt-6 shadow-md">
@@ -170,16 +174,15 @@
                     </button>
                 </div>
 
-                <div id="clientsContainer" class="space-y-3 mt-2">
-                    </div>
+                <div id="clientsContainer" class="space-y-3 mt-2"></div>
             </div>
         </section>
 
         <section id="view-bancos" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas</h2>
-                <p class="text-xs text-slate-500 mt-1">Cuentas y métodos de pago oficiales.</p>
+                <h2 class="text-base font-bold text-slate-700">Bancos y Cuentas Oficiales</h2>
+                <p class="text-xs text-slate-500 mt-1">El validador estricto utiliza estos datos para evitar fraudes.</p>
                 
                 <div id="banksList" class="mt-4 space-y-3 text-left text-xs"></div>
 
@@ -230,7 +233,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             let appData = {
                 payments: [],
-                cajaBalance: { effective: 0, banks: 0 },
                 cajaHistory: [],
                 selectedDay: 'Lunes',
                 systems: [
@@ -244,20 +246,18 @@
                     { name: 'Carlos', phone: '584140000000', balance: 0 }
                 ],
                 banks: [
-                    { name: 'Banco de Venezuela', acc: '01020613810000317201', phone: '0412-4489363', holder: 'Harold Eliezer Galea Sanchez (V-18274410)' },
-                    { name: 'Banesco', acc: '0134-****-5511', phone: '0414-0000000', holder: 'Harold José' },
-                    { name: 'Banco Exterior', acc: '0115-****-0000', phone: '0412-0000000', holder: 'Harold José' }
+                    { name: 'Banco de Venezuela', acc: '01020613810000317201', phone: '04124489363', holder: 'Harold Eliezer Galea Sanchez (V-18274410)' }
                 ]
             };
 
             try {
-                const saved = localStorage.getItem('haroldJoseDataV43');
+                const saved = localStorage.getItem('haroldJoseDataV44');
                 if (saved) appData = JSON.parse(saved);
             } catch(e) { console.error("Error al leer storage", e); }
 
             function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV43', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV44', JSON.stringify(appData));
                 } catch(e) { console.error("Error al guardar storage", e); }
             }
 
@@ -282,7 +282,7 @@
             document.getElementById('nav-clientes').addEventListener('click', () => switchTab('clientes'));
             document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
 
-            // OCR y Validaciones Avanzadas (Mejorado contra teléfonos y malos captures)
+            // OCR y Validación Estricta Anti-Fraude
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
@@ -294,8 +294,38 @@
             const authWarning = document.getElementById('authWarning');
             const authWarningText = document.getElementById('authWarningText');
 
+            let isDataValid = true;
+
+            function verificarDatosOficiales(fullOcrText) {
+                if (!fullOcrText) return true;
+                const textLower = fullOcrText.toLowerCase();
+
+                // Recopilar identificadores registrados en los bancos del usuario
+                let validFound = false;
+                appData.banks.forEach(b => {
+                    // Verificar cédula, teléfono o parte de la cuenta si aparecen
+                    const phoneClean = b.phone.replace(/[-\s]/g, '').toLowerCase();
+                    const accClean = b.acc.replace(/[-\s]/g, '').toLowerCase();
+                    
+                    if (
+                        (b.holder && textLower.includes(b.holder.toLowerCase())) ||
+                        (phoneClean && textLower.includes(phoneClean)) ||
+                        (accClean && textLower.includes(accClean)) ||
+                        textLower.includes('18274410') ||
+                        textLower.includes('galea') ||
+                        textLower.includes('harold')
+                    ) {
+                        validFound = true;
+                    }
+                });
+
+                return validFound;
+            }
+
             function validarReferenciaYDatos(refText, fullOcrText) {
                 const cleanRef = refText.trim();
+                isDataValid = true;
+
                 if (!cleanRef) {
                     dupWarning.style.display = 'none';
                     authWarning.style.display = 'none';
@@ -306,20 +336,17 @@
                 if (existente) {
                     dupWarningText.textContent = `¡Pago ya utilizado por el cliente "${existente.client}" el ${existente.date} (Monto: Bs. ${existente.amount})!`;
                     dupWarning.style.display = 'block';
+                    isDataValid = false;
                 } else {
                     dupWarning.style.display = 'none';
                 }
 
                 if (fullOcrText) {
-                    const textLower = fullOcrText.toLowerCase();
-                    const contieneDatos = textLower.includes('18274410') || 
-                                          textLower.includes('0102') || 
-                                          textLower.includes('4489363') || 
-                                          textLower.includes('harold') || 
-                                          textLower.includes('venezuela');
-                    if (!contieneDatos) {
-                        authWarningText.textContent = `¡Alerta! No se detectaron tus datos oficiales (Cédula V-18274410 / Banco Venezuela / Teléfono) en este comprobante. Verifica que sea tuyo.`;
+                    const isValidAccount = verificarDatosOficiales(fullOcrText);
+                    if (!isValidAccount) {
+                        authWarningText.textContent = `¡BLOQUEADO! Los datos del comprobante no coinciden con ninguna de tus cuentas, cédula o teléfonos registrados. No es tuyo.`;
                         authWarning.style.display = 'block';
+                        isDataValid = false;
                     } else {
                         authWarning.style.display = 'none';
                     }
@@ -353,7 +380,6 @@
                         const text = result.data.text;
                         console.log("OCR Detectado:", text);
 
-                        // Extracción inteligente de referencia evitando teléfonos
                         const textClean = text.replace(/[\n\r]+/g, ' ');
                         let encontrada = '';
                         
@@ -375,11 +401,12 @@
                         if (encontrada) {
                             refNumberInput.value = encontrada;
                             uploadText.textContent = "¡Referencia leída con éxito!";
-                            validarReferenciaYDatos(encontrada, text);
                         } else {
-                            uploadText.textContent = "No se detectó la referencia automáticamente. Ingrésala manual.";
-                            validarReferenciaYDatos('', text);
+                            uploadText.textContent = "Referencia no detectada automáticamente. Ingrésala manual.";
                         }
+
+                        validarReferenciaYDatos(refNumberInput.value, text);
+
                     } catch (err) {
                         console.error("Error OCR:", err);
                         uploadText.textContent = "Imagen cargada. Ingresa los datos manualmente.";
@@ -402,7 +429,7 @@
                 }
             });
 
-            // Guardar Pago y Agregar/Actualizar Cliente Automáticamente
+            // Guardar Pago con Validación Estricta
             document.getElementById('submitPayment').addEventListener('click', () => {
                 const ref = refNumberInput.value.trim();
                 const clientNameInput = document.getElementById('clientName').value.trim();
@@ -414,20 +441,14 @@
                     return;
                 }
 
-                const existente = appData.payments.find(p => p.ref === ref);
-                if (existente) {
-                    alert(`¡BLOQUEADO! Pago ya utilizado por el cliente "${existente.client}" (Ref: ${ref}). No se puede registrar dos veces.`);
+                if (!isDataValid) {
+                    alert('¡ACCIÓN BLOQUEADA! No puedes registrar este pago porque la referencia está repetida o los datos del comprobante no pertenecen a tus cuentas registradas.');
                     return;
                 }
 
                 appData.payments.push({ ref, client: clientNameInput, amount, bank, date: new Date().toLocaleDateString() });
-                if (bank === 'Efectivo Taquilla') {
-                    appData.cajaBalance.effective += amount;
-                } else {
-                    appData.cajaBalance.banks += amount;
-                }
 
-                appData.cajaHistory.unshift({ desc: `Pago Bs. ${amount} de ${clientNameInput} (${bank})`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+                appData.cajaHistory.unshift({ desc: `Pago recibido de ${clientNameInput} (${bank})`, amount: `+${amount.toFixed(2)}`, type: 'income' });
 
                 let clienteExistente = appData.clients.find(c => c.name.toLowerCase() === clientNameInput.toLowerCase());
                 if (clienteExistente) {
@@ -447,6 +468,7 @@
                 uploadText.textContent = "Sube captura o presiona Ctrl+V aquí";
                 dupWarning.style.display = 'none';
                 authWarning.style.display = 'none';
+                isDataValid = true;
                 alert('¡Pago registrado con éxito y cliente actualizado automáticamente!');
             });
 
@@ -463,8 +485,8 @@
                     alert('Introduce un monto válido y un motivo.');
                     return;
                 }
-                appData.cajaBalance.effective -= amount;
-                appData.cajaHistory.unshift({ desc: `${currentModalType === 'premio' ? 'Premio' : 'Gasto'}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
+                const tipoDesc = currentModalType === 'premio' ? 'Premio Pagado' : 'Gasto Registrado';
+                appData.cajaHistory.unshift({ desc: `${tipoDesc}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
                 saveState();
                 renderUI();
                 cajaModal.classList.add('hidden');
@@ -513,7 +535,7 @@
                 }
             };
 
-            // Gestión de Clientes (Copiar Mensaje WhatsApp)
+            // Gestión de Clientes
             document.getElementById('btnAddClient').addEventListener('click', () => {
                 const name = prompt('Nombre del Cliente:');
                 const phone = prompt('Teléfono (Opcional):');
@@ -576,12 +598,43 @@
 
             // Render UI principal
             function renderUI() {
-                document.getElementById('cashEffective').textContent = `${appData.cajaBalance.effective.toFixed(2)} Bs`;
-                document.getElementById('cashBanks').textContent = `${appData.cajaBalance.banks.toFixed(2)} Bs`;
+                // Cálculo de Caja Actualizado
+                let totalTaquilla = 0;
+                let totalPremiosGastos = 0;
+
+                appData.cajaHistory.forEach(h => {
+                    const val = parseFloat(h.amount.replace('+', '')) || 0;
+                    if (h.type === 'income') {
+                        totalTaquilla += val;
+                    } else {
+                        totalPremiosGastos += Math.abs(val);
+                    }
+                });
+
+                // Separar premios vs gastos en el historial si es necesario, o mostrar totales
+                let totalPremios = 0;
+                let totalGastos = 0;
+                appData.cajaHistory.forEach(h => {
+                    const val = parseFloat(h.amount.replace('+', '').replace('-', '')) || 0;
+                    if (h.type === 'expense') {
+                        if (h.desc.toLowerCase().includes('premio')) {
+                            totalPremios += val;
+                        } else {
+                            totalGastos += val;
+                        }
+                    }
+                });
+
+                const saldoDisponible = totalTaquilla - totalPremios - totalGastos;
+
+                document.getElementById('boxTaquilla').textContent = `${totalTaquilla.toFixed(2)} Bs`;
+                document.getElementById('boxPremios').textContent = `${totalPremios.toFixed(2)} Bs`;
+                document.getElementById('boxGastos').textContent = `${totalGastos.toFixed(2)} Bs`;
+                document.getElementById('boxDisponible').textContent = `${saldoDisponible.toFixed(2)} Bs`;
 
                 const historyContainer = document.getElementById('cajaHistory');
                 if (appData.cajaHistory.length === 0) {
-                    historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos hoy.</p>`;
+                    historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos.</p>`;
                 } else {
                     historyContainer.innerHTML = appData.cajaHistory.map(h => `
                         <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
@@ -627,121 +680,4 @@
                                         <input type="number" step="0.01" value="${ventas || ''}" onchange="updateSysDay(${sIndex}, 'ventas', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-500 block">Premios (${appData.selectedDay})</label>
-                                        <input type="number" step="0.01" value="${premios || ''}" onchange="updateSysDay(${sIndex}, 'premios', this.value)" placeholder="0.00" class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold">
-                                    </div>
-                                </div>
-                                <div class="flex justify-between text-[10px] text-slate-500 pt-0.5 px-1">
-                                    <span>Comisión (${sys.commissionRate}%): <strong>${comision.toFixed(2)} Bs</strong></span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                // Desglose Semanal por Sistema (Lunes a Domingo)
-                const systemsWeeklyBreakdown = document.getElementById('systemsWeeklyBreakdown');
-                if (appData.systems.length === 0) {
-                    systemsWeeklyBreakdown.innerHTML = `<p class="text-xs text-slate-400 text-center">No hay sistemas.</p>`;
-                } else {
-                    systemsWeeklyBreakdown.innerHTML = appData.systems.map(sys => {
-                        let sVentas = 0, sPremios = 0, sComisiones = 0, sNeto = 0;
-                        daysList.forEach(day => {
-                            const d = sys.days[day] || { ventas: 0, premios: 0 };
-                            const v = d.ventas;
-                            const p = d.premios;
-                            const c = (v * sys.commissionRate) / 100;
-                            const n = v - p - c;
-                            sVentas += v;
-                            sPremios += p;
-                            sComisiones += c;
-                            sNeto += n;
-                        });
-
-                        return `
-                            <div class="bg-slate-50 p-3 rounded-2xl border border-sky-100 space-y-1.5 text-xs">
-                                <div class="flex justify-between font-bold text-sky-900 border-b border-slate-200 pb-1">
-                                    <span>${sys.name} (${sys.commissionRate}%)</span>
-                                    <span class="${sNeto >= 0 ? 'text-emerald-600' : 'text-rose-600'}">Neto: Bs. ${sNeto.toFixed(2)}</span>
-                                </div>
-                                <div class="grid grid-cols-3 gap-1 text-[11px] text-slate-600 pt-1">
-                                    <div>Ventas: <strong>${sVentas.toFixed(2)}</strong></div>
-                                    <div>Premios: <strong>${sPremios.toFixed(2)}</strong></div>
-                                    <div>Comisión: <strong>${sComisiones.toFixed(2)}</strong></div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                let gVentas = 0, gPremios = 0, gComisiones = 0, gNeto = 0;
-                appData.systems.forEach(sys => {
-                    daysList.forEach(day => {
-                        const d = sys.days[day] || { ventas: 0, premios: 0 };
-                        const v = d.ventas;
-                        const p = d.premios;
-                        const c = (v * sys.commissionRate) / 100;
-                        const n = v - p - c;
-                        gVentas += v;
-                        gPremios += p;
-                        gComisiones += c;
-                        gNeto += n;
-                    });
-                });
-
-                document.getElementById('globalVentas').textContent = `${gVentas.toFixed(2)} Bs`;
-                document.getElementById('globalPremios').textContent = `${gPremios.toFixed(2)} Bs`;
-                document.getElementById('globalComisiones').textContent = `${gComisiones.toFixed(2)} Bs`;
-                document.getElementById('globalNeto').textContent = `${gNeto.toFixed(2)} Bs`;
-
-                const clientsContainer = document.getElementById('clientsContainer');
-                if (appData.clients.length === 0) {
-                    clientsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay clientes registrados.</p>`;
-                } else {
-                    clientsContainer.innerHTML = appData.clients.map((c, cIndex) => `
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                            <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
-                                <div>
-                                    <h3 class="text-xs font-bold text-indigo-900">${c.name}</h3>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold ${c.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
-                                        ${c.balance >= 0 ? `Favor: Bs. ${c.balance.toFixed(2)}` : `Debe: Bs. ${Math.abs(c.balance).toFixed(2)}`}
-                                    </span>
-                                    <button type="button" onclick="deleteClient(${cIndex})" class="text-rose-400 hover:text-rose-600 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1.5">
-                                <button type="button" onclick="clientAction(${cIndex}, 'jugada')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold py-2 rounded-xl border border-rose-200">
-                                    <i class="fa-solid fa-dice"></i> Jugada
-                                </button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'premio')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold py-2 rounded-xl border border-amber-200">
-                                    <i class="fa-solid fa-trophy"></i> Premio
-                                </button>
-                                <button type="button" onclick="clientAction(${cIndex}, 'abono')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold py-2 rounded-xl border border-emerald-200">
-                                    <i class="fa-solid fa-money-bill-wave"></i> Abono
-                                </button>
-                            </div>
-                            <button type="button" onclick="copyWhatsAppMessage(${cIndex})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-2 rounded-xl shadow mt-1">
-                                <i class="fa-brands fa-whatsapp text-sm"></i> Copiar Mensaje para WhatsApp
-                            </button>
-                        </div>
-                    `).join('');
-                }
-
-                const banksContainer = document.getElementById('banksList');
-                banksContainer.innerHTML = appData.banks.map(b => `
-                    <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
-                        <p class="font-bold text-indigo-900">${b.name}</p>
-                        <p class="text-slate-700"><strong>Cuenta:</strong> ${b.acc}</p>
-                        <p class="text-slate-700"><strong>Pago Móvil:</strong> ${b.phone}</p>
-                        <p class="text-[10px] text-slate-500"><strong>Titular:</strong> ${b.holder}</p>
-                    </div>
-                `).join('');
-            }
-
-            renderUI();
-        });
-    </script>
-</body>
-</html>
+                                        <label class="text-[10px] text-slate-500 block">Premios (${
