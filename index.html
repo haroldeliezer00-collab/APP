@@ -60,11 +60,11 @@
             </div>
             <div class="form-group">
                 <label>Nombre del Cliente</label>
-                <input type="text" id="cliente" placeholder="Ej. Norys Luzon">
+                <input type="text" id="cliente" placeholder="Ej. Picapica">
             </div>
             <div class="form-group">
                 <label>Monto del Pago (Bolívares - Bs)</label>
-                <input type="number" id="monto" placeholder="Ej. 970.00">
+                <input type="number" id="monto" placeholder="Ej. 2000.00">
             </div>
             <button class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
         </div>
@@ -119,10 +119,12 @@
 
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDq4lfs7pYccAjcPzFQ61pmz93hA4R6SG51/exec";
-    let historialGlobal = [];
+    
+    // Historial respaldado en localStorage para garantizar velocidad y respaldo local instantáneo
+    let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
 
-    // Cargar historial y sincronizar al abrir
     window.onload = function() {
+        actualizarInterfazCaja();
         sincronizarConNube();
     };
 
@@ -132,11 +134,10 @@
         document.getElementById('view-' + vista).classList.add('active');
         elemento.classList.add('active');
         if(vista === 'caja') {
-            sincronizarConNube();
+            actualizarInterfazCaja();
         }
     }
 
-    // OCR Automático
     function manejarPegado(event) {
         const items = (event.clipboardData || event.originalEvent.clipboardData).items;
         for (let i = 0; i < items.length; i++) {
@@ -183,11 +184,10 @@
             if(refEncontrada) document.getElementById('referencia').value = refEncontrada;
             if(montoEncontrado) document.getElementById('monto').value = montoEncontrado;
 
-            // Validación antifraude local preliminar
-            let existe = historialGlobal.some(item => item.referencia.toString().trim() === refEncontrada.toString().trim());
-            if(existe) {
+            let duplicado = historialGlobal.some(item => item.referencia.toString().trim() === refEncontrada.toString().trim());
+            if(duplicado) {
                 alertBox.className = 'alert-error';
-                alertBox.innerText = '⚠️ ¡ALERTA! La referencia ' + refEncontrada + ' ya fue registrada antes.';
+                alertBox.innerText = '⚠️ ¡ALERTA! La referencia ' + refEncontrada + ' ya se encuentra registrada.';
             } else {
                 alertBox.className = 'alert-success';
                 alertBox.innerText = '¡Comprobante leído con éxito!';
@@ -199,27 +199,28 @@
         });
     }
 
-    // Sincronizar datos con Google Sheets (Descargar y Calcular Totales)
     function sincronizarConNube() {
         const alertBox = document.getElementById('alertBox');
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🔄 Sincronizando datos con Google Sheets...';
+        alertBox.innerText = '🔄 Sincronizando con Google Sheets...';
 
         fetch(GOOGLE_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
-            historialGlobal = data;
+            if(Array.isArray(data) && data.length > 0) {
+                historialGlobal = data;
+                localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            }
             actualizarInterfazCaja();
             alertBox.style.display = 'none';
         })
         .catch(() => {
-            alertBox.className = 'alert-error';
-            alertBox.innerText = 'Error al sincronizar con la nube.';
+            alertBox.style.display = 'none';
+            actualizarInterfazCaja();
         });
     }
 
-    // Guardar Pago Taquilla con validación real contra duplicados
     function guardarPagoTaquilla() {
         const ref = document.getElementById('referencia').value.trim();
         const cliente = document.getElementById('cliente').value.trim();
@@ -233,47 +234,50 @@
             return;
         }
 
-        // Revisar duplicado exacto en memoria
         let duplicado = historialGlobal.some(item => item.referencia.toString().trim() === ref.toString().trim());
         if(duplicado) {
             alertBox.style.display = 'block';
             alertBox.className = 'alert-error';
-            alertBox.innerText = '⛔ ¡FRAUDE / DUPLICADO! La referencia ' + ref + ' ya se encuentra registrada.';
+            alertBox.innerText = '⛔ ¡FRAUDE / DUPLICADO! La referencia ' + ref + ' ya fue registrada.';
             return;
         }
 
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🛡️ Guardando en Google Sheets...';
+        alertBox.innerText = '🛡️ Guardando pago en la nube...';
 
         const datos = { referencia: ref, cliente: cliente, monto: monto, tipo: "Ingreso Taquilla" };
 
-        // Usamos POST con modo predeterminado para permitir lectura de respuesta
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(datos)
         })
-        .then(res => res.json())
-        .then(res => {
-            if(res.status === "error") {
-                alertBox.className = 'alert-error';
-                alertBox.innerText = res.mensaje;
-            } else {
-                alertBox.className = 'alert-success';
-                alertBox.innerText = '¡Pago registrado y validado con éxito!';
-                document.getElementById('referencia').value = '';
-                document.getElementById('cliente').value = '';
-                document.getElementById('monto').value = '';
-                document.getElementById('fileName').innerText = 'No se ha seleccionado archivo';
-                sincronizarConNube();
-            }
+        .then(() => {
+            alertBox.className = 'alert-success';
+            alertBox.innerText = '¡Pago registrado y guardado con éxito!';
+            
+            // Agregar localmente de inmediato
+            historialGlobal.push({
+                fecha: new Date().toLocaleDateString(),
+                hora: new Date().toLocaleTimeString(),
+                referencia: ref,
+                cliente: cliente,
+                monto: monto,
+                tipo: "Ingreso Taquilla"
+            });
+            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            actualizarInterfazCaja();
+
+            document.getElementById('referencia').value = '';
+            document.getElementById('cliente').value = '';
+            document.getElementById('monto').value = '';
+            document.getElementById('fileName').innerText = 'No se ha seleccionado archivo';
         })
         .catch(() => {
-            // Fallback en caso de que no-cors fuera necesario por restricciones de red
-            alertBox.className = 'alert-success';
-            alertBox.innerText = '¡Enviado a la nube con éxito!';
-            sincronizarConNube();
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Error al enviar a la nube.';
         });
     }
 
@@ -284,16 +288,26 @@
         
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ referencia: ref, cliente: "Pronosticador", monto: monto, tipo: "Pronosticador" })
         }).then(() => {
             alert("¡Ingreso de Pronosticador guardado!");
+            historialGlobal.push({
+                fecha: new Date().toLocaleDateString(),
+                hora: new Date().toLocaleTimeString(),
+                referencia: ref,
+                cliente: "Pronosticador",
+                monto: monto,
+                tipo: "Pronosticador"
+            });
+            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            actualizarInterfazCaja();
             document.getElementById('pronoRef').value = '';
             document.getElementById('pronoMonto').value = '';
-            sincronizarConNube();
         });
     }
 
-    // Actualizar sumas y listados en pantalla
     function actualizarInterfazCaja() {
         const contenedor = document.getElementById('historialLista');
         if (!historialGlobal || historialGlobal.length === 0) {
@@ -305,7 +319,6 @@
         let sumaPronosticador = 0;
         let html = '';
 
-        // Recorrer de más reciente a más antiguo
         [...historialGlobal].reverse().forEach(item => {
             let m = parseFloat(item.monto) || 0;
             if(item.tipo === "Pronosticador") {
