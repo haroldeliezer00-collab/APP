@@ -30,13 +30,21 @@
         .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
         .history-item.premio { border-left-color: #d97706; }
         
-        /* Estilos Módulo Sistemas */
+        /* Módulo Sistemas */
         .days-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
         .day-btn { background: #e2e8f0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
         .day-btn.active { background: #0284c7; color: white; }
         .system-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
         .system-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
         .system-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* Módulo Clientes */
+        .client-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+        .client-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+        .client-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .btn-jugada { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .btn-client-premio { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .btn-whatsapp { background: #10b981; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
@@ -144,7 +152,6 @@
             </div>
             <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Control diario y desglose semanal por sistema</div>
 
-            <!-- Días de la semana -->
             <div class="days-container" id="diasContainer">
                 <button class="day-btn active" onclick="cambiarDiaSistema('Lunes', this)">Lunes</button>
                 <button class="day-btn" onclick="cambiarDiaSistema('Martes', this)">Martes</button>
@@ -155,16 +162,13 @@
                 <button class="day-btn" onclick="cambiarDiaSistema('Domingo', this)">Domingo</button>
             </div>
 
-            <!-- Listado de sistemas dinámicos para el día seleccionado -->
             <div id="listaSistemasDia"></div>
         </div>
 
-        <!-- Resumen de Todos los Sistemas -->
         <div class="card">
             <div class="card-title">📑 Resumen de Todos los Sistemas</div>
             <div id="resumenSistemasSemana"></div>
 
-            <!-- Resumen General Acumulado -->
             <div style="background: var(--primary); color: white; border-radius: 8px; padding: 12px; margin-top: 12px;">
                 <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px;">🗂️ RESUMEN GENERAL ACUMULADO</div>
                 <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;"><span>Ventas Totales:</span> <strong id="resGenVentas">0.00 Bs</strong></div>
@@ -175,7 +179,18 @@
         </div>
     </div>
 
-    <div id="view-clientes" class="view-section"><div class="card"><div class="card-title">👥 Módulo de Clientes</div><p>Próximamente...</p></div></div>
+    <!-- VISTA 4: CLIENTES Y SALDOS -->
+    <div id="view-clientes" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                👥 Control de Clientes y Saldos
+                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarClienteModal()">+ Cliente</button>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Cuentas corrientes, jugadas y WhatsApp</div>
+            <div id="listaClientesContainer"></div>
+        </div>
+    </div>
+
     <div id="view-cuentas" class="view-section"><div class="card"><div class="card-title">🏦 Módulo de Cuentas y Bancos</div><p>Próximamente...</p></div></div>
 </div>
 
@@ -191,21 +206,25 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDQ4lfs7pYcCaJcPzFQ61pmz93hA4R6SG51Jk4H1JLJQEZkTkv3vkDKZPuxQ/exec";
     
     let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
-
-    // Estructura de Sistemas y Loterías
     let sistemasData = JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [
         { id: 'maxplay', nombre: 'Maxplay', comision: 14 },
         { id: 'matrix', nombre: 'Matrix Comp', comision: 14 },
         { id: 'srq', nombre: 'SRQ Polla', comision: 14 },
         { id: 'atenas', nombre: 'Atenas', comision: 12 }
     ];
-
     let registrosSistemas = JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {};
     let diaSeleccionado = 'Lunes';
+
+    // Base de datos de Clientes
+    let clientesData = JSON.parse(localStorage.getItem('taquilla_clientes')) || [
+        { id: 'c1', nombre: 'Edgar', saldo: 0, telefono: '' },
+        { id: 'c2', nombre: 'Carlos', saldo: 0, telefono: '' }
+    ];
 
     window.onload = function() {
         actualizarInterfazCaja();
         renderizarModuloSistemas();
+        renderizarModuloClientes();
         sincronizarConNube();
     };
 
@@ -218,6 +237,8 @@
             sincronizarConNube();
         } else if(vista === 'sistemas') {
             renderizarModuloSistemas();
+        } else if(vista === 'clientes') {
+            renderizarModuloClientes();
         }
     }
 
@@ -374,9 +395,19 @@
             return;
         }
 
+        // Actualizar saldo del cliente automáticamente
+        let montoNum = parseFloat(monto) || 0;
+        let clienteObj = clientesData.find(c => c.nombre.toLowerCase() === cliente.toLowerCase());
+        if (clienteObj) {
+            clienteObj.saldo += montoNum;
+        } else {
+            clientesData.push({ id: 'c_' + Date.now(), nombre: cliente, saldo: montoNum, telefono: '' });
+        }
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+
         alertBox.style.display = 'block';
         alertBox.className = 'alert-loading';
-        alertBox.innerText = '🛡️ Guardando pago en la nube...';
+        alertBox.innerText = '🛡️ Guardando pago en la nube y actualizando cliente...';
 
         const datos = { 
             fecha: new Date().toLocaleDateString(),
@@ -392,6 +423,7 @@
             document.getElementById('cliente').value = '';
             document.getElementById('monto').value = '';
             document.getElementById('fileNameTaquilla').innerText = 'No se ha seleccionado archivo';
+            renderizarModuloClientes();
         });
     }
 
@@ -564,7 +596,7 @@
         document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
     }
 
-    // --- FUNCIONES MÓDULO SISTEMAS ---
+    // --- MÓDULO SISTEMAS ---
     function cambiarDiaSistema(dia, elemento) {
         diaSeleccionado = dia;
         document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
@@ -597,12 +629,8 @@
     }
 
     function actualizarDatoSistemaDia(sistemaId, campo, valor) {
-        if(!registrosSistemas[sistemaId]) {
-            registrosSistemas[sistemaId] = {};
-        }
-        if(!registrosSistemas[sistemaId][diaSeleccionado]) {
-            registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
-        }
+        if(!registrosSistemas[sistemaId]) registrosSistemas[sistemaId] = {};
+        if(!registrosSistemas[sistemaId][diaSeleccionado]) registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
         registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
         localStorage.setItem('taquilla_sistemas_registros', JSON.stringify(registrosSistemas));
         renderizarResumenSistemas();
@@ -690,6 +718,97 @@
         document.getElementById('resGenComisiones').innerText = totalGenComisiones.toFixed(2) + " Bs";
         document.getElementById('resGenNeto').innerText = saldoNetoGlobal.toFixed(2) + " Bs";
         document.getElementById('resGenNeto').style.color = saldoNetoGlobal >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    // --- MÓDULO CLIENTES ---
+    function agregarClienteModal() {
+        let nombre = prompt("Nombre del cliente:");
+        if(!nombre) return;
+        let telefono = prompt("Número de WhatsApp (ej. 584121234567) opcional:") || "";
+        
+        let id = 'c_' + Date.now();
+        clientesData.push({ id, nombre: nombre.trim(), saldo: 0, telefono: telefono.trim() });
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+        renderizarModuloClientes();
+    }
+
+    function eliminarCliente(id) {
+        if(confirm("¿Estás seguro de eliminar este cliente?")) {
+            clientesData = clientesData.filter(c => c.id !== id);
+            localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+            renderizarModuloClientes();
+        }
+    }
+
+    function registrarAccionCliente(id, tipo) {
+        let cliente = clientesData.find(c => c.id === id);
+        if(!cliente) return;
+
+        let montoStr = prompt(`Monto a ${tipo === 'jugada' ? 'descontar por Jugada' : 'acreditar por Premio'} para ${cliente.nombre} (Bs):`);
+        let monto = parseFloat(montoStr);
+        if(isNaN(monto) || monto <= 0) {
+            alert("Monto inválido.");
+            return;
+        }
+
+        if(tipo === 'jugada') {
+            cliente.saldo -= monto;
+        } else if(tipo === 'premio') {
+            cliente.saldo += monto;
+        }
+
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+        renderizarModuloClientes();
+    }
+
+    function enviarWhatsAppCliente(id) {
+        let cliente = clientesData.find(c => c.id === id);
+        if(!cliente) return;
+
+        let telefono = cliente.telefono;
+        if(!telefono) {
+            telefono = prompt(`Ingresa el número de WhatsApp para ${cliente.nombre} (con código de país, ej. 584121234567):`) || "";
+            if(telefono) {
+                cliente.telefono = telefono.trim();
+                localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+            } else {
+                return;
+            }
+        }
+
+        let estadoTexto = cliente.saldo >= 0 ? "a favor" : "en contra";
+        let mensaje = `¡Hola **${cliente.nombre}**! 🎲 Tu saldo en Centro de Apuestas Harold José es de **Bs. ${Math.abs(cliente.saldo).toFixed(2)}** (${estadoTexto}). ¡Mucho éxito en tus jugadas!`;
+        
+        let url = `https://api.whatsapp.com/send?phone=${telefono}&text=${encodeURIComponent(mensaje)}`;
+        window.open(url, '_blank');
+    }
+
+    function renderizarModuloClientes() {
+        const contenedor = document.getElementById('listaClientesContainer');
+        if(!clientesData || clientesData.length === 0) {
+            contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay clientes registrados.</div>';
+            return;
+        }
+
+        let html = '';
+        clientesData.forEach(c => {
+            let colorSaldo = c.saldo >= 0 ? '#10b981' : '#ef4444';
+            html += `<div class="client-card">
+                <div class="client-header">
+                    <span>👤 ${c.nombre}</span>
+                    <span style="color:${colorSaldo};">Favor: Bs. ${c.saldo.toFixed(2)} <span style="cursor:pointer; margin-left:6px;" onclick="eliminarCliente('${c.id}')" title="Eliminar cliente">🗑️</span></span>
+                </div>
+                <div class="client-actions">
+                    <button class="btn btn-jugada" onclick="registrarAccionCliente('${c.id}', 'jugada')">🎲 Jugada</button>
+                    <button class="btn btn-client-premio" onclick="registrarAccionCliente('${c.id}', 'premio')">🏆 Premio</button>
+                </div>
+                <button class="btn btn-whatsapp" onclick="enviarWhatsAppCliente('${c.id}')">
+                    <span>💬</span> Enviar Estado por WhatsApp
+                </button>
+            </div>`;
+        });
+
+        contenedor.innerHTML = html;
     }
 </script>
 
