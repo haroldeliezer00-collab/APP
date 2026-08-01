@@ -1,223 +1,246 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Centro de Apuestas Harold José - Taquilla (Mejorado)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Centro de Apuestas Harold José - Taquilla (Firestore)</title>
 
-    <!-- Tesseract: usar worker moderno -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Tesseract for OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-    <style>
-        :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; padding-bottom: 80px; color: var(--text); }
-        .container { max-width: 900px; margin: 0 auto; }
-        .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .upload-area { border: 2px dashed #93c5fd; background: #f0fdf4; padding: 16px; text-align: center; border-radius: 10px; margin-bottom: 12px; cursor: pointer; }
-        .upload-area p { margin: 6px 0 0; font-size: 11px; color: #166534; font-weight: bold; }
-        input, textarea { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
-        .btn-success { background: var(--accent); color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 12px; }
-        .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
-        .history-item.premio { border-left-color: #d97706; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
-        .nav-item.active { color: #0284c7; }
-        .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        #alertBox { padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; display: none; font-weight: bold; }
-        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-        .alert-loading { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .progress { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top:8px;}
-        .progress > i { display:block; height:100%; background: #0284c7; width:0%; transition: width .2s ease;}
-        .small { font-size: 11px; color: #64748b; }
-    </style>
+  <!-- Firebase (compat builds para integración sencilla) -->
+  <script src="https://www.gstatic.com/firebasejs/9.34.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.34.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.34.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; padding-bottom: 80px; color: var(--text); }
+    .container { max-width: 900px; margin: 0 auto; }
+    .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .upload-area { border: 2px dashed #93c5fd; background: #f0fdf4; padding: 16px; text-align: center; border-radius: 10px; margin-bottom: 12px; cursor: pointer; }
+    .upload-area p { margin: 6px 0 0; font-size: 11px; color: #166534; font-weight: bold; }
+    input, textarea { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
+    .btn-success { background: var(--accent); color: white; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 12px; }
+    .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
+    .history-item.premio { border-left-color: #d97706; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
+    .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
+    .nav-item.active { color: #0284c7; }
+    .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    #alertBox { padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; display: none; font-weight: bold; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .alert-loading { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .progress { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top:8px;}
+    .progress > i { display:block; height:100%; background: #0284c7; width:0%; transition: width .2s ease;}
+    .small { font-size: 11px; color: #64748b; }
+  </style>
 </head>
 <body onpaste="manejarPegadoGlobal(event)">
 
 <div class="container">
-    <div id="alertBox"></div>
+  <div id="alertBox"></div>
 
-    <!-- VISTA 1: PAGOS -->
-    <div id="view-pagos" class="view-section active">
-        <div class="card" style="border-top: 4px solid var(--accent);">
-            <div class="card-title">📥 Registrar Pago Taquilla</div>
-            <div class="upload-area" onclick="document.getElementById('fileInputTaquilla').click()" role="button" tabindex="0">
-                <span style="font-size: 20px;">☁️</span>
-                <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
-                <input type="file" id="fileInputTaquilla" style="display:none;" accept="image/*" onchange="cargarCapturaArchivo(event, 'taquilla')">
-                <div id="fileNameTaquilla" class="small">No se ha seleccionado archivo</div>
-            </div>
+  <!-- VISTA 1: PAGOS -->
+  <div id="view-pagos" class="view-section active">
+    <div class="card" style="border-top: 4px solid var(--accent);">
+      <div class="card-title">📥 Registrar Pago Taquilla</div>
+      <div class="upload-area" onclick="document.getElementById('fileInputTaquilla').click()" role="button" tabindex="0">
+        <span style="font-size: 20px;">☁️</span>
+        <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
+        <input type="file" id="fileInputTaquilla" style="display:none;" accept="image/*" onchange="cargarCapturaArchivo(event, 'taquilla')">
+        <div id="fileNameTaquilla" class="small">No se ha seleccionado archivo</div>
+      </div>
 
-            <div class="anti-fraud-badge small">🛡️ Validador Anti-Fraude Estricto (Bloquea Duplicados y Datos Incorrectos)</div>
+      <div class="anti-fraud-badge small">🛡️ Validador Anti-Fraude Estricto (Bloquea Duplicados y Datos Incorrectos)</div>
 
-            <div class="form-group">
-                <label>Número de Referencia / Operación</label>
-                <input type="text" id="referencia" placeholder="Lectura automática OCR o manual" oninput="validarReferenciaEnVivo(this.value)">
-            </div>
-            <div class="form-group">
-                <label>Nombre del Cliente</label>
-                <input type="text" id="cliente" placeholder="Ej. Edgar">
-            </div>
-            <div class="form-group">
-                <label>Monto del Pago (Bolívares - Bs)</label>
-                <input type="number" id="monto" placeholder="Ej. 2000.00" step="0.01" min="0">
-            </div>
-            <button id="btnGuardarTaquilla" class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
-        </div>
+      <div class="form-group">
+        <label>Número de Referencia / Operación</label>
+        <input type="text" id="referencia" placeholder="Lectura automática OCR o manual" oninput="validarReferenciaEnVivo(this.value)">
+      </div>
+      <div class="form-group">
+        <label>Nombre del Cliente</label>
+        <input type="text" id="cliente" placeholder="Ej. Edgar">
+      </div>
+      <div class="form-group">
+        <label>Monto del Pago (Bolívares - Bs)</label>
+        <input type="number" id="monto" placeholder="Ej. 2000.00" step="0.01" min="0">
+      </div>
+      <button id="btnGuardarTaquilla" class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
+    </div>
+  </div>
+
+  <!-- VISTA 2: CAJA Y GLOBAL -->
+  <div id="view-caja" class="view-section">
+    <div class="card">
+      <div class="card-title">📊 Panel de Caja y Global</div>
+      <div class="grid-caja" style="margin-bottom: 8px;">
+        <div class="box-stat"><span>Suma Total (Cuentas + Pronost.):</span> <strong id="lblSumaTotal">0.00 Bs</strong></div>
+        <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
+      </div>
+      <div class="grid-caja" style="margin-bottom: 12px;">
+        <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
+        <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button class="btn btn-premio" onclick="registrarPremioModal()">🏆 Pagar Premio</button>
+        <button class="btn btn-danger" onclick="registrarGastoModal()">❌ Registrar Gasto</button>
+      </div>
     </div>
 
-    <!-- VISTA 2: CAJA Y GLOBAL -->
-    <div id="view-caja" class="view-section">
-        <div class="card">
-            <div class="card-title">📊 Panel de Caja y Global</div>
-            <div class="grid-caja" style="margin-bottom: 8px;">
-                <div class="box-stat"><span>Suma Total (Cuentas + Pronost.):</span> <strong id="lblSumaTotal">0.00 Bs</strong></div>
-                <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
-            </div>
-            <div class="grid-caja" style="margin-bottom: 12px;">
-                <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
-                <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn btn-premio" onclick="registrarPremioModal()">🏆 Pagar Premio</button>
-                <button class="btn btn-danger" onclick="registrarGastoModal()">❌ Registrar Gasto</button>
-            </div>
-        </div>
+    <!-- Control Saldo Pronosticador -->
+    <div class="card" style="background: #1e1b4b; color: white;">
+      <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span id="lblPronosticador" style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:11px; color:#000;">0.00 Bs</span></div>
+      <div class="upload-area" style="background: #312e81; border-color: #4338ca;" onclick="document.getElementById('fileInputProno').click()">
+        <span style="font-size: 18px;">☁️</span>
+        <p style="color: #93c5fd;">Sube captura o presiona <b>Ctrl+V</b> aquí para Pronosticador</p>
+        <input type="file" id="fileInputProno" style="display:none;" accept="image/*" onchange="cargarCapturaArchivo(event, 'pronosticador')">
+        <div id="fileNameProno" class="small">No se ha seleccionado archivo</div>
+      </div>
 
-        <!-- Control Saldo Pronosticador -->
-        <div class="card" style="background: #1e1b4b; color: white;">
-            <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span id="lblPronosticador" style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:11px; color:#000;">0.00 Bs</span></div>
-            
-            <div class="upload-area" style="background: #312e81; border-color: #4338ca;" onclick="document.getElementById('fileInputProno').click()">
-                <span style="font-size: 18px;">☁️</span>
-                <p style="color: #93c5fd;">Sube captura o presiona <b>Ctrl+V</b> aquí para Pronosticador</p>
-                <input type="file" id="fileInputProno" style="display:none;" accept="image/*" onchange="cargarCapturaArchivo(event, 'pronosticador')">
-                <div id="fileNameProno" class="small">No se ha seleccionado archivo</div>
-            </div>
-
-            <div style="background: #312e81; padding: 10px; border-radius: 6px; border: 1px solid #4338ca;">
-                <label style="color: #e2e8f0; font-size:10px;">🛡️ Gestión Saldo Pronosticador (Aparte)</label>
-                <div class="form-group" style="margin-top:6px;">
-                    <input type="text" id="pronoRef" placeholder="Referencia o Concepto" style="background:#1e1b4b; color:white; border-color:#4338ca;" oninput="validarReferenciaEnVivo(this.value)">
-                </div>
-                <div class="form-group">
-                    <input type="number" id="pronoMonto" placeholder="Monto en Bs" style="background:#1e1b4b; color:white; border-color:#4338ca;" step="0.01" min="0">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:6px;">
-                    <button class="btn btn-success" onclick="guardarPronosticador('Ingreso Pronosticador')">➕ Agregar Ingreso</button>
-                    <button class="btn btn-danger" onclick="guardarPronosticador('Retiro Pronosticador')">➖ Pagar / Enviar</button>
-                </div>
-            </div>
+      <div style="background: #312e81; padding: 10px; border-radius: 6px; border: 1px solid #4338ca;">
+        <label style="color: #e2e8f0; font-size:10px;">🛡️ Gestión Saldo Pronosticador (Aparte)</label>
+        <div class="form-group" style="margin-top:6px;">
+          <input type="text" id="pronoRef" placeholder="Referencia o Concepto" style="background:#1e1b4b; color:white; border-color:#4338ca;" oninput="validarReferenciaEnVivo(this.value)">
         </div>
-
-        <!-- Historial de Movimientos -->
-        <div class="card">
-            <div class="card-title">📜 Historial de Movimientos <button onclick="sincronizarConNube()" style="margin-left:auto; font-size:10px; padding:3px 6px;" class="btn btn-warning">🔄 Sincronizar Nube</button></div>
-            <div id="historialLista" style="max-height: 350px; overflow-y: auto;">
-                <div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">Cargando historial...</div>
-            </div>
+        <div class="form-group">
+          <input type="number" id="pronoMonto" placeholder="Monto en Bs" style="background:#1e1b4b; color:white; border-color:#4338ca;" step="0.01" min="0">
         </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:6px;">
+          <button class="btn btn-success" onclick="guardarPronosticador('Ingreso Pronosticador')">➕ Agregar Ingreso</button>
+          <button class="btn btn-danger" onclick="guardarPronosticador('Retiro Pronosticador')">➖ Pagar / Enviar</button>
+        </div>
+      </div>
     </div>
 
-    <!-- VISTA 3: SISTEMAS Y LOTERÍAS (resumida) -->
-    <div id="view-sistemas" class="view-section">
-        <div class="card">
-            <div class="card-title">
-                📈 Sistemas y Loterías
-                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarNuevoSistemaModal()">+ Sistema</button>
-            </div>
-            <div class="small" style="margin-bottom:10px;">Control diario y desglose semanal por sistema</div>
+    <!-- Historial de Movimientos -->
+    <div class="card">
+      <div class="card-title">📜 Historial de Movimientos <button onclick="flushPendingQueue()" style="margin-left:auto; font-size:10px; padding:3px 6px;" class="btn btn-warning">🔄 Reintentar Envíos</button></div>
+      <div id="historialLista" style="max-height: 350px; overflow-y: auto;">
+        <div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">Cargando historial...</div>
+      </div>
+    </div>
+  </div>
 
-            <div id="listaSistemasDia"></div>
-        </div>
+  <!-- VISTA 3: SISTEMAS Y LOTERÍAS -->
+  <div id="view-sistemas" class="view-section">
+    <div class="card">
+      <div class="card-title">
+        📈 Sistemas y Loterías
+        <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarNuevoSistemaModal()">+ Sistema</button>
+      </div>
+      <div class="small" style="margin-bottom:10px;">Control diario y desglose semanal por sistema</div>
 
-        <div class="card">
-            <div class="card-title">📑 Resumen de Todos los Sistemas</div>
-            <div id="resumenSistemasSemana"></div>
-        </div>
+      <div id="listaSistemasDia"></div>
     </div>
 
-    <!-- VISTA 4: CLIENTES Y SALDOS -->
-    <div id="view-clientes" class="view-section">
-        <div class="card">
-            <div class="card-title">
-                👥 Control de Clientes y Saldos
-                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarClienteModal()">+ Cliente</button>
-            </div>
-            <div class="small" style="margin-bottom: 10px;">Cuentas corrientes, jugadas y copiado rápido para WhatsApp</div>
-            <div id="listaClientesContainer"></div>
+    <div class="card">
+      <div class="card-title">📑 Resumen de Todos los Sistemas</div>
+      <div id="resumenSistemasSemana"></div>
+    </div>
+  </div>
+
+  <!-- VISTA 4: CLIENTES Y SALDOS -->
+  <div id="view-clientes" class="view-section">
+    <div class="card">
+      <div class="card-title">
+        👥 Control de Clientes y Saldos
+        <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarClienteModal()">+ Cliente</button>
+      </div>
+      <div class="small" style="margin-bottom: 10px;">Cuentas corrientes, jugadas y copiado rápido para WhatsApp</div>
+      <div id="listaClientesContainer"></div>
+    </div>
+  </div>
+
+  <!-- VISTA 5: CUENTAS Y BANCOS -->
+  <div id="view-cuentas" class="view-section">
+    <div class="card" style="background: #0f172a; color: white;">
+      <div class="card-title" style="color: white;">💳 Tus Datos de Receptor (Pago Móvil / Cédula)</div>
+      <div class="small" style="margin-bottom: 10px;">El sistema anti-fraude usa estos datos para verificar automáticamente tus comprobantes</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <div>
+          <label style="color: #cbd5e1;">Cédula / RIF</label>
+          <input type="text" id="recCedula" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
         </div>
+        <div>
+          <label style="color: #cbd5e1;">Teléfono Pago Móvil</label>
+          <input type="text" id="recTelefono" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="color: #cbd5e1;">Banco / Alias Receptor</label>
+        <input type="text" id="recBanco" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
+      </div>
     </div>
 
-    <!-- VISTA 5: CUENTAS Y BANCOS -->
-    <div id="view-cuentas" class="view-section">
-        <div class="card" style="background: #0f172a; color: white;">
-            <div class="card-title" style="color: white;">💳 Tus Datos de Receptor (Pago Móvil / Cédula)</div>
-            <div class="small" style="margin-bottom: 10px;">El sistema anti-fraude usa estos datos para verificar automáticamente tus comprobantes</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                <div>
-                    <label style="color: #cbd5e1;">Cédula / RIF</label>
-                    <input type="text" id="recCedula" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
-                </div>
-                <div>
-                    <label style="color: #cbd5e1;">Teléfono Pago Móvil</label>
-                    <input type="text" id="recTelefono" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
-                </div>
-            </div>
-            <div class="form-group">
-                <label style="color: #cbd5e1;">Banco / Alias Receptor</label>
-                <input type="text" id="recBanco" value="" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">🏦 Cuentas y Números Destino</div>
-            <div class="small" style="margin-bottom: 10px;">Configura tus cuentas. Los saldos aquí ingresados se suman automáticamente al Total General.</div>
-            <div id="listaCuentasBancariasContainer"></div>
-            <button class="btn btn-success" style="background: #3b82f6; margin-top: 5px;" onclick="agregarCuentaBancariaModal()">+ Agregar Otra Cuenta</button>
-        </div>
+    <div class="card">
+      <div class="card-title">🏦 Cuentas y Números Destino</div>
+      <div class="small" style="margin-bottom: 10px;">Configura tus cuentas. Los saldos aquí ingresados se suman automáticamente al Total General.</div>
+      <div id="listaCuentasBancariasContainer"></div>
+      <button class="btn btn-success" style="background: #3b82f6; margin-top: 5px;" onclick="agregarCuentaBancariaModal()">+ Agregar Otra Cuenta</button>
     </div>
+  </div>
 </div>
 
 <nav class="bottom-nav">
-    <div class="nav-item active" onclick="cambiarVista('pagos', this)"><span>🏠</span>Pagos</div>
-    <div class="nav-item" onclick="cambiarVista('caja', this)"><span>📊</span>Caja</div>
-    <div class="nav-item" onclick="cambiarVista('sistemas', this)"><span>📈</span>Sistemas</div>
-    <div class="nav-item" onclick="cambiarVista('clientes', this)"><span>👥</span>Clientes</div>
-    <div class="nav-item" onclick="cambiarVista('cuentas', this)"><span>🏦</span>Cuentas</div>
+  <div class="nav-item active" onclick="cambiarVista('pagos', this)"><span>🏠</span>Pagos</div>
+  <div class="nav-item" onclick="cambiarVista('caja', this)"><span>📊</span>Caja</div>
+  <div class="nav-item" onclick="cambiarVista('sistemas', this)"><span>📈</span>Sistemas</div>
+  <div class="nav-item" onclick="cambiarVista('clientes', this)"><span>👥</span>Clientes</div>
+  <div class="nav-item" onclick="cambiarVista('cuentas', this)"><span>🏦</span>Cuentas</div>
 </nav>
 
 <script>
 /*
-  Principales mejoras:
-   - OCR usando createWorker y mostrando progreso.
-   - Cola de envíos pendiente (pendingQueue) con retry/flush para evitar dependencias de mode:no-cors.
-   - Detección de duplicados robusta (normaliza referencias y busca en server + pending).
-   - Mejora UX: mensajes claros, bloqueo botones durante OCR/envío, progreso.
-   - Guardado consistente en localStorage con claves separadas (server vs pending).
+  INSTRUCCIONES IMPORTANTES:
+  1) Reemplaza el objeto `firebaseConfig` abajo con la configuración de tu proyecto Firebase.
+     - Ve a Firebase Console -> Project settings -> SDK setup and configuration -> Firebase SDK snippet (Config)
+  2) Configura reglas de Firestore al menos para permitir usuarios autenticados (o anónimo si usas auth anónimo).
+  3) Deploy en HTTPS (Vercel ya provee HTTPS).
 */
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDQ4lfs7pYcCaJcPzFQ61pmz93hA4R6SG51Jk4H1JLJQEZkTkv3vkDKZPuxQ/exec";
+/* =========================
+   FIREBASE CONFIG (REEMPLAZA)
+   ========================= */
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// --- Keys de almacenamiento local (evitar confusión) ---
-const KEY_SERVER_HISTORIAL = 'taquilla_historial_server'; // datos sincronizados desde la nube
-const KEY_PENDING_QUEUE = 'taquilla_historial_pending';  // datos locales pendientes de enviar
+// Habilitar persistence (caché offline)
+db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+  console.warn('Firestore persistence no disponible:', err);
+});
+
+/* =========================
+   STORAGE KEYS y ESTADO
+   ========================= */
+const KEY_PENDING_QUEUE = 'taquilla_historial_pending';
 const KEY_CLIENTES = 'taquilla_clientes';
 const KEY_CUENTAS = 'taquilla_cuentas_bancarias';
 const KEY_SISTEMAS_CONFIG = 'taquilla_sistemas_config';
 const KEY_SISTEMAS_REG = 'taquilla_sistemas_registros';
 const KEY_RECEPTOR = 'taquilla_receptor_oficial';
+const KEY_SERVER_HISTORIAL = 'taquilla_historial_server';
 
-// Estado en memoria
 let historialServer = JSON.parse(localStorage.getItem(KEY_SERVER_HISTORIAL)) || [];
 let pendingQueue = JSON.parse(localStorage.getItem(KEY_PENDING_QUEUE)) || [];
 let clientesData = JSON.parse(localStorage.getItem(KEY_CLIENTES)) || [{ id: 'c1', nombre: 'Edgar', saldo: 0 }, { id: 'c2', nombre: 'Carlos', saldo: 0 }];
@@ -226,797 +249,711 @@ let sistemasData = JSON.parse(localStorage.getItem(KEY_SISTEMAS_CONFIG)) || [{ i
 let registrosSistemas = JSON.parse(localStorage.getItem(KEY_SISTEMAS_REG)) || {};
 let diaSeleccionado = 'Lunes';
 
+/* OCR */
 let tesseractWorker = null;
 let ocrBusy = false;
 
-window.onload = async function() {
-    // cargar receptor oficial si existe
-    const receptor = JSON.parse(localStorage.getItem(KEY_RECEPTOR));
-    if(receptor) {
-        document.getElementById('recCedula').value = receptor.cedula || '';
-        document.getElementById('recTelefono').value = receptor.telefono || '';
-        document.getElementById('recBanco').value = receptor.banco || '';
-    } else {
-        // valores por defecto (si quieres mantener los originales, descomenta)
-        // document.getElementById('recCedula').value = "18274410";
-        // document.getElementById('recTelefono').value = "04124489363";
-        // document.getElementById('recBanco').value = "0102 - Banco de Venezuela";
-    }
-
-    actualizarInterfazCaja();
-    renderizarModuloSistemas();
-    renderizarModuloClientes();
-    renderizarModuloCuentas();
-
-    await initTesseractWorker();
-    // intentar enviar pendientes al iniciar
-    flushPendingQueue();
-    // sincronizar desde la nube sin bloquear UI (intenta actualizar historialServer)
-    sincronizarConNube();
-};
-
-/* -------------------------
-   UTILIDADES y VALIDACIONES
-   ------------------------- */
+/* =========================
+   UTILIDADES
+   ========================= */
 function mostrarAlerta(tipo, texto, duracionMs = 5000) {
-    const alertBox = document.getElementById('alertBox');
-    alertBox.style.display = 'block';
-    alertBox.className = tipo === 'error' ? 'alert-error' : tipo === 'loading' ? 'alert-loading' : 'alert-success';
-    alertBox.innerText = texto;
-    if(duracionMs > 0) {
-        setTimeout(() => {
-            // ocultar sólo si el contenido no cambió
-            if(alertBox.innerText === texto) alertBox.style.display = 'none';
-        }, duracionMs);
-    }
+  const alertBox = document.getElementById('alertBox');
+  alertBox.style.display = 'block';
+  alertBox.className = tipo === 'error' ? 'alert-error' : tipo === 'loading' ? 'alert-loading' : 'alert-success';
+  alertBox.innerText = texto;
+  if (duracionMs > 0) {
+    setTimeout(() => { if (alertBox.innerText === texto) alertBox.style.display = 'none'; }, duracionMs);
+  }
 }
 
 function normalizarRef(ref) {
-    if (!ref) return "";
-    let s = String(ref).trim();
-    // eliminar caracteres no alfanuméricos excepto letras en caso de referencia alfanumérica
-    s = s.replace(/[^\w]/g, ''); // mantiene letras y números
-    // convertir a mayúsculas y quitar ceros a la izquierda sólo en cadenas numéricas largas
-    if(/^\d+$/.test(s)) s = s.replace(/^0+/, '') || s;
-    return s.toUpperCase();
+  if (!ref) return "";
+  let s = String(ref).trim();
+  s = s.replace(/[^\w]/g, '');
+  if (/^\d+$/.test(s)) s = s.replace(/^0+/, '') || s;
+  return s.toUpperCase();
 }
 
 function buscarDuplicado(ref) {
-    if (!ref) return null;
-    const target = normalizarRef(ref);
-    if(!target) return null;
-
-    // buscar en server history, en pending, y en historial localmente guardado
-    const combinado = [...historialServer, ...pendingQueue];
-    return combinado.find(item => {
-        if (!item.referencia) return false;
-        return normalizarRef(item.referencia) === target;
-    }) || null;
+  if (!ref) return null;
+  const target = normalizarRef(ref);
+  if (!target) return null;
+  const combinado = [...historialServer, ...pendingQueue];
+  return combinado.find(item => item.referencia && normalizarRef(item.referencia) === target) || null;
 }
 
-function formatBs(n) {
-    const num = parseFloat(n) || 0;
-    return num.toFixed(2) + " Bs";
-}
+function formatBs(n) { return (parseFloat(n) || 0).toFixed(2) + " Bs"; }
 
-/* -------------------------
-   OCR (Tesseract) más robusto
-   ------------------------- */
+/* =========================
+   OCR (Tesseract worker)
+   ========================= */
 async function initTesseractWorker() {
-    if(tesseractWorker) return;
-    try {
-        tesseractWorker = Tesseract.createWorker({
-            logger: m => {
-                // opcional: mostrar progreso en UI
-                if(m.status && m.progress !== undefined) {
-                    const alertBox = document.getElementById('alertBox');
-                    if(alertBox.style.display !== 'block') {
-                        alertBox.style.display = 'block';
-                        alertBox.className = 'alert-loading';
-                    }
-                    document.getElementById('alertBox').innerText = `OCR: ${m.status} ${(m.progress * 100).toFixed(0)}%`;
-                    // si hay elemento progress, actualizar
-                    const progressEl = document.querySelector('.progress > i');
-                    if (progressEl) progressEl.style.width = `${(m.progress * 100).toFixed(0)}%`;
-                }
-            }
-        });
-        await tesseractWorker.load();
-        await tesseractWorker.loadLanguage('spa');
-        await tesseractWorker.initialize('spa');
-    } catch (e) {
-        console.warn('No se pudo inicializar Tesseract worker:', e);
-        tesseractWorker = null;
-    }
+  if (tesseractWorker) return;
+  try {
+    tesseractWorker = Tesseract.createWorker({
+      logger: m => {
+        if (m.status && m.progress !== undefined) {
+          const alertBox = document.getElementById('alertBox');
+          if (alertBox.style.display !== 'block') {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-loading';
+          }
+          document.getElementById('alertBox').innerText = `OCR: ${m.status} ${(m.progress * 100).toFixed(0)}%`;
+          const progressEl = document.querySelector('.progress > i');
+          if (progressEl) progressEl.style.width = `${(m.progress * 100).toFixed(0)}%`;
+        }
+      }
+    });
+    await tesseractWorker.load();
+    await tesseractWorker.loadLanguage('spa');
+    await tesseractWorker.initialize('spa');
+  } catch (e) {
+    console.warn('No se pudo inicializar Tesseract worker:', e);
+    tesseractWorker = null;
+  }
 }
 
 async function procesarOCR(file, destino) {
-    if(ocrBusy) {
-        mostrarAlerta('error', 'El OCR ya está en progreso. Espera a que termine.');
-        return;
+  if (ocrBusy) { mostrarAlerta('error', 'El OCR ya está en progreso. Espera a que termine.'); return; }
+  ocrBusy = true;
+  const alertBox = document.getElementById('alertBox');
+  alertBox.style.display = 'block';
+  alertBox.className = 'alert-loading';
+  alertBox.innerHTML = '🔍 Leyendo comprobante con OCR y validando datos anti-fraude...<div class="progress"><i></i></div>';
+  try {
+    let resultText = '';
+    if (tesseractWorker) {
+      const { data: { text } } = await tesseractWorker.recognize(file);
+      resultText = text || '';
+    } else {
+      const { data: { text } } = await Tesseract.recognize(file, 'spa');
+      resultText = text || '';
     }
-    ocrBusy = true;
-    const alertBox = document.getElementById('alertBox');
-    alertBox.style.display = 'block';
-    alertBox.className = 'alert-loading';
-    alertBox.innerHTML = '🔍 Leyendo comprobante con OCR y validando datos anti-fraude...<div class="progress"><i></i></div>';
 
-    try {
-        let resultText = '';
-        if(tesseractWorker) {
-            const { data: { text } } = await tesseractWorker.recognize(file);
-            resultText = text || '';
-        } else {
-            // fallback: usar API sin worker (menos óptimo)
-            const { data: { text } } = await Tesseract.recognize(file, 'spa');
-            resultText = text || '';
+    let refEncontrada = "";
+    let montoEncontrado = "";
+    const lineas = resultText.split('\n').map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < lineas.length; i++) {
+      let linea = lineas[i].toLowerCase();
+      if (linea.includes('operación') || linea.includes('operacion') || linea.includes('referencia') || linea.includes('ref')) {
+        let nums = lineas[i].match(/\d{6,15}/);
+        if (nums) { refEncontrada = nums[0]; break; }
+        else if (i + 1 < lineas.length) {
+          let numsSig = lineas[i + 1].match(/\d{6,15}/);
+          if (numsSig) { refEncontrada = numsSig[0]; break; }
         }
-
-        // procesar texto
-        let refEncontrada = "";
-        let montoEncontrado = "";
-
-        const lineas = resultText.split('\n').map(l => l.trim()).filter(Boolean);
-        // buscar patrones específicos
-        for (let i = 0; i < lineas.length; i++) {
-            let linea = lineas[i].toLowerCase();
-            if (linea.includes('operación') || linea.includes('operacion') || linea.includes('referencia') || linea.includes('ref')) {
-                let nums = lineas[i].match(/\d{6,15}/);
-                if (nums) { refEncontrada = nums[0]; break; }
-                else if (i + 1 < lineas.length) {
-                    let numsSig = lineas[i+1].match(/\d{6,15}/);
-                    if (numsSig) { refEncontrada = numsSig[0]; break; }
-                }
-            }
-        }
-        if(!refEncontrada) { let match = resultText.match(/\d{8,14}/); if(match) refEncontrada = match[0]; }
-
-        let matchMonto = resultText.match(/(?:monto|importe|total|bs\.?|bolivares)[\s\:\.]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i);
-        if(matchMonto) {
-            montoEncontrado = matchMonto[1].replace(/\./g, '').replace(',', '.');
-        } else {
-            let matchGen = resultText.match(/([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/);
-            if(matchGen) montoEncontrado = matchGen[1].replace(/\./g, '').replace(',', '.');
-        }
-
-        // Llenar inputs según destino (pronosticador o taquilla)
-        if(destino === 'pronosticador') {
-            if(refEncontrada) document.getElementById('pronoRef').value = refEncontrada;
-            if(montoEncontrado) document.getElementById('pronoMonto').value = montoEncontrado;
-            document.getElementById('fileNameProno').innerText = 'Imagen procesada correctamente';
-        } else {
-            if(refEncontrada) document.getElementById('referencia').value = refEncontrada;
-            if(montoEncontrado) document.getElementById('monto').value = montoEncontrado;
-            document.getElementById('fileNameTaquilla').innerText = 'Imagen procesada correctamente';
-        }
-
-        // Validar Anti-Fraude con los datos de receptor
-        let cedulaOficial = document.getElementById('recCedula').value.trim();
-        let telefonoOficial = document.getElementById('recTelefono').value.trim();
-        let tieneDatosValidos = false;
-        const normalizedText = resultText.replace(/\s+/g, ' ').toLowerCase();
-        if(cedulaOficial) tieneDatosValidos = normalizedText.includes(cedulaOficial.toLowerCase());
-        if(!tieneDatosValidos && telefonoOficial) tieneDatosValidos = normalizedText.includes(telefonoOficial.toLowerCase());
-        if(!tieneDatosValidos && /0102/.test(normalizedText)) tieneDatosValidos = true;
-
-        const existente = buscarDuplicado(refEncontrada);
-        if(existente) {
-            mostrarAlerta('error', `⛔ ¡ALERTA DUPLICADO! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}".`, 7000);
-        } else if (!tieneDatosValidos) {
-            mostrarAlerta('error', `❌ ¡ALERTA ANTI-FRAUDE! El comprobante NO contiene tus datos oficiales (Cédula/Teléfono/Banco).`, 7000);
-        } else {
-            mostrarAlerta('success', '✅ ¡Comprobante verificado con éxito! Datos correctos y referencia libre.', 5000);
-        }
-    } catch (e) {
-        console.error('OCR error', e);
-        mostrarAlerta('error', 'No se pudo leer automáticamente. Ingresa los datos manualmente.', 6000);
-    } finally {
-        ocrBusy = false;
-        // limpiar progreso
-        const progressEl = document.querySelector('.progress > i');
-        if (progressEl) progressEl.style.width = '0%';
-        setTimeout(() => {
-            const ab = document.getElementById('alertBox');
-            if(ab && ab.className === 'alert-loading') ab.style.display = 'none';
-        }, 1000);
+      }
     }
+    if (!refEncontrada) { let match = resultText.match(/\d{8,14}/); if (match) refEncontrada = match[0]; }
+
+    let matchMonto = resultText.match(/(?:monto|importe|total|bs\.?|bolivares)[\s\:\.]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i);
+    if (matchMonto) { montoEncontrado = matchMonto[1].replace(/\./g, '').replace(',', '.'); }
+    else { let matchGen = resultText.match(/([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/); if (matchGen) montoEncontrado = matchGen[1].replace(/\./g, '').replace(',', '.'); }
+
+    if (destino === 'pronosticador') {
+      if (refEncontrada) document.getElementById('pronoRef').value = refEncontrada;
+      if (montoEncontrado) document.getElementById('pronoMonto').value = montoEncontrado;
+      document.getElementById('fileNameProno').innerText = 'Imagen procesada correctamente';
+    } else {
+      if (refEncontrada) document.getElementById('referencia').value = refEncontrada;
+      if (montoEncontrado) document.getElementById('monto').value = montoEncontrado;
+      document.getElementById('fileNameTaquilla').innerText = 'Imagen procesada correctamente';
+    }
+
+    let cedulaOficial = document.getElementById('recCedula').value.trim();
+    let telefonoOficial = document.getElementById('recTelefono').value.trim();
+    let normalizedText = resultText.replace(/\s+/g, ' ').toLowerCase();
+    let tieneDatosValidos = false;
+    if (cedulaOficial && normalizedText.includes(cedulaOficial.toLowerCase())) tieneDatosValidos = true;
+    if (!tieneDatosValidos && telefonoOficial && normalizedText.includes(telefonoOficial.toLowerCase())) tieneDatosValidos = true;
+    if (!tieneDatosValidos && /0102/.test(normalizedText)) tieneDatosValidos = true;
+
+    const existente = buscarDuplicado(refEncontrada);
+    if (existente) {
+      mostrarAlerta('error', `⛔ ¡ALERTA DUPLICADO! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}".`, 7000);
+    } else if (!tieneDatosValidos) {
+      mostrarAlerta('error', `❌ ¡ALERTA ANTI-FRAUDE! El comprobante NO contiene tus datos oficiales (Cédula/Teléfono/Banco).`, 7000);
+    } else {
+      mostrarAlerta('success', '✅ ¡Comprobante verificado con éxito! Datos correctos y referencia libre.', 5000);
+    }
+  } catch (e) {
+    console.error('OCR error', e);
+    mostrarAlerta('error', 'No se pudo leer automáticamente. Ingresa los datos manualmente.', 6000);
+  } finally {
+    ocrBusy = false;
+    const progressEl = document.querySelector('.progress > i');
+    if (progressEl) progressEl.style.width = '0%';
+    setTimeout(() => {
+      const ab = document.getElementById('alertBox');
+      if (ab && ab.className === 'alert-loading') ab.style.display = 'none';
+    }, 1000);
+  }
 }
 
-/* -------------------------
+/* =========================
    Manejo de archivos y pegado
-   ------------------------- */
+   ========================= */
 function manejarPegadoGlobal(event) {
-    try {
-        const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items || [];
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf("image") !== -1) {
-                const blob = items[i].getAsFile();
-                // Si la vista "caja" está activa, lo consideramos pronosticador (mantener comportamiento original)
-                const vistaCajaActiva = document.getElementById('view-caja').classList.contains('active');
-                if (vistaCajaActiva) {
-                    document.getElementById('fileNameProno').innerText = "Imagen pegada. Leyendo con OCR...";
-                    procesarOCR(blob, 'pronosticador');
-                } else {
-                    document.getElementById('fileNameTaquilla').innerText = "Imagen pegada. Leyendo con OCR...";
-                    procesarOCR(blob, 'taquilla');
-                }
-                event.preventDefault();
-                break;
-            }
+  try {
+    const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items || [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const blob = items[i].getAsFile();
+        const vistaCajaActiva = document.getElementById('view-caja').classList.contains('active');
+        if (vistaCajaActiva) {
+          document.getElementById('fileNameProno').innerText = "Imagen pegada. Leyendo con OCR...";
+          procesarOCR(blob, 'pronosticador');
+        } else {
+          document.getElementById('fileNameTaquilla').innerText = "Imagen pegada. Leyendo con OCR...";
+          procesarOCR(blob, 'taquilla');
         }
-    } catch (e) {
-        console.warn('Error manejando pegado:', e);
+        event.preventDefault();
+        break;
+      }
     }
+  } catch (e) {
+    console.warn('Error manejando pegado:', e);
+  }
 }
 
 function cargarCapturaArchivo(event, destino) {
-    if(event.target.files && event.target.files.length > 0) {
-        const file = event.target.files[0];
-        if(destino === 'pronosticador') {
-            document.getElementById('fileNameProno').innerText = "Leyendo con OCR...";
-        } else {
-            document.getElementById('fileNameTaquilla').innerText = "Leyendo con OCR...";
-        }
-        procesarOCR(file, destino);
-    }
+  if (event.target.files && event.target.files.length > 0) {
+    const file = event.target.files[0];
+    if (destino === 'pronosticador') document.getElementById('fileNameProno').innerText = "Leyendo con OCR...";
+    else document.getElementById('fileNameTaquilla').innerText = "Leyendo con OCR...";
+    procesarOCR(file, destino);
+  }
 }
 
-/* -------------------------
-   Sincronización y cola pendiente
-   ------------------------- */
-async function sincronizarConNube() {
-    mostrarAlerta('loading', '🔄 Sincronizando historial con la nube (intento)...', 3000);
-    try {
-        const res = await fetch(GOOGLE_SCRIPT_URL + '?action=get', { method: 'GET', cache: 'no-store' });
-        // si el servidor no permite CORS, fetch puede fallar aquí
-        const data = await res.json();
-        if(Array.isArray(data)) {
-            historialServer = data;
-            localStorage.setItem(KEY_SERVER_HISTORIAL, JSON.stringify(historialServer));
-            mostrarAlerta('success', 'Historial sincronizado desde la nube.', 3000);
-            actualizarInterfazCaja();
-        }
-    } catch (e) {
-        console.warn('No se pudo sincronizar con la nube (CORS o red):', e);
-        mostrarAlerta('error', 'Sincronización fallida. Los registros se guardarán localmente y se enviarán cuando haya conexión/CORS permitido.', 6000);
-    }
+/* =========================
+   FIRESTORE: realtime listeners
+   ========================= */
+function startRealtimeListeners() {
+  // Movimientos (orden por fechaISO desc)
+  db.collection('movimientos').orderBy('fechaISO', 'desc').onSnapshot(snapshot => {
+    const serverData = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      data._id = doc.id;
+      serverData.push(data);
+    });
+    historialServer = serverData;
+    localStorage.setItem(KEY_SERVER_HISTORIAL, JSON.stringify(historialServer));
+    actualizarInterfazCaja();
+  }, err => console.warn('Listener movimientos error:', err));
+
+  // Clientes
+  db.collection('clientes').onSnapshot(snap => {
+    const arr = [];
+    snap.forEach(d => { const dd = d.data(); dd.id = d.id; arr.push(dd); });
+    clientesData = arr;
+    localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
+    renderizarModuloClientes();
+  }, err => console.warn('Listener clientes error:', err));
+
+  // Cuentas
+  db.collection('cuentas').onSnapshot(snap => {
+    const arr = [];
+    snap.forEach(d => { const dd = d.data(); dd.id = d.id; arr.push(dd); });
+    cuentasBancariasData = arr;
+    localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
+    renderizarModuloCuentas();
+  }, err => console.warn('Listener cuentas error:', err));
+
+  // Sistemas
+  db.collection('sistemas').onSnapshot(snap => {
+    const arr = [];
+    snap.forEach(d => { const dd = d.data(); dd.id = d.id; arr.push(dd); });
+    sistemasData = arr.length ? arr : sistemasData;
+    localStorage.setItem(KEY_SISTEMAS_CONFIG, JSON.stringify(sistemasData));
+    renderizarModuloSistemas();
+  }, err => console.warn('Listener sistemas error:', err));
 }
 
+/* =========================
+   Enviar movimiento al servidor (Firestore)
+   ========================= */
+async function sendMovementToServer(datos) {
+  try {
+    datos.fechaISO = new Date().toISOString();
+    if (datos.referencia && normalizarRef(datos.referencia)) {
+      const id = 'ref_' + normalizarRef(datos.referencia);
+      const refDoc = db.collection('movimientos').doc(id);
+      // usar transaction para mayor seguridad si quieres evitar overwrites no deseados
+      await refDoc.set(datos, { merge: true });
+    } else {
+      await db.collection('movimientos').add(datos);
+    }
+    return true;
+  } catch (e) {
+    console.warn('Error enviando movimiento a Firestore:', e);
+    return false;
+  }
+}
+
+/* =========================
+   Cola fallback (por si Firestore no responde)
+   ========================= */
 function enqueuePending(datos) {
-    pendingQueue.push(datos);
-    localStorage.setItem(KEY_PENDING_QUEUE, JSON.stringify(pendingQueue));
+  pendingQueue.push(datos);
+  localStorage.setItem(KEY_PENDING_QUEUE, JSON.stringify(pendingQueue));
 }
 
 async function flushPendingQueue() {
-    if(!pendingQueue || pendingQueue.length === 0) return;
-    mostrarAlerta('loading', `Enviando ${pendingQueue.length} operación(es) pendientes...`, 3000);
-
-    // intentar enviar cada item; si falla, mantenerlo en la cola
-    const pendientes = [...pendingQueue];
-    pendingQueue = []; // asumimos que los vamos a procesar
-    for(const item of pendientes) {
-        try {
-            const ok = await intentarEnviarAlServidor(item);
-            if(!ok) {
-                // falló, lo dejamos en pending
-                pendingQueue.push(item);
-            }
-        } catch (e) {
-            pendingQueue.push(item);
-        }
-    }
-    localStorage.setItem(KEY_PENDING_QUEUE, JSON.stringify(pendingQueue));
-    if(pendingQueue.length === 0) {
-        mostrarAlerta('success', 'Todos los pendientes fueron enviados (o encolados para reintento).', 3000);
-    } else {
-        mostrarAlerta('error', `Quedan ${pendingQueue.length} pendiente(s) por enviar. Se reintentará más tarde.`, 5000);
-    }
-    actualizarInterfazCaja();
-}
-
-// intenta enviar y devuelve true si parece haberse enviado ok
-async function intentarEnviarAlServidor(datos) {
+  if (!pendingQueue || pendingQueue.length === 0) {
+    mostrarAlerta('success', 'No hay pendientes por enviar.', 2500);
+    return;
+  }
+  mostrarAlerta('loading', `Intentando enviar ${pendingQueue.length} pendientes...`, 4000);
+  const pendientes = [...pendingQueue];
+  pendingQueue = [];
+  for (const item of pendientes) {
     try {
-        // Intentar POST con CORS (si la URL lo permite)
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(datos),
-            mode: "cors"
-        });
-        if(res.ok) {
-            // si todo bien, actualizar historialServer local
-            historialServer.push(datos);
-            localStorage.setItem(KEY_SERVER_HISTORIAL, JSON.stringify(historialServer));
-            return true;
-        } else {
-            console.warn('Servidor respondió con error:', res.status);
-            return false;
-        }
-    } catch (err) {
-        console.warn('Error al enviar al servidor (probable CORS/red):', err);
-        // fallback: guardar en local server history también (para que aparezca)
-        historialServer.push(datos);
-        localStorage.setItem(KEY_SERVER_HISTORIAL, JSON.stringify(historialServer));
-        return false;
+      const ok = await sendMovementToServer(item);
+      if (!ok) pendingQueue.push(item);
+    } catch (e) {
+      pendingQueue.push(item);
     }
+  }
+  localStorage.setItem(KEY_PENDING_QUEUE, JSON.stringify(pendingQueue));
+  if (pendingQueue.length === 0) mostrarAlerta('success', 'Pendientes enviados.', 3000);
+  else mostrarAlerta('error', `Quedan ${pendingQueue.length} pendientes`, 5000);
+  actualizarInterfazCaja();
 }
 
-/* -------------------------
-   Guardado de operaciones (taquilla/pronosticador)
-   ------------------------- */
-function guardarPagoTaquilla() {
-    const btn = document.getElementById('btnGuardarTaquilla');
-    btn.disabled = true;
+/* =========================
+   Operaciones: guardar pagos/pronosticador/premios/gastos
+   ========================= */
+async function guardarPagoTaquilla() {
+  const btn = document.getElementById('btnGuardarTaquilla');
+  btn.disabled = true;
+  const ref = document.getElementById('referencia').value.trim();
+  const cliente = document.getElementById('cliente').value.trim();
+  const monto = document.getElementById('monto').value.trim();
+  if (!ref || !cliente || !monto) { mostrarAlerta('error', 'Por favor completa todos los campos.', 5000); btn.disabled = false; return; }
 
-    const ref = document.getElementById('referencia').value.trim();
-    const cliente = document.getElementById('cliente').value.trim();
-    const monto = document.getElementById('monto').value.trim();
+  const existente = buscarDuplicado(ref);
+  if (existente) { mostrarAlerta('error', `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya fue registrada.`, 7000); btn.disabled = false; return; }
 
-    if (!ref || !cliente || !monto) {
-        mostrarAlerta('error', 'Por favor completa todos los campos.', 5000);
-        btn.disabled = false;
-        return;
-    }
-
-    const existente = buscarDuplicado(ref);
-    if(existente) {
-        mostrarAlerta('error', `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya fue registrada.`, 7000);
-        btn.disabled = false;
-        return;
-    }
-
-    const montoNum = parseFloat(monto) || 0;
-    let clienteObj = clientesData.find(c => c.nombre.toLowerCase() === cliente.toLowerCase());
-    if (clienteObj) {
-        clienteObj.saldo = (parseFloat(clienteObj.saldo) || 0) + montoNum;
-    } else {
-        clienteObj = { id: 'c_' + Date.now(), nombre: cliente, saldo: montoNum };
-        clientesData.push(clienteObj);
-    }
+  const montoNum = parseFloat(monto) || 0;
+  // Actualizar clientes local y en Firestore
+  let clienteObj = clientesData.find(c => c.nombre.toLowerCase() === cliente.toLowerCase());
+  if (clienteObj) {
+    clienteObj.saldo = (parseFloat(clienteObj.saldo) || 0) + montoNum;
+    // actualizar en Firestore (por id)
+    try { if (clienteObj.id) await db.collection('clientes').doc(clienteObj.id).set(clienteObj, { merge: true }); } catch(e){ console.warn('No se pudo actualizar cliente en Firestore', e); }
+  } else {
+    clienteObj = { nombre: cliente, saldo: montoNum };
+    // crear doc en Firestore con id automático
+    try {
+      const docRef = await db.collection('clientes').add(clienteObj);
+      clienteObj.id = docRef.id;
+    } catch(e){ console.warn('No se pudo crear cliente en Firestore', e); }
+    clientesData.push(clienteObj);
     localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
+  }
 
-    const datos = { 
-        fecha: new Date().toLocaleDateString(),
-        hora: new Date().toLocaleTimeString(),
-        referencia: ref, 
-        cliente: cliente, 
-        monto: montoNum,
-        tipo: "Ingreso Taquilla",
-        origen: 'local'
-    };
+  const datos = { fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), referencia: ref, cliente, monto: montoNum, tipo: "Ingreso Taquilla", origen: 'web' };
 
-    // intentar enviar al servidor; si no se puede, encolar
-    intentarEnviarAlServidor(datos).then(ok => {
-        if(!ok) enqueuePending(datos);
-        // mostrar resultado y limpiar formulario
-        mostrarAlerta('success', '🛡️ Operación registrada localmente y encolada/guardada.', 4000);
-        document.getElementById('referencia').value = '';
-        document.getElementById('cliente').value = '';
-        document.getElementById('monto').value = '';
-        document.getElementById('fileNameTaquilla').innerText = 'No se ha seleccionado archivo';
-        btn.disabled = false;
-        actualizarInterfazCaja();
-    }).catch(() => {
-        enqueuePending(datos);
-        mostrarAlerta('error', 'Error al enviar; operación encolada para reintento.', 5000);
-        btn.disabled = false;
-        actualizarInterfazCaja();
-    });
+  const ok = await sendMovementToServer(datos);
+  if (!ok) { enqueuePending(datos); mostrarAlerta('error', 'No se pudo sincronizar ahora; guardado localmente y encolado.', 5000); }
+  else mostrarAlerta('success', 'Registro sincronizado con éxito.', 3000);
+
+  document.getElementById('referencia').value = '';
+  document.getElementById('cliente').value = '';
+  document.getElementById('monto').value = '';
+  document.getElementById('fileNameTaquilla').innerText = 'No se ha seleccionado archivo';
+  btn.disabled = false;
+  actualizarInterfazCaja();
 }
 
-function guardarPronosticador(tipoAccion) {
-    const ref = document.getElementById('pronoRef').value.trim();
-    const monto = document.getElementById('pronoMonto').value.trim();
-    if(!ref || !monto) { 
-        mostrarAlerta('error', 'Por favor completa la referencia y el monto.', 4000);
-        return; 
-    }
-    const existente = buscarDuplicado(ref);
-    if(existente) {
-        mostrarAlerta('error', `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya existe.`, 7000);
-        return;
-    }
+async function guardarPronosticador(tipoAccion) {
+  const ref = document.getElementById('pronoRef').value.trim();
+  const monto = document.getElementById('pronoMonto').value.trim();
+  if (!ref || !monto) { mostrarAlerta('error', 'Por favor completa la referencia y el monto.', 4000); return; }
+  const existente = buscarDuplicado(ref);
+  if (existente) { mostrarAlerta('error', `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya existe.`, 7000); return; }
 
-    const datos = {
-        fecha: new Date().toLocaleDateString(),
-        hora: new Date().toLocaleTimeString(),
-        referencia: ref,
-        cliente: "Pronosticador",
-        monto: parseFloat(monto) || 0,
-        tipo: tipoAccion,
-        origen: 'local'
-    };
+  const datos = { fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), referencia: ref, cliente: "Pronosticador", monto: parseFloat(monto) || 0, tipo: tipoAccion, origen: 'web' };
 
-    intentarEnviarAlServidor(datos).then(ok => {
-        if(!ok) enqueuePending(datos);
-        mostrarAlerta('success', 'Operación pronosticador registrada.', 3000);
-        document.getElementById('pronoRef').value = '';
-        document.getElementById('pronoMonto').value = '';
-        document.getElementById('fileNameProno').innerText = 'No se ha seleccionado archivo';
-        actualizarInterfazCaja();
-    }).catch(() => {
-        enqueuePending(datos);
-        mostrarAlerta('error', 'Error al enviar; operación encolada para reintento.', 5000);
-        actualizarInterfazCaja();
-    });
+  const ok = await sendMovementToServer(datos);
+  if (!ok) { enqueuePending(datos); mostrarAlerta('error', 'No se pudo sincronizar ahora; guardado localmente y encolado.', 5000); }
+  else mostrarAlerta('success', 'Operación pronosticador sincronizada.', 3000);
+
+  document.getElementById('pronoRef').value = '';
+  document.getElementById('pronoMonto').value = '';
+  document.getElementById('fileNameProno').innerText = 'No se ha seleccionado archivo';
+  actualizarInterfazCaja();
 }
 
-/* -------------------------
-   Operaciones administrativas
-   ------------------------- */
-function registrarPremioModal() {
-    const concepto = prompt("Indica el beneficiario o concepto del premio:");
-    if (!concepto) return;
-    const montoStr = prompt("Monto del premio en Bs:");
-    const monto = parseFloat(montoStr);
-    if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+async function registrarPremioModal() {
+  const concepto = prompt("Indica el beneficiario o concepto del premio:");
+  if (!concepto) return;
+  const montoStr = prompt("Monto del premio en Bs:");
+  const monto = parseFloat(montoStr);
+  if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
 
-    const datos = {
-        fecha: new Date().toLocaleDateString(),
-        hora: new Date().toLocaleTimeString(),
-        referencia: "PREMIO-" + Math.floor(100000 + Math.random() * 900000),
-        cliente: "Premio: " + concepto,
-        monto: monto,
-        tipo: "Premio Pagado",
-        origen: 'local'
-    };
-    intentarEnviarAlServidor(datos).then(ok => { if(!ok) enqueuePending(datos); actualizarInterfazCaja(); });
+  const datos = { fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), referencia: "PREMIO-" + Math.floor(100000 + Math.random() * 900000), cliente: "Premio: " + concepto, monto: monto, tipo: "Premio Pagado", origen: 'web' };
+
+  const ok = await sendMovementToServer(datos);
+  if (!ok) enqueuePending(datos);
+  actualizarInterfazCaja();
 }
 
-function registrarGastoModal() {
-    const concepto = prompt("Descripción del gasto:");
-    if (!concepto) return;
-    const montoStr = prompt("Monto del gasto en Bs:");
-    const monto = parseFloat(montoStr);
-    if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+async function registrarGastoModal() {
+  const concepto = prompt("Descripción del gasto:");
+  if (!concepto) return;
+  const montoStr = prompt("Monto del gasto en Bs:");
+  const monto = parseFloat(montoStr);
+  if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
 
-    const datos = {
-        fecha: new Date().toLocaleDateString(),
-        hora: new Date().toLocaleTimeString(),
-        referencia: "GASTO-" + Math.floor(100000 + Math.random() * 900000),
-        cliente: "Gasto: " + concepto,
-        monto: monto,
-        tipo: "Gasto Registrado",
-        origen: 'local'
-    };
-    intentarEnviarAlServidor(datos).then(ok => { if(!ok) enqueuePending(datos); actualizarInterfazCaja(); });
+  const datos = { fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), referencia: "GASTO-" + Math.floor(100000 + Math.random() * 900000), cliente: "Gasto: " + concepto, monto: monto, tipo: "Gasto Registrado", origen: 'web' };
+
+  const ok = await sendMovementToServer(datos);
+  if (!ok) enqueuePending(datos);
+  actualizarInterfazCaja();
 }
 
-/* -------------------------
+/* =========================
    Interfaz: historial y sumas
-   ------------------------- */
+   ========================= */
 function actualizarInterfazCaja() {
-    const contenedor = document.getElementById('historialLista');
-    let sumaTaquilla = 0;
-    let sumaPronosticador = 0;
-    let totalPremios = 0;
-    let totalGastos = 0;
-    let html = '';
+  const contenedor = document.getElementById('historialLista');
+  let sumaTaquilla = 0, sumaPronosticador = 0, totalPremios = 0, totalGastos = 0;
+  let html = '';
 
-    // combinar server + pending para mostrar todo
-    const combinado = [...historialServer, ...pendingQueue];
-    if (combinado && combinado.length > 0) {
-        [...combinado].reverse().forEach(item => {
-            let m = parseFloat(item.monto) || 0;
-            let tipo = item.tipo || "Ingreso Taquilla";
-            let signo = "+";
-            let colorMonto = "var(--accent)";
-            let claseItem = "history-item";
+  const combinado = [...historialServer, ...pendingQueue];
+  if (combinado && combinado.length > 0) {
+    [...combinado].reverse().forEach(item => {
+      const m = parseFloat(item.monto) || 0;
+      const tipo = item.tipo || "Ingreso Taquilla";
+      let signo = "+", colorMonto = "var(--accent)", claseItem = "history-item";
 
-            if(tipo === "Ingreso Pronosticador") {
-                sumaPronosticador += m;
-            } else if(tipo === "Retiro Pronosticador") {
-                sumaPronosticador -= m;
-                signo = "-";
-                colorMonto = "#ef4444";
-                claseItem += " retiro";
-            } else if(tipo === "Premio Pagado") {
-                totalPremios += m;
-                signo = "-";
-                colorMonto = "#d97706";
-                claseItem += " premio";
-            } else if(tipo === "Gasto Registrado") {
-                totalGastos += m;
-                signo = "-";
-                colorMonto = "#ef4444";
-                claseItem += " gasto";
-            } else {
-                sumaTaquilla += m; 
-            }
+      if (tipo === "Ingreso Pronosticador") sumaPronosticador += m;
+      else if (tipo === "Retiro Pronosticador") { sumaPronosticador -= m; signo = "-"; colorMonto = "#ef4444"; claseItem += " retiro"; }
+      else if (tipo === "Premio Pagado") { totalPremios += m; signo = "-"; colorMonto = "#d97706"; claseItem += " premio"; }
+      else if (tipo === "Gasto Registrado") { totalGastos += m; signo = "-"; colorMonto = "#ef4444"; claseItem += " gasto"; }
+      else sumaTaquilla += m;
 
-            // marcar si el registro está pendiente de envío
-            const pendienteNote = (pendingQueue.find(p => normalizarRef(p.referencia) === normalizarRef(item.referencia))) ? ' (PENDIENTE)' : '';
+      const pendienteNote = (pendingQueue.find(p => normalizarRef(p.referencia) === normalizarRef(item.referencia))) ? ' (PENDIENTE)' : '';
 
-            html += `<div class="${claseItem}">
-                <div><strong>${item.cliente || 'Sin nombre'}</strong><br><span class="small">Ref: ${item.referencia || ''} ${pendienteNote} | ${item.hora || ''}</span></div>
-                <div style="text-align:right;"><strong style="color:${colorMonto};">${signo}${m.toFixed(2)} Bs</strong><br><span class="small" style="background:#e0f2fe; padding:1px 4px; border-radius:3px;">${tipo}</span></div>
-            </div>`;
-        });
-        contenedor.innerHTML = html;
-    } else {
-        contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay movimientos registrados.</div>';
-    }
+      html += `<div class="${claseItem}">
+        <div><strong>${item.cliente || 'Sin nombre'}</strong><br><span class="small">Ref: ${item.referencia || ''}${pendienteNote} | ${item.hora || ''}</span></div>
+        <div style="text-align:right;"><strong style="color:${colorMonto};">${signo}${m.toFixed(2)} Bs</strong><br><span class="small" style="background:#e0f2fe; padding:1px 4px; border-radius:3px;">${tipo}</span></div>
+      </div>`;
+    });
+    contenedor.innerHTML = html;
+  } else {
+    contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay movimientos registrados.</div>';
+  }
 
-    // Sumar cuentas bancarias actuales
-    let sumaTotalCuentasBancarias = 0;
-    cuentasBancariasData.forEach(acc => { sumaTotalCuentasBancarias += parseFloat(acc.saldo) || 0; });
+  let sumaTotalCuentasBancarias = 0;
+  cuentasBancariasData.forEach(acc => { sumaTotalCuentasBancarias += parseFloat(acc.saldo) || 0; });
 
-    let sumaTotalGlobal = sumaTotalCuentasBancarias + sumaPronosticador;
-    let saldoNeto = sumaTotalGlobal - totalPremios - totalGastos;
+  let sumaTotalGlobal = sumaTotalCuentasBancarias + sumaPronosticador;
+  let saldoNeto = sumaTotalGlobal - totalPremios - totalGastos;
 
-    document.getElementById('lblSumaTotal').innerText = sumaTotalGlobal.toFixed(2) + " Bs";
-    document.getElementById('lblSaldoNeto').innerText = saldoNeto.toFixed(2) + " Bs";
-    document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
-    document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
-    document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
+  document.getElementById('lblSumaTotal').innerText = sumaTotalGlobal.toFixed(2) + " Bs";
+  document.getElementById('lblSaldoNeto').innerText = saldoNeto.toFixed(2) + " Bs";
+  document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
+  document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
+  document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
 }
 
-/* -------------------------
-   Módulo Sistemas (simplificado)
-   ------------------------- */
+/* =========================
+   Sistemas
+   ========================= */
 function cambiarDiaSistema(dia, elemento) {
-    diaSeleccionado = dia;
-    document.querySelectorAll('.day-btn').forEach(btn => btn && btn.classList.remove('active'));
-    if(elemento) elemento.classList.add('active');
-    renderizarModuloSistemas();
+  diaSeleccionado = dia;
+  document.querySelectorAll('.day-btn').forEach(btn => btn && btn.classList.remove('active'));
+  if (elemento) elemento.classList.add('active');
+  renderizarModuloSistemas();
 }
 
 function agregarNuevoSistemaModal() {
-    const nombre = prompt("Nombre del nuevo sistema (ej. Olimpo):");
-    if(!nombre) return;
-    const comisionStr = prompt("Porcentaje de comisión (ej. 14):");
-    const comision = parseFloat(comisionStr);
-    if(isNaN(comision) || comision < 0) { alert("Comisión inválida."); return; }
+  const nombre = prompt("Nombre del nuevo sistema (ej. Olimpo):");
+  if (!nombre) return;
+  const comisionStr = prompt("Porcentaje de comisión (ej. 14):");
+  const comision = parseFloat(comisionStr);
+  if (isNaN(comision) || comision < 0) { alert("Comisión inválida."); return; }
 
-    const id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    sistemasData.push({ id, nombre, comision });
-    localStorage.setItem(KEY_SISTEMAS_CONFIG, JSON.stringify(sistemasData));
-    renderizarModuloSistemas();
+  const id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const sis = { id, nombre, comision };
+  sistemasData.push(sis);
+  localStorage.setItem(KEY_SISTEMAS_CONFIG, JSON.stringify(sistemasData));
+  // Guardar en Firestore
+  try { db.collection('sistemas').doc(id).set(sis, { merge: true }); } catch (e) { console.warn('No se pudo guardar sistema en Firestore', e); }
+  renderizarModuloSistemas();
 }
 
 function eliminarSistema(id) {
-    if(confirm("¿Eliminar este sistema?")) {
-        sistemasData = sistemasData.filter(s => s.id !== id);
-        localStorage.setItem(KEY_SISTEMAS_CONFIG, JSON.stringify(sistemasData));
-        renderizarModuloSistemas();
-    }
+  if (confirm("¿Eliminar este sistema?")) {
+    sistemasData = sistemasData.filter(s => s.id !== id);
+    localStorage.setItem(KEY_SISTEMAS_CONFIG, JSON.stringify(sistemasData));
+    try { db.collection('sistemas').doc(id).delete(); } catch(e){ console.warn('No se pudo eliminar sistema en Firestore', e); }
+    renderizarModuloSistemas();
+  }
 }
 
 function actualizarDatoSistemaDia(sistemaId, campo, valor) {
-    if(!registrosSistemas[sistemaId]) registrosSistemas[sistemaId] = {};
-    if(!registrosSistemas[sistemaId][diaSeleccionado]) registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
-    registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
-    localStorage.setItem(KEY_SISTEMAS_REG, JSON.stringify(registrosSistemas));
-    renderizarResumenSistemas();
-    renderizarModuloSistemas();
+  if (!registrosSistemas[sistemaId]) registrosSistemas[sistemaId] = {};
+  if (!registrosSistemas[sistemaId][diaSeleccionado]) registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
+  registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
+  localStorage.setItem(KEY_SISTEMAS_REG, JSON.stringify(registrosSistemas));
+  try { db.collection('sistemas_registros').doc(sistemaId).set(registrosSistemas[sistemaId], { merge: true }); } catch(e){ console.warn('No se pudo guardar registro sistema', e); }
+  renderizarResumenSistemas();
+  renderizarModuloSistemas();
 }
 
 function renderizarModuloSistemas() {
-    const contenedorDia = document.getElementById('listaSistemasDia');
-    let htmlDia = '';
-    sistemasData.forEach(sis => {
-        if(!registrosSistemas[sis.id]) registrosSistemas[sis.id] = {};
-        if(!registrosSistemas[sis.id][diaSeleccionado]) registrosSistemas[sis.id][diaSeleccionado] = { ventas: 0, premios: 0 };
-
-        const datosDia = registrosSistemas[sis.id][diaSeleccionado];
-        const netoDia = datosDia.ventas - datosDia.premios - (datosDia.ventas * (sis.comision / 100));
-
-        htmlDia += `<div class="card" style="padding:10px; margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>${sis.nombre} (${sis.comision}%)</strong></div>
-                <div>Neto: <strong style="color:${netoDia >= 0 ? '#10b981' : '#ef4444'}">${netoDia.toFixed(2)} Bs</strong> <button style="margin-left:6px;" onclick="eliminarSistema('${sis.id}')">🗑️</button></div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
-                <div><label class="small">Ventas (${diaSeleccionado})</label><input type="number" value="${datosDia.ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'ventas', this.value)"></div>
-                <div><label class="small">Premios (${diaSeleccionado})</label><input type="number" value="${datosDia.premios || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'premios', this.value)"></div>
-            </div>
-        </div>`;
-    });
-    contenedorDia.innerHTML = htmlDia;
-    renderizarResumenSistemas();
+  const contenedorDia = document.getElementById('listaSistemasDia');
+  let htmlDia = '';
+  sistemasData.forEach(sis => {
+    if (!registrosSistemas[sis.id]) registrosSistemas[sis.id] = {};
+    if (!registrosSistemas[sis.id][diaSeleccionado]) registrosSistemas[sis.id][diaSeleccionado] = { ventas: 0, premios: 0 };
+    const datosDia = registrosSistemas[sis.id][diaSeleccionado];
+    const netoDia = datosDia.ventas - datosDia.premios - (datosDia.ventas * (sis.comision / 100));
+    htmlDia += `<div class="card" style="padding:10px; margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>${sis.nombre} (${sis.comision}%)</strong></div>
+        <div>Neto: <strong style="color:${netoDia >= 0 ? '#10b981' : '#ef4444'}">${netoDia.toFixed(2)} Bs</strong> <button style="margin-left:6px;" onclick="eliminarSistema('${sis.id}')">🗑️</button></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
+        <div><label class="small">Ventas (${diaSeleccionado})</label><input type="number" value="${datosDia.ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'ventas', this.value)"></div>
+        <div><label class="small">Premios (${diaSeleccionado})</label><input type="number" value="${datosDia.premios || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'premios', this.value)"></div>
+      </div>
+    </div>`;
+  });
+  contenedorDia.innerHTML = htmlDia;
+  renderizarResumenSistemas();
 }
 
 function renderizarResumenSistemas() {
-    const contenedorResumen = document.getElementById('resumenSistemasSemana');
-    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    let htmlResumen = '';
-    let totalGenVentas = 0, totalGenPremios = 0, totalGenComisiones = 0;
-
-    sistemasData.forEach(sis => {
-        let acVentas = 0, acPremios = 0;
-        dias.forEach(d => {
-            if(registrosSistemas[sis.id] && registrosSistemas[sis.id][d]) {
-                acVentas += registrosSistemas[sis.id][d].ventas || 0;
-                acPremios += registrosSistemas[sis.id][d].premios || 0;
-            }
-        });
-        let comisionTotal = acVentas * (sis.comision / 100);
-        let netoSistema = acVentas - acPremios - comisionTotal;
-
-        totalGenVentas += acVentas;
-        totalGenPremios += acPremios;
-        totalGenComisiones += comisionTotal;
-
-        htmlResumen += `<div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 11px;">
-            <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 3px;">
-                <span>${sis.nombre}</span>
-                <span style="color:${netoSistema >= 0 ? '#10b981' : '#ef4444'}">Neto: Bs. ${netoSistema.toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; color: #475569;">
-                <span>Ventas: ${acVentas.toFixed(2)}</span>
-                <span>Premios: ${acPremios.toFixed(2)}</span>
-                <span>Comisión: ${comisionTotal.toFixed(2)}</span>
-            </div>
-        </div>`;
-    });
-    contenedorResumen.innerHTML = htmlResumen;
-
-    // también actualizar panel gen
-    const saldoNetoGlobal = totalGenVentas - totalGenPremios - totalGenComisiones;
-    const resGenVentas = document.getElementById('resGenVentas');
-    const resGenPremios = document.getElementById('resGenPremios');
-    const resGenComisiones = document.getElementById('resGenComisiones');
-    const resGenNeto = document.getElementById('resGenNeto');
-    if(resGenVentas) resGenVentas.innerText = totalGenVentas.toFixed(2) + " Bs";
-    if(resGenPremios) resGenPremios.innerText = totalGenPremios.toFixed(2) + " Bs";
-    if(resGenComisiones) resGenComisiones.innerText = totalGenComisiones.toFixed(2) + " Bs";
-    if(resGenNeto) { resGenNeto.innerText = saldoNetoGlobal.toFixed(2) + " Bs"; resGenNeto.style.color = saldoNetoGlobal >= 0 ? '#10b981' : '#ef4444'; }
+  const contenedorResumen = document.getElementById('resumenSistemasSemana');
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  let htmlResumen = '';
+  let totalGenVentas = 0, totalGenPremios = 0, totalGenComisiones = 0;
+  sistemasData.forEach(sis => {
+    let acVentas = 0, acPremios = 0;
+    dias.forEach(d => { if (registrosSistemas[sis.id] && registrosSistemas[sis.id][d]) { acVentas += registrosSistemas[sis.id][d].ventas || 0; acPremios += registrosSistemas[sis.id][d].premios || 0; } });
+    const comisionTotal = acVentas * (sis.comision / 100);
+    const netoSistema = acVentas - acPremios - comisionTotal;
+    totalGenVentas += acVentas; totalGenPremios += acPremios; totalGenComisiones += comisionTotal;
+    htmlResumen += `<div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 11px;">
+      <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary); margin-bottom:3px;">
+        <span>${sis.nombre}</span>
+        <span style="color:${netoSistema >= 0 ? '#10b981' : '#ef4444'}">Neto: Bs. ${netoSistema.toFixed(2)}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; color:#475569;">
+        <span>Ventas: ${acVentas.toFixed(2)}</span>
+        <span>Premios: ${acPremios.toFixed(2)}</span>
+        <span>Comisión: ${comisionTotal.toFixed(2)}</span>
+      </div>
+    </div>`;
+  });
+  contenedorResumen.innerHTML = htmlResumen;
+  const saldoNetoGlobal = totalGenVentas - totalGenPremios - totalGenComisiones;
+  const resGenVentas = document.getElementById('resGenVentas'), resGenPremios = document.getElementById('resGenPremios'), resGenComisiones = document.getElementById('resGenComisiones'), resGenNeto = document.getElementById('resGenNeto');
+  if (resGenVentas) resGenVentas.innerText = totalGenVentas.toFixed(2) + " Bs";
+  if (resGenPremios) resGenPremios.innerText = totalGenPremios.toFixed(2) + " Bs";
+  if (resGenComisiones) resGenComisiones.innerText = totalGenComisiones.toFixed(2) + " Bs";
+  if (resGenNeto) { resGenNeto.innerText = saldoNetoGlobal.toFixed(2) + " Bs"; resGenNeto.style.color = saldoNetoGlobal >= 0 ? '#10b981' : '#ef4444'; }
 }
 
-/* -------------------------
-   Módulo Clientes
-   ------------------------- */
+/* =========================
+   Clientes
+   ========================= */
 function agregarClienteModal() {
-    const nombre = prompt("Nombre del cliente:");
-    if(!nombre) return;
-    const id = 'c_' + Date.now();
-    clientesData.push({ id, nombre: nombre.trim(), saldo: 0 });
-    localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
-    renderizarModuloClientes();
+  const nombre = prompt("Nombre del cliente:");
+  if (!nombre) return;
+  const cliente = { nombre: nombre.trim(), saldo: 0 };
+  try {
+    db.collection('clientes').add(cliente).then(docRef => {
+      cliente.id = docRef.id;
+      clientesData.push(cliente);
+      localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
+      renderizarModuloClientes();
+    });
+  } catch (e) { console.warn('No se pudo crear cliente en Firestore', e); clientesData.push(cliente); localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData)); renderizarModuloClientes(); }
 }
 
 function eliminarCliente(id) {
-    if(confirm("¿Eliminar este cliente?")) {
-        clientesData = clientesData.filter(c => c.id !== id);
-        localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
-        renderizarModuloClientes();
-    }
+  if (confirm("¿Eliminar este cliente?")) {
+    clientesData = clientesData.filter(c => c.id !== id);
+    localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
+    try { db.collection('clientes').doc(id).delete(); } catch(e){ console.warn('No se pudo eliminar cliente', e); }
+    renderizarModuloClientes();
+  }
 }
 
 function registrarAccionCliente(id, tipo) {
-    const cliente = clientesData.find(c => c.id === id);
-    if(!cliente) return;
-    const montoStr = prompt(`Monto a ${tipo === 'jugada' ? 'descontar por Jugada' : 'acreditar por Premio'} para ${cliente.nombre} (Bs):`);
-    const monto = parseFloat(montoStr);
-    if(isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
-
-    if(tipo === 'jugada') cliente.saldo = (parseFloat(cliente.saldo) || 0) - monto;
-    else if(tipo === 'premio') cliente.saldo = (parseFloat(cliente.saldo) || 0) + monto;
-
-    localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
-    renderizarModuloClientes();
+  const cliente = clientesData.find(c => c.id === id);
+  if (!cliente) return;
+  const montoStr = prompt(`Monto a ${tipo === 'jugada' ? 'descontar por Jugada' : 'acreditar por Premio'} para ${cliente.nombre} (Bs):`);
+  const monto = parseFloat(montoStr);
+  if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+  if (tipo === 'jugada') cliente.saldo = (parseFloat(cliente.saldo) || 0) - monto;
+  else cliente.saldo = (parseFloat(cliente.saldo) || 0) + monto;
+  localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientesData));
+  try { if (cliente.id) db.collection('clientes').doc(cliente.id).set(cliente, { merge: true }); } catch(e){ console.warn('No se pudo actualizar cliente en Firestore', e); }
+  renderizarModuloClientes();
 }
 
 function copiarWhatsAppCliente(id) {
-    const cliente = clientesData.find(c => c.id === id);
-    if(!cliente) return;
-    const estadoTexto = cliente.saldo >= 0 ? "a favor" : "en contra";
-    const mensaje = `¡Hola *${cliente.nombre}*! Tu saldo actual en Centro de Apuestas Harold José es de *Bs. ${Math.abs(cliente.saldo).toFixed(2)}* (${estadoTexto}).`;
-    navigator.clipboard.writeText(mensaje).then(() => {
-        alert(`📋 ¡Mensaje copiado para ${cliente.nombre}!`);
-    }).catch(() => {
-        alert("Error al copiar al portapapeles.");
-    });
+  const cliente = clientesData.find(c => c.id === id);
+  if (!cliente) return;
+  const estadoTexto = cliente.saldo >= 0 ? "a favor" : "en contra";
+  const mensaje = `¡Hola *${cliente.nombre}*! Tu saldo actual en Centro de Apuestas Harold José es de *Bs. ${Math.abs(cliente.saldo).toFixed(2)}* (${estadoTexto}).`;
+  navigator.clipboard.writeText(mensaje).then(() => alert(`📋 ¡Mensaje copiado para ${cliente.nombre}!`)).catch(() => alert("Error al copiar al portapapeles."));
 }
 
 function renderizarModuloClientes() {
-    const contenedor = document.getElementById('listaClientesContainer');
-    if(!clientesData || clientesData.length === 0) {
-        contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay clientes registrados.</div>';
-        return;
-    }
-
-    let html = '';
-    clientesData.forEach(c => {
-        let colorSaldo = c.saldo >= 0 ? '#10b981' : '#ef4444';
-        html += `<div class="card" style="margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>👤 ${c.nombre}</strong></div>
-                <div style="color:${colorSaldo};">Bs. ${c.saldo.toFixed(2)} <button onclick="eliminarCliente('${c.id}')">🗑️</button></div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
-                <button class="btn" style="background:#fee2e2; color:#991b1b;" onclick="registrarAccionCliente('${c.id}', 'jugada')">🎲 Jugada</button>
-                <button class="btn" style="background:#fef3c7; color:#92400e;" onclick="registrarAccionCliente('${c.id}', 'premio')">🏆 Premio</button>
-            </div>
-            <button class="btn" style="background:#25D366; color:white; margin-top:8px;" onclick="copiarWhatsAppCliente('${c.id}')">📋 Copiar Mensaje para WhatsApp</button>
-        </div>`;
-    });
-    contenedor.innerHTML = html;
+  const contenedor = document.getElementById('listaClientesContainer');
+  if (!clientesData || clientesData.length === 0) { contenedor.innerHTML = '<div style="text-align:center; font-size:11px; color:#64748b; padding:10px;">No hay clientes registrados.</div>'; return; }
+  let html = '';
+  clientesData.forEach(c => {
+    const colorSaldo = c.saldo >= 0 ? '#10b981' : '#ef4444';
+    html += `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>👤 ${c.nombre}</strong></div>
+        <div style="color:${colorSaldo};">Bs. ${c.saldo.toFixed(2)} <button onclick="eliminarCliente('${c.id}')">🗑️</button></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+        <button class="btn" style="background:#fee2e2; color:#991b1b;" onclick="registrarAccionCliente('${c.id}', 'jugada')">🎲 Jugada</button>
+        <button class="btn" style="background:#fef3c7; color:#92400e;" onclick="registrarAccionCliente('${c.id}', 'premio')">🏆 Premio</button>
+      </div>
+      <button class="btn" style="background:#25D366; color:white; margin-top:8px;" onclick="copiarWhatsAppCliente('${c.id}')">📋 Copiar Mensaje para WhatsApp</button>
+    </div>`;
+  });
+  contenedor.innerHTML = html;
 }
 
-/* -------------------------
-   Módulo Cuentas
-   ------------------------- */
+/* =========================
+   Cuentas
+   ========================= */
 function guardarDatosReceptor() {
-    const datos = {
-        cedula: document.getElementById('recCedula').value,
-        telefono: document.getElementById('recTelefono').value,
-        banco: document.getElementById('recBanco').value
-    };
-    localStorage.setItem(KEY_RECEPTOR, JSON.stringify(datos));
+  const datos = { cedula: document.getElementById('recCedula').value, telefono: document.getElementById('recTelefono').value, banco: document.getElementById('recBanco').value };
+  localStorage.setItem(KEY_RECEPTOR, JSON.stringify(datos));
 }
 
 function agregarCuentaBancariaModal() {
-    const nombre = prompt("Nombre o Tipo de Cuenta (ej. Cuenta 2 - Banesco):");
-    if(!nombre) return;
-    const numero = prompt("Número de cuenta (o últimos 4 dígitos):") || "";
-    const saldoStr = prompt("Saldo actual de esta cuenta (Bs):") || "0";
-    const saldo = parseFloat(saldoStr) || 0;
-
-    const id = 'acc_' + Date.now();
-    cuentasBancariasData.push({ id, nombre, numero, saldo });
-    localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
-    renderizarModuloCuentas();
-    actualizarInterfazCaja();
+  const nombre = prompt("Nombre o Tipo de Cuenta (ej. Cuenta 2 - Banesco):");
+  if (!nombre) return;
+  const numero = prompt("Número de cuenta (o últimos 4 dígitos):") || "";
+  const saldoStr = prompt("Saldo actual de esta cuenta (Bs):") || "0";
+  const saldo = parseFloat(saldoStr) || 0;
+  const cuenta = { nombre, numero, saldo };
+  try {
+    db.collection('cuentas').add(cuenta).then(docRef => { cuenta.id = docRef.id; cuentasBancariasData.push(cuenta); localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData)); renderizarModuloCuentas(); });
+  } catch (e) { console.warn('No se pudo crear cuenta en Firestore', e); cuentasBancariasData.push(cuenta); localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData)); renderizarModuloCuentas(); }
 }
 
 function eliminarCuentaBancaria(id) {
-    if(confirm("¿Estás seguro de eliminar esta cuenta?")) {
-        cuentasBancariasData = cuentasBancariasData.filter(a => a.id !== id);
-        localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
-        renderizarModuloCuentas();
-        actualizarInterfazCaja();
-    }
+  if (confirm("¿Estás seguro de eliminar esta cuenta?")) {
+    cuentasBancariasData = cuentasBancariasData.filter(a => a.id !== id);
+    localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
+    try { db.collection('cuentas').doc(id).delete(); } catch(e){ console.warn('No se pudo eliminar cuenta', e); }
+    renderizarModuloCuentas(); actualizarInterfazCaja();
+  }
 }
 
 function actualizarSaldoCuentaInput(id, valor) {
-    const acc = cuentasBancariasData.find(a => a.id === id);
-    if(acc) {
-        acc.saldo = parseFloat(valor) || 0;
-        localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
-        actualizarInterfazCaja();
-    }
+  const acc = cuentasBancariasData.find(a => a.id === id);
+  if (acc) {
+    acc.saldo = parseFloat(valor) || 0;
+    localStorage.setItem(KEY_CUENTAS, JSON.stringify(cuentasBancariasData));
+    try { if (acc.id) db.collection('cuentas').doc(acc.id).set(acc, { merge: true }); } catch(e){ console.warn('No se pudo actualizar cuenta', e); }
+    actualizarInterfazCaja();
+  }
 }
 
 function renderizarModuloCuentas() {
-    const contenedor = document.getElementById('listaCuentasBancariasContainer');
-    if(!cuentasBancariasData || cuentasBancariasData.length === 0) {
-        contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay cuentas configuradas.</div>';
-        return;
-    }
-
-    let html = '';
-    cuentasBancariasData.forEach(acc => {
-        html += `<div class="card" style="padding:10px; margin-bottom:8px; position:relative;">
-            <button style="position:absolute; right:8px; top:8px;" onclick="eliminarCuentaBancaria('${acc.id}')">🗑️</button>
-            <div><label class="small">Nombre / Tipo de Cuenta</label><input type="text" value="${acc.nombre}" readonly style="background:#f1f5f9;"></div>
-            <div><label class="small">Número de Cuenta</label><input type="text" value="${acc.numero}" readonly style="background:#f1f5f9;"></div>
-            <div><label class="small">Saldo Actual (Bs)</label><input type="number" step="0.01" value="${acc.saldo}" placeholder="0.00" oninput="actualizarSaldoCuentaInput('${acc.id}', this.value)"></div>
-        </div>`;
-    });
-    contenedor.innerHTML = html;
+  const contenedor = document.getElementById('listaCuentasBancariasContainer');
+  if (!cuentasBancariasData || cuentasBancariasData.length === 0) { contenedor.innerHTML = '<div style="text-align:center; font-size:11px; color:#64748b; padding:10px;">No hay cuentas configuradas.</div>'; return; }
+  let html = '';
+  cuentasBancariasData.forEach(acc => {
+    html += `<div class="card" style="padding:10px; margin-bottom:8px; position:relative;">
+      <button style="position:absolute; right:8px; top:8px;" onclick="eliminarCuentaBancaria('${acc.id}')">🗑️</button>
+      <div><label class="small">Nombre / Tipo de Cuenta</label><input type="text" value="${acc.nombre || ''}" readonly style="background:#f1f5f9;"></div>
+      <div><label class="small">Número de Cuenta</label><input type="text" value="${acc.numero || ''}" readonly style="background:#f1f5f9;"></div>
+      <div><label class="small">Saldo Actual (Bs)</label><input type="number" step="0.01" value="${acc.saldo || 0}" placeholder="0.00" oninput="actualizarSaldoCuentaInput('${acc.id}', this.value)"></div>
+    </div>`;
+  });
+  contenedor.innerHTML = html;
 }
 
-/* -------------------------
+/* =========================
    Navegación
-   ------------------------- */
+   ========================= */
 function cambiarVista(vista, elemento) {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('view-' + vista).classList.add('active');
-    if(elemento) elemento.classList.add('active');
-    // acciones por vista
-    if(vista === 'caja') {
-        sincronizarConNube();
-    } else if(vista === 'sistemas') {
-        renderizarModuloSistemas();
-    } else if(vista === 'clientes') {
-        renderizarModuloClientes();
-    } else if(vista === 'cuentas') {
-        renderizarModuloCuentas();
-    }
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + vista).classList.add('active');
+  if (elemento) elemento.classList.add('active');
+  if (vista === 'caja') { /* nada extra */ }
+  else if (vista === 'sistemas') renderizarModuloSistemas();
+  else if (vista === 'clientes') renderizarModuloClientes();
+  else if (vista === 'cuentas') renderizarModuloCuentas();
 }
+
+/* =========================
+   Auto-sync móvil y eventos de foco
+   ========================= */
+function isMobileDevice() { return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+
+function tryAutoSyncOnOpen() {
+  if (isMobileDevice()) {
+    setTimeout(() => {
+      if (pendingQueue && pendingQueue.length > 0) {
+        mostrarAlerta('loading', `Detectado móvil: intentando enviar ${pendingQueue.length} pendientes...`, 3000);
+        flushPendingQueue();
+      } else {
+        // no pendientes -> rely on realtime listeners (already active) but refresh local view
+        actualizarInterfazCaja();
+      }
+    }, 500);
+  }
+}
+window.addEventListener('focus', () => { if (isMobileDevice()) setTimeout(() => flushPendingQueue(), 300); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && isMobileDevice()) setTimeout(() => flushPendingQueue(), 300); });
+
+/* =========================
+   Inicialización al cargar la página
+   ========================= */
+window.addEventListener('load', async () => {
+  // cargar receptor local si existe
+  const receptor = JSON.parse(localStorage.getItem(KEY_RECEPTOR));
+  if (receptor) {
+    document.getElementById('recCedula').value = receptor.cedula || '';
+    document.getElementById('recTelefono').value = receptor.telefono || '';
+    document.getElementById('recBanco').value = receptor.banco || '';
+  }
+
+  // inicializar Tesseract worker (no bloqueante)
+  await initTesseractWorker();
+
+  // iniciar auth anónimo y listeners
+  auth.signInAnonymously().catch(err => console.warn('Auth anon error', err));
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      // start realtime listeners
+      startRealtimeListeners();
+      // intentar enviar pendientes almacenados
+      flushPendingQueue();
+    } else {
+      console.warn('Usuario no autenticado');
+    }
+  });
+
+  // render inicial
+  renderizarModuloClientes();
+  renderizarModuloCuentas();
+  renderizarModuloSistemas();
+  actualizarInterfazCaja();
+
+  // intentar auto sync si es móvil
+  tryAutoSyncOnOpen();
+});
 </script>
 
 </body>
