@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.7</title>
+    <title>Centro de Apuestas Harold José v4.8</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -84,7 +84,7 @@
                 
                 <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2.5">
                     <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
-                        <span class="text-slate-500">Suma Total de Cuentas (1, 2, 3...):</span>
+                        <span class="text-slate-500">Suma Total (Cuentas + Pronosticador):</span>
                         <span id="boxTotalCuentas" class="text-sky-800 font-bold">0.00 Bs</span>
                     </div>
                     <div class="flex justify-between text-xs font-medium">
@@ -275,10 +275,10 @@
         </button>
     </nav>
 
-    <!-- JavaScript v4.7 con Sync Robusta y OCR Pronosticador -->
+    <!-- JavaScript v4.8 con Cloud Sync robusta (creación automática) y Pronosticador integrado en Suma Total -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV47Data/data';
+            const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV48Data/data';
             const syncText = document.getElementById('syncText');
             const syncIcon = document.getElementById('syncIcon');
             const btnManualSync = document.getElementById('btnManualSync');
@@ -310,7 +310,7 @@
 
             // Cargar datos locales iniciales
             try {
-                const saved = localStorage.getItem('haroldJoseDataV47');
+                const saved = localStorage.getItem('haroldJoseDataV48');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     appData = { ...appData, ...parsed };
@@ -320,7 +320,7 @@
             // Función para sincronizar con la nube (Empujar cambios)
             async function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV47', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV48', JSON.stringify(appData));
                 } catch(e) {}
 
                 syncText.textContent = 'Guardando...';
@@ -342,7 +342,7 @@
                 }
             }
 
-            // Función para descargar y actualizar desde la nube (Traer cambios)
+            // Función para descargar y actualizar desde la nube (Traer cambios con soporte 404 de creación automática)
             async function fetchCloudData(isManual = false) {
                 if (isManual) {
                     syncText.textContent = 'Sincronizando...';
@@ -354,14 +354,18 @@
                         const cloudData = await response.json();
                         if (cloudData && typeof cloudData === 'object' && cloudData.accounts) {
                             appData = { ...appData, ...cloudData };
-                            try { localStorage.setItem('haroldJoseDataV47', JSON.stringify(appData)); } catch(e){}
+                            try { localStorage.setItem('haroldJoseDataV48', JSON.stringify(appData)); } catch(e){}
                             renderUI();
                             syncText.textContent = 'Sincronizado';
                             syncIcon.className = "fa-solid fa-cloud-arrow-up";
                             if (isManual) alert('¡Datos sincronizados correctamente entre dispositivos!');
                         }
+                    } else if (response.status === 404) {
+                        // Si la nube está vacía, inicializamos creando el registro con los datos locales
+                        await saveState();
+                        if (isManual) alert('¡Nube inicializada y sincronizada con éxito!');
                     } else if (isManual) {
-                        alert('No se encontraron datos en la nube todavía. Se mantendrán los locales.');
+                        alert('No se pudieron descargar los datos de la nube.');
                     }
                 } catch(e) {
                     syncText.textContent = 'Modo Local';
@@ -533,7 +537,6 @@
                     if (item.kind === 'file' && item.type.startsWith('image/')) {
                         const blob = item.getAsFile();
                         if (blob) {
-                            // Si estamos en la pestaña pagos o caja
                             if (document.getElementById('view-pagos').style.display !== 'none') {
                                 fileNameText.textContent = "captura_portapapeles.jpg";
                                 previewContainer.style.display = 'block';
@@ -622,7 +625,7 @@
                 pronosticoRefInput.value = '';
                 document.getElementById('pronosticoAmountInput').value = '';
                 pronosticoFileInput.value = '';
-                pronosticoPreviewContainer.style.display = 'hidden';
+                pronosticoPreviewContainer.style.display = 'none';
                 pronosticoDupWarning.style.display = 'none';
                 isPronosticoValid = true;
                 alert('¡Ingreso del pronosticador guardado y verificado con éxito!');
@@ -778,10 +781,13 @@
                 }
             };
 
-            // Renderizado Global de Interfaz
+            // Renderizado Global de Interfaz (Incluyendo Pronosticador en Suma Total)
             function renderUI() {
                 let totalCuentas = 0;
                 appData.accounts.forEach(acc => { totalCuentas += acc.balance; });
+
+                // Sumar también el saldo del pronosticador a la bolsa total de cuentas
+                totalCuentas += (appData.pronosticador.balance || 0);
 
                 let totalPremios = 0;
                 let totalGastos = 0;
