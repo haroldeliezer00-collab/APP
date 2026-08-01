@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Apuestas Harold José v4.6</title>
+    <title>Centro de Apuestas Harold José v4.7</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,27 +12,27 @@
 </head>
 <body class="bg-slate-100 text-slate-800 pb-28">
 
-    <!-- Encabezado -->
+    <!-- Encabezado con Botón de Sincronización Manual -->
     <header class="bg-white shadow-sm py-3 px-4 text-center sticky top-0 z-50 border-b border-sky-100">
         <div class="flex justify-between items-center max-w-md mx-auto">
-            <span id="syncStatus" class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizado
-            </span>
+            <button type="button" id="btnManualSync" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-cloud-arrow-up" id="syncIcon"></i> <span id="syncText">Sincronizado</span>
+            </button>
             <div>
                 <h1 class="text-sm font-bold text-sky-900">Harold José</h1>
                 <p class="text-[9px] text-slate-500">Control Inteligente de Pagos y Cuentas</p>
             </div>
-            <div class="w-10"></div>
+            <div class="w-12"></div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- ================= VISTA: PAGOS & OCR ================= -->
+        <!-- ================= VISTA: PAGOS & OCR (TAQUILLA) ================= -->
         <section id="view-pagos" class="tab-view space-y-4">
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Recibido
+                    <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i> Registrar Pago Taquilla
                 </h2>
                 
                 <div class="border-2 border-dashed border-sky-300 rounded-xl p-4 text-center bg-sky-50/50 space-y-2">
@@ -40,7 +40,6 @@
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
                     <p id="uploadText" class="text-xs text-slate-600 font-medium">Sube captura o presiona <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold">Ctrl+V</span> aquí</p>
-                    
                     <input type="file" id="fileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
                 </div>
 
@@ -52,7 +51,7 @@
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="bg-sky-50 border border-sky-200 text-sky-800 text-xs py-2 px-3 rounded-xl font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador Anti-Fraude (Va directo a Cuenta 1)
+                    <i class="fa-solid fa-shield-halved text-sky-600"></i> Validador Anti-Fraude (Suma a Cuenta 1)
                 </div>
 
                 <div>
@@ -72,7 +71,7 @@
                 </div>
 
                 <button type="button" id="submitPayment" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow transition">
-                    Guardar Pago (Suma a Cuenta 1)
+                    Guardar Pago Taquilla
                 </button>
             </div>
         </section>
@@ -81,7 +80,7 @@
         <section id="view-caja" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-sky-600 text-4xl mb-2"><i class="fa-solid fa-vault"></i></div>
-                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Cuentas</h2>
+                <h2 class="text-base font-bold text-slate-700">Panel de Caja y Global</h2>
                 
                 <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2.5">
                     <div class="flex justify-between text-xs font-medium border-b border-slate-200 pb-1.5">
@@ -97,7 +96,7 @@
                         <span id="boxGastos" class="text-rose-600 font-bold">0.00 Bs</span>
                     </div>
                     <div class="flex justify-between text-xs font-bold pt-1 text-sm">
-                        <span class="text-slate-700">Saldo Disponible Neto (Quedando):</span>
+                        <span class="text-slate-700">Saldo Disponible Neto:</span>
                         <span id="boxDisponible" class="text-emerald-700 font-bold">0.00 Bs</span>
                     </div>
                 </div>
@@ -112,19 +111,43 @@
                 </div>
             </div>
 
-            <!-- Módulo Saldo Pronosticador -->
+            <!-- Módulo Saldo Pronosticador con OCR Anti-Fraude -->
             <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-sm space-y-3">
                 <div class="flex justify-between items-center border-b border-indigo-700 pb-2">
                     <div>
                         <h3 class="text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-tie text-amber-300"></i> Control Saldo Pronosticador</h3>
-                        <p class="text-[10px] text-indigo-200">Manejo de pagos y retiros de tu pana</p>
+                        <p class="text-[10px] text-indigo-200">Manejo de pagos, comprobantes y retiros</p>
                     </div>
                     <span id="pronosticoSaldoBadge" class="text-xs font-bold bg-amber-400 text-indigo-950 px-2.5 py-1 rounded-lg">0.00 Bs</span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" id="btnPronosticoIngreso" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2 px-2 rounded-xl shadow">
-                        <i class="fa-solid fa-plus-circle"></i> Ingreso a Favor
+                <!-- OCR / Subir Comprobante Pronosticador -->
+                <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700 space-y-2">
+                    <label class="block text-[11px] font-bold text-amber-300"><i class="fa-solid fa-shield-halved"></i> Registrar Ingreso Pronosticador con Comprobante (OCR)</label>
+                    <div class="border border-dashed border-indigo-500 rounded-xl p-2.5 text-center bg-indigo-900/40 space-y-1">
+                        <p id="pronosticoUploadText" class="text-[10px] text-indigo-200">Sube captura o pega imagen (<span class="bg-indigo-800 px-1 rounded">Ctrl+V</span>)</p>
+                        <input type="file" id="pronosticoFileInput" accept="image/*" class="w-full text-[10px] text-indigo-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-amber-500 file:text-indigo-950 hover:file:bg-amber-400 cursor-pointer">
+                    </div>
+                    <div id="pronosticoPreviewContainer" class="hidden text-center space-y-1">
+                        <img id="pronosticoImagePreview" src="" alt="Preview" class="max-h-28 mx-auto rounded border border-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-indigo-300 mb-0.5">Referencia</label>
+                        <input type="text" id="pronosticoRef" placeholder="Número de referencia" class="w-full text-xs p-2 rounded-lg bg-indigo-950 border border-indigo-700 text-amber-300 font-bold focus:outline-none">
+                        <p id="pronosticoDupWarning" class="text-[10px] text-rose-300 font-bold mt-1 hidden bg-rose-950/80 p-1.5 rounded border border-rose-800"><i class="fa-solid fa-triangle-exclamation"></i> <span id="pronosticoDupText">Referencia ya usada</span></p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-indigo-300 mb-0.5">Monto en Bs</label>
+                        <input type="number" step="0.01" id="pronosticoAmountInput" placeholder="Ej. 2300.00" class="w-full text-xs p-2 rounded-lg bg-indigo-950 border border-indigo-700 text-white focus:outline-none">
+                    </div>
+                    <button type="button" id="btnPronosticoSaveOCR" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow">
+                        Agregar Ingreso Pronosticador
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button type="button" id="btnPronosticoIngresoManual" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2 px-2 rounded-xl shadow">
+                        <i class="fa-solid fa-plus-circle"></i> Ingreso Manual
                     </button>
                     <button type="button" id="btnPronosticoPago" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold py-2 px-2 rounded-xl shadow">
                         <i class="fa-solid fa-paper-plane"></i> Pagar / Enviar
@@ -136,7 +159,7 @@
                 </div>
             </div>
 
-            <!-- Movimientos de Caja -->
+            <!-- Movimientos de Taquilla -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <h3 class="text-xs font-bold text-slate-700 mb-2">Historial de Movimientos de Taquilla</h3>
                 <div id="cajaHistory" class="space-y-2 text-xs">
@@ -158,21 +181,16 @@
                     </button>
                 </div>
 
-                <!-- Selector de Días -->
                 <div id="daysTabsContainer" class="flex overflow-x-auto gap-1.5 py-1.5 no-scrollbar border-b border-slate-100 pb-2"></div>
-
-                <!-- Contenedor de Sistemas -->
                 <div id="systemsByDayContainer" class="space-y-3 mt-2"></div>
 
-                <!-- Resumen Semanal por Sistema -->
                 <div class="mt-6 space-y-3 border-t border-slate-200 pt-4">
                     <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <i class="fa-solid fa-list-check text-sky-600"></i> Resumen de Todos los Sistemas (Lunes a Domingo)
+                        <i class="fa-solid fa-list-check text-sky-600"></i> Resumen de Todos los Sistemas
                     </h3>
                     <div id="systemsWeeklyBreakdown" class="space-y-3"></div>
                 </div>
 
-                <!-- Resumen General -->
                 <div class="bg-sky-900 text-white p-4 rounded-2xl space-y-2 text-xs mt-6 shadow-md">
                     <p class="font-bold border-b border-sky-700 pb-1.5 text-center flex items-center justify-center gap-2">
                         <i class="fa-solid fa-calculator text-amber-300"></i> RESUMEN GENERAL ACUMULADO
@@ -199,17 +217,16 @@
                         <i class="fa-solid fa-user-plus"></i> Cliente
                     </button>
                 </div>
-
                 <div id="clientsContainer" class="space-y-3 mt-2"></div>
             </div>
         </section>
 
-        <!-- ================= VISTA: CUENTAS BANCARIAS GENÉRICAS ================= -->
+        <!-- ================= VISTA: CUENTAS BANCARIAS ================= -->
         <section id="view-bancos" class="tab-view space-y-4" style="display: none;">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
                 <div class="text-indigo-600 text-4xl mb-2"><i class="fa-solid fa-building-columns"></i></div>
                 <h2 class="text-base font-bold text-slate-700">Cuentas (Cuenta 1, 2, 3...)</h2>
-                <p class="text-xs text-slate-500 mt-1">La Cuenta 1 recibe automáticamente los pagos de taquilla. Las demás las ajustas manual aquí.</p>
+                <p class="text-xs text-slate-500 mt-1">La Cuenta 1 recibe automáticamente los pagos de taquilla. Las demás se ajustan manual aquí.</p>
                 
                 <div id="accountsList" class="mt-4 space-y-3 text-left text-xs"></div>
 
@@ -258,11 +275,13 @@
         </button>
     </nav>
 
-    <!-- JavaScript v4.6 con Sincronización Cloud -->
+    <!-- JavaScript v4.7 con Sync Robusta y OCR Pronosticador -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV46Data/data';
-            const syncStatus = document.getElementById('syncStatus');
+            const SYNC_URL = 'https://kvdb.io/HaroldJoseTaquillaV47Data/data';
+            const syncText = document.getElementById('syncText');
+            const syncIcon = document.getElementById('syncIcon');
+            const btnManualSync = document.getElementById('btnManualSync');
 
             let appData = {
                 payments: [],
@@ -289,23 +308,23 @@
                 ]
             };
 
-            // Cargar datos locales iniciales de respaldo
+            // Cargar datos locales iniciales
             try {
-                const saved = localStorage.getItem('haroldJoseDataV46');
+                const saved = localStorage.getItem('haroldJoseDataV47');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     appData = { ...appData, ...parsed };
                 }
-            } catch(e) { console.error("Error al leer storage", e); }
+            } catch(e) {}
 
-            // Función para guardar y sincronizar con la nube (PC y Teléfono al mismo tiempo)
+            // Función para sincronizar con la nube (Empujar cambios)
             async function saveState() {
                 try {
-                    localStorage.setItem('haroldJoseDataV46', JSON.stringify(appData));
+                    localStorage.setItem('haroldJoseDataV47', JSON.stringify(appData));
                 } catch(e) {}
 
-                syncStatus.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Sincronizando...';
-                syncStatus.className = "text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg flex items-center gap-1";
+                syncText.textContent = 'Guardando...';
+                syncIcon.className = "fa-solid fa-rotate fa-spin";
 
                 try {
                     const response = await fetch(SYNC_URL, {
@@ -314,45 +333,49 @@
                         body: JSON.stringify(appData)
                     });
                     if (response.ok) {
-                        syncStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Sincronizado';
-                        syncStatus.className = "text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1";
+                        syncText.textContent = 'Sincronizado';
+                        syncIcon.className = "fa-solid fa-cloud-arrow-up";
                     }
                 } catch(e) {
-                    syncStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Modo Local';
-                    syncStatus.className = "text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded-lg flex items-center gap-1";
+                    syncText.textContent = 'Modo Local';
+                    syncIcon.className = "fa-solid fa-triangle-exclamation";
                 }
             }
 
-            // Función para descargar datos de la nube automáticamente
-            async function fetchCloudData(silent = false) {
+            // Función para descargar y actualizar desde la nube (Traer cambios)
+            async function fetchCloudData(isManual = false) {
+                if (isManual) {
+                    syncText.textContent = 'Sincronizando...';
+                    syncIcon.className = "fa-solid fa-rotate fa-spin";
+                }
                 try {
                     const response = await fetch(SYNC_URL);
                     if (response.ok) {
                         const cloudData = await response.json();
                         if (cloudData && typeof cloudData === 'object' && cloudData.accounts) {
                             appData = { ...appData, ...cloudData };
+                            try { localStorage.setItem('haroldJoseDataV47', JSON.stringify(appData)); } catch(e){}
                             renderUI();
-                            if (!silent) {
-                                syncStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Sincronizado';
-                                syncStatus.className = "text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1";
-                            }
+                            syncText.textContent = 'Sincronizado';
+                            syncIcon.className = "fa-solid fa-cloud-arrow-up";
+                            if (isManual) alert('¡Datos sincronizados correctamente entre dispositivos!');
                         }
+                    } else if (isManual) {
+                        alert('No se encontraron datos en la nube todavía. Se mantendrán los locales.');
                     }
                 } catch(e) {
-                    if (!silent) {
-                        syncStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Modo Local';
-                        syncStatus.className = "text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded-lg flex items-center gap-1";
-                    }
+                    syncText.textContent = 'Modo Local';
+                    syncIcon.className = "fa-solid fa-triangle-exclamation";
+                    if (isManual) alert('Error al conectar con la nube. Comprueba tu internet.');
                 }
             }
 
-            // Sincronizar al iniciar y cada 5 segundos automáticamente entre dispositivos
-            fetchCloudData();
-            setInterval(() => {
-                fetchCloudData(true);
-            }, 5000);
+            btnManualSync.addEventListener('click', () => fetchCloudData(true));
 
-            // Navegación
+            // Sincronizar al iniciar
+            fetchCloudData(false);
+
+            // Navegación de vistas
             function switchTab(tabName) {
                 document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
                 const target = document.getElementById(`view-${tabName}`);
@@ -373,7 +396,7 @@
             document.getElementById('nav-clientes').addEventListener('click', () => switchTab('clientes'));
             document.getElementById('nav-bancos').addEventListener('click', () => switchTab('bancos'));
 
-            // OCR y Validación Anti-Fraude
+            // OCR Taquilla
             const fileInput = document.getElementById('fileInput');
             const previewContainer = document.getElementById('previewContainer');
             const imagePreview = document.getElementById('imagePreview');
@@ -385,18 +408,19 @@
 
             let isDataValid = true;
 
-            function validarReferenciaYDatos(refText) {
+            function verificarReferenciaGlobal(refText) {
                 const cleanRef = refText.trim();
                 isDataValid = true;
-
                 if (!cleanRef) {
                     dupWarning.style.display = 'none';
                     return;
                 }
+                const existePago = appData.payments.find(p => p.ref === cleanRef);
+                const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
 
-                const existente = appData.payments.find(p => p.ref === cleanRef);
-                if (existente) {
-                    dupWarningText.textContent = `¡Pago ya utilizado por el cliente "${existente.client}" el ${existente.date} (Monto: Bs. ${existente.amount})!`;
+                if (existePago || existePronostico) {
+                    const origen = existePago ? `Taquilla (Cliente: ${existePago.client})` : `Pronosticador`;
+                    dupWarningText.textContent = `¡Referencia ya utilizada en ${origen}!`;
                     dupWarning.style.display = 'block';
                     isDataValid = false;
                 } else {
@@ -404,34 +428,24 @@
                 }
             }
 
-            refNumberInput.addEventListener('input', () => {
-                validarReferenciaYDatos(refNumberInput.value);
-            });
+            refNumberInput.addEventListener('input', () => verificarReferenciaGlobal(refNumberInput.value));
 
-            async function procesarImagenOCR(file, nombre) {
+            async function procesarOCRGenerico(file, onRefFound, statusElement) {
                 if (!file) return;
-                uploadText.textContent = "Cargando imagen...";
-                fileNameText.textContent = nombre || file.name;
-                previewContainer.style.display = 'block';
-
+                statusElement.textContent = "Leyendo comprobante con IA...";
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     const base64Img = e.target.result;
-                    imagePreview.src = base64Img;
-
-                    uploadText.textContent = "Leyendo comprobante con IA...";
                     try {
                         const result = await Tesseract.recognize(base64Img, 'spa', {
                             logger: m => {
                                 if (m.status === 'recognizing text') {
-                                    uploadText.textContent = `Leyendo: ${Math.round(m.progress * 100)}%`;
+                                    statusElement.textContent = `Leyendo: ${Math.round(m.progress * 100)}%`;
                                 }
                             }
                         });
-                        const text = result.data.text;
-                        const textClean = text.replace(/[\n\r]+/g, ' ');
+                        const textClean = result.data.text.replace(/[\n\r]+/g, ' ');
                         let encontrada = '';
-                        
                         const refMatch = textClean.match(/(?:ref|referencia|operaci[oó]n|nro|número|transacci[oó]n)[^\d]*(\d{4,12})/i);
                         if (refMatch && refMatch[1]) {
                             encontrada = refMatch[1];
@@ -439,60 +453,125 @@
                             const numbers = textClean.match(/\b\d{4,10}\b/g);
                             if (numbers) {
                                 const validNums = numbers.filter(n => !n.startsWith('04') && !n.startsWith('02') && n.length >= 4 && n.length <= 10);
-                                if (validNums.length > 0) encontrada = validNums[0];
-                                else if (numbers.length > 0) encontrada = numbers[0];
+                                encontrada = validNums.length > 0 ? validNums[0] : numbers[0];
                             }
                         }
-
                         if (encontrada) {
-                            refNumberInput.value = encontrada;
-                            uploadText.textContent = "¡Referencia leída con éxito!";
+                            onRefFound(encontrada, base64Img);
+                            statusElement.textContent = "¡Referencia leída con éxito!";
                         } else {
-                            uploadText.textContent = "Referencia no detectada. Ingrésala manual.";
+                            statusElement.textContent = "Referencia no detectada. Ingrésala manual.";
+                            onRefFound('', base64Img);
                         }
-
-                        validarReferenciaYDatos(refNumberInput.value);
-
                     } catch (err) {
-                        console.error("Error OCR:", err);
-                        uploadText.textContent = "Imagen cargada. Ingresa los datos manualmente.";
+                        statusElement.textContent = "Error al leer imagen. Ingresa manual.";
+                        onRefFound('', base64Img);
                     }
                 };
                 reader.readAsDataURL(file);
             }
 
             fileInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files[0]) procesarImagenOCR(e.target.files[0]);
+                if (e.target.files && e.target.files[0]) {
+                    fileNameText.textContent = e.target.files[0].name;
+                    previewContainer.style.display = 'block';
+                    imagePreview.src = URL.createObjectURL(e.target.files[0]);
+                    procesarOCRGenerico(e.target.files[0], (ref) => {
+                        if(ref) refNumberInput.value = ref;
+                        verificarReferenciaGlobal(refNumberInput.value);
+                    }, uploadText);
+                }
             });
 
+            // OCR Pronosticador
+            const pronosticoFileInput = document.getElementById('pronosticoFileInput');
+            const pronosticoPreviewContainer = document.getElementById('pronosticoPreviewContainer');
+            const pronosticoImagePreview = document.getElementById('pronosticoImagePreview');
+            const pronosticoUploadText = document.getElementById('pronosticoUploadText');
+            const pronosticoRefInput = document.getElementById('pronosticoRef');
+            const pronosticoDupWarning = document.getElementById('pronosticoDupWarning');
+            const pronosticoDupText = document.getElementById('pronosticoDupText');
+
+            let isPronosticoValid = true;
+
+            function verificarPronosticoRef(refText) {
+                const cleanRef = refText.trim();
+                isPronosticoValid = true;
+                if (!cleanRef) {
+                    pronosticoDupWarning.style.display = 'none';
+                    return;
+                }
+                const existePago = appData.payments.find(p => p.ref === cleanRef);
+                const existePronostico = appData.pronosticador.history.find(h => h.ref === cleanRef);
+
+                if (existePago || existePronostico) {
+                    pronosticoDupText.textContent = `¡Referencia ya utilizada anteriormente!`;
+                    pronosticoDupWarning.style.display = 'block';
+                    isPronosticoValid = false;
+                } else {
+                    pronosticoDupWarning.style.display = 'none';
+                }
+            }
+
+            pronosticoRefInput.addEventListener('input', () => verificarPronosticoRef(pronosticoRefInput.value));
+
+            pronosticoFileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    pronosticoPreviewContainer.style.display = 'block';
+                    pronosticoImagePreview.src = URL.createObjectURL(e.target.files[0]);
+                    procesarOCRGenerico(e.target.files[0], (ref) => {
+                        if(ref) pronosticoRefInput.value = ref;
+                        verificarPronosticoRef(pronosticoRefInput.value);
+                    }, pronosticoUploadText);
+                }
+            });
+
+            // Portapapeles global (Ctrl+V)
             window.addEventListener('paste', (e) => {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let item of items) {
                     if (item.kind === 'file' && item.type.startsWith('image/')) {
                         const blob = item.getAsFile();
-                        if (blob) procesarImagenOCR(blob, "captura_portapapeles.jpg");
+                        if (blob) {
+                            // Si estamos en la pestaña pagos o caja
+                            if (document.getElementById('view-pagos').style.display !== 'none') {
+                                fileNameText.textContent = "captura_portapapeles.jpg";
+                                previewContainer.style.display = 'block';
+                                imagePreview.src = URL.createObjectURL(blob);
+                                procesarOCRGenerico(blob, (ref) => {
+                                    if(ref) refNumberInput.value = ref;
+                                    verificarReferenciaGlobal(refNumberInput.value);
+                                }, uploadText);
+                            } else if (document.getElementById('view-caja').style.display !== 'none') {
+                                pronosticoPreviewContainer.style.display = 'block';
+                                pronosticoImagePreview.src = URL.createObjectURL(blob);
+                                procesarOCRGenerico(blob, (ref) => {
+                                    if(ref) pronosticoRefInput.value = ref;
+                                    verificarPronosticoRef(pronosticoRefInput.value);
+                                }, pronosticoUploadText);
+                            }
+                        }
                     }
                 }
             });
 
-            // Guardar Pago (Va directo a Cuenta 1 y Taquilla)
+            // Guardar Pago Taquilla
             document.getElementById('submitPayment').addEventListener('click', async () => {
                 const ref = refNumberInput.value.trim();
                 const clientNameInput = document.getElementById('clientName').value.trim();
                 const amount = parseFloat(document.getElementById('paymentAmount').value);
 
                 if (!ref || !clientNameInput || isNaN(amount) || amount <= 0) {
-                    alert('Por favor complete la Referencia, Nombre del Cliente y el Monto en Bs.');
+                    alert('Complete la Referencia, Nombre del Cliente y el Monto en Bs.');
                     return;
                 }
-
                 if (!isDataValid) {
-                    alert('¡ACCIÓN BLOQUEADA! Esta referencia ya fue registrada anteriormente.');
+                    alert('¡ACCIÓN BLOQUEADA! Esta referencia ya fue registrada.');
                     return;
                 }
 
                 appData.payments.push({ ref, client: clientNameInput, amount, date: new Date().toLocaleDateString() });
-                appData.cajaHistory.unshift({ desc: `Pago recibido de ${clientNameInput}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+                appData.cajaHistory.unshift({ desc: `Pago taquilla de ${clientNameInput}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
 
                 if (appData.accounts.length > 0) {
                     appData.accounts[0].balance += amount;
@@ -516,18 +595,47 @@
                 uploadText.textContent = "Sube captura o presiona Ctrl+V aquí";
                 dupWarning.style.display = 'none';
                 isDataValid = true;
-                alert('¡Pago registrado con éxito y sincronizado en todos tus dispositivos!');
+                alert('¡Pago de taquilla registrado y sincronizado!');
             });
 
-            // Modales Caja y Pronosticador
+            // Guardar Ingreso Pronosticador con OCR
+            document.getElementById('btnPronosticoSaveOCR').addEventListener('click', async () => {
+                const ref = pronosticoRefInput.value.trim();
+                const amount = parseFloat(document.getElementById('pronosticoAmountInput').value);
+
+                if (!ref || isNaN(amount) || amount <= 0) {
+                    alert('Ingrese la Referencia y el Monto en Bs.');
+                    return;
+                }
+                if (!isPronosticoValid) {
+                    alert('¡ACCIÓN BLOQUEADA! Esta referencia ya fue utilizada.');
+                    return;
+                }
+
+                appData.pronosticador.balance += amount;
+                appData.pronosticador.history.unshift({ desc: `Ingreso con comprobante (Ref: ${ref})`, amount: `+${amount.toFixed(2)}`, type: 'income', ref });
+                appData.cajaHistory.unshift({ desc: `Ingreso Pronosticador Ref ${ref}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+
+                await saveState();
+                renderUI();
+
+                pronosticoRefInput.value = '';
+                document.getElementById('pronosticoAmountInput').value = '';
+                pronosticoFileInput.value = '';
+                pronosticoPreviewContainer.style.display = 'hidden';
+                pronosticoDupWarning.style.display = 'none';
+                isPronosticoValid = true;
+                alert('¡Ingreso del pronosticador guardado y verificado con éxito!');
+            });
+
+            // Modales Caja
             let currentModalType = '';
             const cajaModal = document.getElementById('cajaModal');
             
             document.getElementById('btnPremio').addEventListener('click', () => openCajaModal('premio'));
             document.getElementById('btnGasto').addEventListener('click', () => openCajaModal('gasto'));
-            document.getElementById('btnPronosticoIngreso').addEventListener('click', () => openCajaModal('pronostico_ingreso'));
+            document.getElementById('btnPronosticoIngresoManual').addEventListener('click', () => openCajaModal('pronostico_ingreso'));
             document.getElementById('btnPronosticoPago').addEventListener('click', () => openCajaModal('pronostico_pago'));
-
             document.getElementById('modalCancel').addEventListener('click', () => cajaModal.classList.add('hidden'));
             
             document.getElementById('modalSave').addEventListener('click', async () => {
@@ -543,10 +651,10 @@
                     appData.cajaHistory.unshift({ desc: `${tipoDesc}: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
                 } else if (currentModalType === 'pronostico_ingreso') {
                     appData.pronosticador.balance += amount;
-                    appData.pronosticador.history.unshift({ desc: `Ingreso: ${reason}`, amount: `+${amount.toFixed(2)}`, type: 'income' });
+                    appData.pronosticador.history.unshift({ desc: `Ingreso Manual: ${reason}`, amount: `+${amount.toFixed(2)}`, type: 'income', ref: '' });
                 } else if (currentModalType === 'pronostico_pago') {
                     appData.pronosticador.balance -= amount;
-                    appData.pronosticador.history.unshift({ desc: `Pago/Retiro: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense' });
+                    appData.pronosticador.history.unshift({ desc: `Pago/Retiro: ${reason}`, amount: `-${amount.toFixed(2)}`, type: 'expense', ref: '' });
                 }
 
                 await saveState();
@@ -561,14 +669,14 @@
                 let title = '';
                 if (type === 'premio') title = 'Pagar / Restar Premio (Bs)';
                 else if (type === 'gasto') title = 'Registrar Gasto (Bs)';
-                else if (type === 'pronostico_ingreso') title = 'Ingreso a Favor del Pronosticador (Bs)';
+                else if (type === 'pronostico_ingreso') title = 'Ingreso Manual Pronosticador (Bs)';
                 else if (type === 'pronostico_pago') title = 'Pagar o Enviar al Pronosticador (Bs)';
 
                 document.getElementById('modalTitle').textContent = title;
                 cajaModal.classList.remove('hidden');
             }
 
-            // Gestión de Cuentas Genéricas
+            // Gestión de Cuentas
             document.getElementById('btnAddAccount').addEventListener('click', async () => {
                 const name = prompt('Nombre de la cuenta (Ej. Cuenta 4, Ahorros, etc.):');
                 if (name) {
@@ -596,7 +704,7 @@
                 }
             };
 
-            // Sistemas y Loterías
+            // Sistemas
             document.getElementById('btnAddSystem').addEventListener('click', async () => {
                 const name = prompt('Nombre del Sistema:');
                 const rate = prompt('Porcentaje de Comisión (%):');
@@ -659,12 +767,7 @@
                 const c = appData.clients[cIndex];
                 const estado = c.balance >= 0 ? `saldo a favor de Bs. ${c.balance.toFixed(2)}` : `saldo pendiente de Bs. ${Math.abs(c.balance).toFixed(2)}`;
                 const msg = `¡Hola, *${c.name}*! Le informamos que su estado de cuenta actual presenta un ${estado}. ¡Mucho éxito en sus próximas jugadas! 🎲✨`;
-                
-                navigator.clipboard.writeText(msg).then(() => {
-                    alert(`¡Mensaje copiado para ${c.name}!\n\n${msg}`);
-                }).catch(() => {
-                    alert('Copia el mensaje:\n\n' + msg);
-                });
+                navigator.clipboard.writeText(msg).then(() => alert(`¡Mensaje copiado para ${c.name}!`));
             };
 
             window.deleteClient = async function(cIndex) {
@@ -675,12 +778,10 @@
                 }
             };
 
-            // Render UI
+            // Renderizado Global de Interfaz
             function renderUI() {
                 let totalCuentas = 0;
-                appData.accounts.forEach(acc => {
-                    totalCuentas += acc.balance;
-                });
+                appData.accounts.forEach(acc => { totalCuentas += acc.balance; });
 
                 let totalPremios = 0;
                 let totalGastos = 0;
@@ -699,7 +800,7 @@
                 document.getElementById('boxGastos').textContent = `${totalGastos.toFixed(2)} Bs`;
                 document.getElementById('boxDisponible').textContent = `${saldoDisponible.toFixed(2)} Bs`;
 
-                // Render Pronosticador
+                // Pronosticador
                 document.getElementById('pronosticoSaldoBadge').textContent = `${appData.pronosticador.balance.toFixed(2)} Bs`;
                 const pronosticoHistory = document.getElementById('pronosticoHistory');
                 if (appData.pronosticador.history.length === 0) {
@@ -713,7 +814,7 @@
                     `).join('');
                 }
 
-                // Render Historial Caja
+                // Historial Caja
                 const historyContainer = document.getElementById('cajaHistory');
                 if (appData.cajaHistory.length === 0) {
                     historyContainer.innerHTML = `<p class="text-slate-400 text-center py-2">No hay movimientos.</p>`;
@@ -726,7 +827,7 @@
                     `).join('');
                 }
 
-                // Render Cuentas List
+                // Cuentas
                 const accountsContainer = document.getElementById('accountsList');
                 accountsContainer.innerHTML = appData.accounts.map((acc, accIndex) => `
                     <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1.5">
@@ -741,7 +842,7 @@
                     </div>
                 `).join('');
 
-                // Render Días y Sistemas
+                // Días y Sistemas
                 const daysList = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
                 document.getElementById('daysTabsContainer').innerHTML = daysList.map(day => `
                     <button type="button" onclick="setDay('${day}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${appData.selectedDay === day ? 'bg-sky-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
