@@ -29,6 +29,15 @@
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 12px; }
         .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
         .history-item.premio { border-left-color: #d97706; }
+        
+        /* Estilos Módulo Sistemas */
+        .days-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
+        .day-btn { background: #e2e8f0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
+        .day-btn.active { background: #0284c7; color: white; }
+        .system-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .system-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
+        .system-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
         .nav-item.active { color: #0284c7; }
@@ -126,7 +135,46 @@
         </div>
     </div>
 
-    <div id="view-sistemas" class="view-section"><div class="card"><div class="card-title">📈 Módulo de Sistemas</div><p>Próximamente...</p></div></div>
+    <!-- VISTA 3: SISTEMAS Y LOTERÍAS -->
+    <div id="view-sistemas" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                📈 Sistemas y Loterías
+                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarNuevoSistemaModal()">+ Sistema</button>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Control diario y desglose semanal por sistema</div>
+
+            <!-- Días de la semana -->
+            <div class="days-container" id="diasContainer">
+                <button class="day-btn active" onclick="cambiarDiaSistema('Lunes', this)">Lunes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Martes', this)">Martes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Miércoles', this)">Miércoles</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Jueves', this)">Jueves</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Viernes', this)">Viernes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Sábado', this)">Sábado</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Domingo', this)">Domingo</button>
+            </div>
+
+            <!-- Listado de sistemas dinámicos para el día seleccionado -->
+            <div id="listaSistemasDia"></div>
+        </div>
+
+        <!-- Resumen de Todos los Sistemas -->
+        <div class="card">
+            <div class="card-title">📑 Resumen de Todos los Sistemas</div>
+            <div id="resumenSistemasSemana"></div>
+
+            <!-- Resumen General Acumulado -->
+            <div style="background: var(--primary); color: white; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px;">🗂️ RESUMEN GENERAL ACUMULADO</div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;"><span>Ventas Totales:</span> <strong id="resGenVentas">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;"><span>Premios Totales:</span> <strong id="resGenPremios">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;"><span>Comisiones Totales:</span> <strong id="resGenComisiones">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6px;"><span>Saldo Neto Global:</span> <strong id="resGenNeto" style="color: #10b981;">0.00 Bs</strong></div>
+            </div>
+        </div>
+    </div>
+
     <div id="view-clientes" class="view-section"><div class="card"><div class="card-title">👥 Módulo de Clientes</div><p>Próximamente...</p></div></div>
     <div id="view-cuentas" class="view-section"><div class="card"><div class="card-title">🏦 Módulo de Cuentas y Bancos</div><p>Próximamente...</p></div></div>
 </div>
@@ -144,8 +192,20 @@
     
     let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
 
+    // Estructura de Sistemas y Loterías
+    let sistemasData = JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [
+        { id: 'maxplay', nombre: 'Maxplay', comision: 14 },
+        { id: 'matrix', nombre: 'Matrix Comp', comision: 14 },
+        { id: 'srq', nombre: 'SRQ Polla', comision: 14 },
+        { id: 'atenas', nombre: 'Atenas', comision: 12 }
+    ];
+
+    let registrosSistemas = JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {};
+    let diaSeleccionado = 'Lunes';
+
     window.onload = function() {
         actualizarInterfazCaja();
+        renderizarModuloSistemas();
         sincronizarConNube();
     };
 
@@ -156,6 +216,8 @@
         elemento.classList.add('active');
         if(vista === 'caja') {
             sincronizarConNube();
+        } else if(vista === 'sistemas') {
+            renderizarModuloSistemas();
         }
     }
 
@@ -188,7 +250,6 @@
         }
     }
 
-    // Normalizador estricto anti-duplicados (elimina ceros a la izquierda, espacios y símbolos)
     function normalizarRef(ref) {
         if (!ref) return "";
         let soloDigitos = ref.toString().replace(/\D/g, '');
@@ -263,7 +324,6 @@
                 document.getElementById('fileNameTaquilla').innerText = 'Imagen procesada correctamente';
             }
 
-            // Verificación absoluta contra duplicados al momento de leer el OCR
             let existente = buscarDuplicado(refEncontrada);
             if(existente) {
                 alertBox.className = 'alert-error';
@@ -502,6 +562,134 @@
         document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
         document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
         document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
+    }
+
+    // --- FUNCIONES MÓDULO SISTEMAS ---
+    function cambiarDiaSistema(dia, elemento) {
+        diaSeleccionado = dia;
+        document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+        elemento.classList.add('active');
+        renderizarModuloSistemas();
+    }
+
+    function agregarNuevoSistemaModal() {
+        let nombre = prompt("Nombre del nuevo sistema (ej. Olimpo, Los Animalitos):");
+        if(!nombre) return;
+        let comisionStr = prompt("Porcentaje de comisión del sistema (ej. 14):");
+        let comision = parseFloat(comisionStr);
+        if(isNaN(comision) || comision < 0) {
+            alert("Comisión inválida.");
+            return;
+        }
+
+        let id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        sistemasData.push({ id, nombre, comision });
+        localStorage.setItem('taquilla_sistemas_config', JSON.stringify(sistemasData));
+        renderizarModuloSistemas();
+    }
+
+    function eliminarSistema(id) {
+        if(confirm("¿Estás seguro de eliminar este sistema y todos sus registros?")) {
+            sistemasData = sistemasData.filter(s => s.id !== id);
+            localStorage.setItem('taquilla_sistemas_config', JSON.stringify(sistemasData));
+            renderizarModuloSistemas();
+        }
+    }
+
+    function actualizarDatoSistemaDia(sistemaId, campo, valor) {
+        if(!registrosSistemas[sistemaId]) {
+            registrosSistemas[sistemaId] = {};
+        }
+        if(!registrosSistemas[sistemaId][diaSeleccionado]) {
+            registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
+        }
+        registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
+        localStorage.setItem('taquilla_sistemas_registros', JSON.stringify(registrosSistemas));
+        renderizarResumenSistemas();
+    }
+
+    function renderizarModuloSistemas() {
+        const contenedorDia = document.getElementById('listaSistemasDia');
+        let htmlDia = '';
+
+        sistemasData.forEach(sis => {
+            if(!registrosSistemas[sis.id]) registrosSistemas[sis.id] = {};
+            if(!registrosSistemas[sis.id][diaSeleccionado]) registrosSistemas[sis.id][diaSeleccionado] = { ventas: 0, premios: 0 };
+
+            let datosDia = registrosSistemas[sis.id][diaSeleccionado];
+            let netoDia = datosDia.ventas - datosDia.premios - (datosDia.ventas * (sis.comision / 100));
+
+            htmlDia += `<div class="system-card">
+                <div class="system-header">
+                    <span>${sis.nombre} (${sis.comision}%)</span>
+                    <span>Neto: <strong style="color:${netoDia >= 0 ? '#10b981' : '#ef4444'}">${netoDia.toFixed(2)} Bs</strong> <span style="cursor:pointer; margin-left:6px;" onclick="eliminarSistema('${sis.id}')">🗑️</span></span>
+                </div>
+                <div class="system-inputs">
+                    <div>
+                        <label>Ventas (${diaSeleccionado})</label>
+                        <input type="number" value="${datosDia.ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'ventas', this.value)">
+                    </div>
+                    <div>
+                        <label>Premios (${diaSeleccionado})</label>
+                        <input type="number" value="${datosDia.premios || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'premios', this.value)">
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        contenedorDia.innerHTML = htmlDia;
+        renderizarResumenSistemas();
+    }
+
+    function renderizarResumenSistemas() {
+        const contenedorResumen = document.getElementById('resumenSistemasSemana');
+        const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        
+        let htmlResumen = '';
+        let totalGenVentas = 0;
+        let totalGenPremios = 0;
+        let totalGenComisiones = 0;
+
+        sistemasData.forEach(sis => {
+            let acumuladoVentas = 0;
+            let acumuladoPremios = 0;
+
+            dias.forEach(d => {
+                if(registrosSistemas[sis.id] && registrosSistemas[sis.id][d]) {
+                    acumuladoVentas += registrosSistemas[sis.id][d].ventas || 0;
+                    acumuladoPremios += registrosSistemas[sis.id][d].premios || 0;
+                }
+            });
+
+            let comisionTotalSistema = acumuladoVentas * (sis.comision / 100);
+            let netoSistema = acumuladoVentas - acumuladoPremios - comisionTotalSistema;
+
+            totalGenVentas += acumuladoVentas;
+            totalGenPremios += acumuladoPremios;
+            totalGenComisiones += comisionTotalSistema;
+
+            htmlResumen += `<div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 3px;">
+                    <span>${sis.nombre}</span>
+                    <span style="color:${netoSistema >= 0 ? '#10b981' : '#ef4444'}">Neto: Bs. ${netoSistema.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #475569;">
+                    <span>Ventas: ${acumuladoVentas.toFixed(2)}</span>
+                    <span>Premios: ${acumuladoPremios.toFixed(2)}</span>
+                    <span>Comisión: ${comisionTotalSistema.toFixed(2)}</span>
+                </div>
+            </div>`;
+        });
+
+        contenedorResumen.innerHTML = htmlResumen;
+
+        let saldoNetoGlobal = totalGenVentas - totalGenPremios - totalGenComisiones;
+
+        document.getElementById('resGenVentas').innerText = totalGenVentas.toFixed(2) + " Bs";
+        document.getElementById('resGenPremios').innerText = totalGenPremios.toFixed(2) + " Bs";
+        document.getElementById('resGenComisiones').innerText = totalGenComisiones.toFixed(2) + " Bs";
+        document.getElementById('resGenNeto').innerText = saldoNetoGlobal.toFixed(2) + " Bs";
+        document.getElementById('resGenNeto').style.color = saldoNetoGlobal >= 0 ? '#10b981' : '#ef4444';
     }
 </script>
 
