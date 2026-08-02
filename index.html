@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Apuestas Harold José - Taquilla</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root { --primary: #1e1b4b; --accent: #10b981; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; padding-bottom: 80px; color: var(--text); }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .upload-area { border: 2px dashed #93c5fd; background: #f0fdf4; padding: 16px; text-align: center; border-radius: 10px; margin-bottom: 12px; cursor: pointer; }
+        .upload-area p { margin: 6px 0 0; font-size: 11px; color: #166534; font-weight: bold; }
+        .anti-fraud-badge { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 11px; color: #166534; font-weight: bold; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 3px; color: #475569; }
+        input, textarea { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-success { background: var(--accent); color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-premio { background: #d97706; color: white; }
+        .grid-caja { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .box-stat { background: #f1f5f9; padding: 8px; border-radius: 6px; text-align: center; }
+        .box-stat span { display: block; font-size: 10px; color: #64748b; }
+        .box-stat strong { font-size: 13px; color: var(--primary); }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 12px; }
+        .history-item.retiro, .history-item.gasto { border-left-color: #ef4444; }
+        .history-item.premio { border-left-color: #d97706; }
+        
+        /* Módulo Sistemas */
+        .days-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
+        .day-btn { background: #e2e8f0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
+        .day-btn.active { background: #0284c7; color: white; }
+        .system-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .system-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
+        .system-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* Módulo Clientes */
+        .client-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+        .client-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+        .client-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .btn-jugada { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .btn-client-premio { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .btn-whatsapp { background: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+
+        /* Módulo Cuentas */
+        .account-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #3b82f6; position: relative; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0; box-shadow: -2px 5px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-align: center; font-size: 10px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
+        .nav-item.active { color: #0284c7; }
+        .nav-item span { display: block; font-size: 16px; margin-bottom: 2px; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        #alertBox { padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; display: none; font-weight: bold; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .alert-loading { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        /* Mejoras de estabilidad y experiencia */
+        button, input, textarea { touch-action: manipulation; }
+        .btn:disabled { opacity: .55; cursor: not-allowed; }
+        .is-invalid { border-color: #ef4444 !important; background: #fff7f7 !important; }
+        .sync-status { font-size: 10px; margin-left: 6px; font-weight: 600; }
+        .sync-ok { color: #166534; }
+        .sync-error { color: #991b1b; }
+        .sync-loading { color: #0369a1; }
+        .toast {
+            position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%);
+            z-index: 2000; max-width: calc(100% - 30px); padding: 10px 14px;
+            border-radius: 8px; font-size: 12px; font-weight: 700; display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,.18);
+        }
+        .toast.show { display: block; }
+        .toast.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .toast.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .toast.info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .backup-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .weekly-reset-card {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-left: 4px solid #ea580c;
+        }
+        .btn-reset-week { background: #ea580c; color: white; }
+        .btn-reset-week:hover { filter: brightness(.95); }
+        .weekly-reset-note {
+            font-size: 10px;
+            line-height: 1.4;
+            color: #9a3412;
+            margin: 6px 0 10px;
+        }
+
+        @media (max-width: 420px) {
+            .backup-actions { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body onpaste="manejarPegadoGlobal(event)">
+
+<div class="container">
+    <div id="alertBox"></div>
+
+    <!-- VISTA 1: PAGOS -->
+    <div id="view-pagos" class="view-section active">
+        <div class="card" style="border-top: 4px solid var(--accent);">
+            <div class="card-title">📥 Registrar Pago Taquilla</div>
+            <div class="upload-area" onclick="document.getElementById('fileInputTaquilla').click()">
+                <span style="font-size: 20px;">☁️</span>
+                <p>Sube captura o presiona <b>Ctrl+V</b> aquí</p>
+                <input type="file" id="fileInputTaquilla" style="display:none;" onchange="cargarCapturaArchivo(event, 'taquilla')">
+                <div id="fileNameTaquilla" style="font-size: 10px; color: #64748b; margin-top: 4px;">No se ha seleccionado archivo</div>
+            </div>
+            <div class="anti-fraud-badge">🛡️ Validador Anti-Fraude Estricto (Bloquea Duplicados y Datos Incorrectos)</div>
+            <div class="form-group">
+                <label>Número de Referencia / Operación</label>
+                <input type="text" id="referencia" placeholder="Lectura automática OCR o manual" oninput="validarReferenciaEnVivo(this.value)">
+            </div>
+            <div class="form-group">
+                <label>Nombre del Cliente</label>
+                <input type="text" id="cliente" placeholder="Ej. Edgar">
+            </div>
+            <div class="form-group">
+                <label>Monto del Pago (Bolívares - Bs)</label>
+                <input type="number" id="monto" placeholder="Ej. 2000.00">
+            </div>
+            <button class="btn btn-success" onclick="guardarPagoTaquilla()">Guardar Pago Taquilla</button>
+        </div>
+    </div>
+
+    <!-- VISTA 2: CAJA Y GLOBAL -->
+    <div id="view-caja" class="view-section">
+        <div class="card">
+            <div class="card-title">📊 Panel de Caja y Global</div>
+            <div class="grid-caja" style="margin-bottom: 8px;">
+                <div class="box-stat"><span>Suma Total (Cuentas + Pronost.):</span> <strong id="lblSumaTotal">0.00 Bs</strong></div>
+                <div class="box-stat"><span>Saldo Disponible Neto:</span> <strong id="lblSaldoNeto" style="color: #10b981;">0.00 Bs</strong></div>
+            </div>
+            <div class="grid-caja" style="margin-bottom: 12px;">
+                <div class="box-stat"><span>Total Premios Pagados:</span> <strong id="lblPremios" style="color: #d97706;">0.00 Bs</strong></div>
+                <div class="box-stat"><span>Total Gastos Registrados:</span> <strong id="lblGastos" style="color: #ef4444;">0.00 Bs</strong></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn btn-premio" onclick="registrarPremioModal()">🏆 Pagar Premio</button>
+                <button class="btn btn-danger" onclick="registrarGastoModal()">❌ Registrar Gasto</button>
+            </div>
+        </div>
+
+        <!-- Control Saldo Pronosticador -->
+        <div class="card" style="background: #1e1b4b; color: white;">
+            <div class="card-title" style="color: white;">👤 Control Saldo Pronosticador <span id="lblPronosticador" style="margin-left:auto; background:#f59e0b; padding:2px 8px; border-radius:4px; font-size:11px; color:#000;">0.00 Bs</span></div>
+            
+            <div class="upload-area" style="background: #312e81; border-color: #4338ca;" onclick="document.getElementById('fileInputProno').click()">
+                <span style="font-size: 18px;">☁️</span>
+                <p style="color: #93c5fd;">Sube captura o presiona <b>Ctrl+V</b> aquí para Pronosticador</p>
+                <input type="file" id="fileInputProno" style="display:none;" onchange="cargarCapturaArchivo(event, 'pronosticador')">
+                <div id="fileNameProno" style="font-size: 10px; color: #cbd5e1; margin-top: 4px;">No se ha seleccionado archivo</div>
+            </div>
+
+            <div style="background: #312e81; padding: 10px; border-radius: 6px; border: 1px solid #4338ca;">
+                <label style="color: #e2e8f0; font-size:10px;">🛡️ Gestión Saldo Pronosticador (Aparte)</label>
+                <div class="form-group" style="margin-top:6px;">
+                    <input type="text" id="pronoRef" placeholder="Referencia o Concepto" style="background:#1e1b4b; color:white; border-color:#4338ca;" oninput="validarReferenciaEnVivo(this.value)">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="pronoMonto" placeholder="Monto en Bs" style="background:#1e1b4b; color:white; border-color:#4338ca;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:6px;">
+                    <button class="btn btn-success" onclick="guardarPronosticador('Ingreso Pronosticador')">➕ Agregar Ingreso</button>
+                    <button class="btn btn-danger" onclick="guardarPronosticador('Retiro Pronosticador')">➖ Pagar / Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Movimientos -->
+        <div class="card">
+            <div class="card-title">📜 Historial de Movimientos <span id="syncStatus" class="sync-status">⏳ Preparando...</span><button onclick="sincronizarConNube()" style="margin-left:auto; font-size:10px; padding:3px 6px;" class="btn btn-warning">🔄 Sincronizar Nube</button></div>
+            <div id="historialLista" style="max-height: 250px; overflow-y: auto;">
+                <div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">Cargando historial...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA 3: SISTEMAS Y LOTERÍAS -->
+    <div id="view-sistemas" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                📈 Sistemas y Loterías
+                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarNuevoSistemaModal()">+ Sistema</button>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Control diario y desglose semanal por sistema</div>
+
+            <div class="days-container" id="diasContainer">
+                <button class="day-btn active" onclick="cambiarDiaSistema('Lunes', this)">Lunes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Martes', this)">Martes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Miércoles', this)">Miércoles</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Jueves', this)">Jueves</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Viernes', this)">Viernes</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Sábado', this)">Sábado</button>
+                <button class="day-btn" onclick="cambiarDiaSistema('Domingo', this)">Domingo</button>
+            </div>
+
+            <div id="listaSistemasDia"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📑 Resumen de Todos los Sistemas</div>
+            <div id="resumenSistemasSemana"></div>
+
+            <div style="background: var(--primary); color: white; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px;">🗂️ RESUMEN GENERAL ACUMULADO</div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;"><span>Ventas Totales:</span> <strong id="resGenVentas">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;"><span>Premios Totales:</span> <strong id="resGenPremios">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;"><span>Comisiones Totales:</span> <strong id="resGenComisiones">0.00 Bs</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6px;"><span>Saldo Neto Global:</span> <strong id="resGenNeto" style="color: #10b981;">0.00 Bs</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA 4: CLIENTES Y SALDOS -->
+    <div id="view-clientes" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                👥 Control de Clientes y Saldos
+                <button class="btn btn-warning" style="margin-left:auto; width:auto; font-size:11px; padding:4px 8px;" onclick="agregarClienteModal()">+ Cliente</button>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Cuentas corrientes, jugadas y copiado rápido para WhatsApp</div>
+            <div id="listaClientesContainer"></div>
+        </div>
+    </div>
+
+    <!-- VISTA 5: CUENTAS Y BANCOS -->
+    <div id="view-cuentas" class="view-section">
+        <!-- Tus Datos de Receptor (Anti-Fraude) -->
+        <div class="card" style="background: #0f172a; color: white;">
+            <div class="card-title" style="color: white;">💳 Tus Datos de Receptor (Pago Móvil / Cédula)</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-bottom: 10px;">El sistema anti-fraude usa estos datos para verificar automáticamente tus comprobantes</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div>
+                    <label style="color: #cbd5e1;">Cédula / RIF</label>
+                    <input type="text" id="recCedula" value="18274410" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
+                </div>
+                <div>
+                    <label style="color: #cbd5e1;">Teléfono Pago Móvil</label>
+                    <input type="text" id="recTelefono" value="04124489363" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="color: #cbd5e1;">Banco / Alias Receptor (Ej. 0102 Banco de Venezuela)</label>
+                <input type="text" id="recBanco" value="0102 - Banco de Venezuela" style="background: #1e293b; color: white; border-color: #334155;" oninput="guardarDatosReceptor()">
+            </div>
+        </div>
+
+        <!-- Cuentas y Números Destino -->
+        <div class="card">
+            <div class="card-title">🏦 Cuentas y Números Destino</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Configura tus cuentas. Los saldos aquí ingresados se suman automáticamente al Total General.</div>
+            
+            <div id="listaCuentasBancariasContainer"></div>
+
+            <button class="btn btn-success" style="background: #3b82f6; margin-top: 5px;" onclick="agregarCuentaBancariaModal()">+ Agregar Otra Cuenta</button>
+
+            <div class="card weekly-reset-card" style="margin-top:12px; margin-bottom:0;">
+                <div class="card-title" style="color:#9a3412;">🧹 Cierre y Limpieza Semanal</div>
+                <div class="weekly-reset-note">
+                    Al iniciar una nueva semana, esta función elimina los movimientos, clientes,
+                    registros de sistemas y saldos del pronosticador. <b>Los saldos actuales de las cuentas bancarias se conservan.</b>
+                    Se recomienda exportar un respaldo antes de ejecutar la limpieza.
+                </div>
+                <button class="btn btn-reset-week" onclick="limpiarNuevaSemana()">🧹 Cerrar Semana y Empezar de 0</button>
+            </div>
+
+            <div class="card" style="margin-top:12px; margin-bottom:0; background:#f8fafc;">
+                <div class="card-title">💾 Respaldo de Datos</div>
+                <div style="font-size:11px; color:#64748b; margin-bottom:8px;">
+                    Guarda una copia local de tus movimientos, clientes, sistemas, cuentas y configuración.
+                </div>
+                <div class="backup-actions">
+                    <button class="btn btn-success" onclick="exportarRespaldo()">⬇️ Exportar Respaldo</button>
+                    <button class="btn btn-warning" onclick="document.getElementById('inputRespaldo').click()">⬆️ Restaurar Respaldo</button>
+                </div>
+                <input type="file" id="inputRespaldo" accept=".json,application/json" style="display:none;" onchange="importarRespaldo(event)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="cambiarVista('pagos', this)"><span>🏠</span>Pagos</div>
+    <div class="nav-item" onclick="cambiarVista('caja', this)"><span>📊</span>Caja</div>
+    <div class="nav-item" onclick="cambiarVista('sistemas', this)"><span>📈</span>Sistemas</div>
+    <div class="nav-item" onclick="cambiarVista('clientes', this)"><span>👥</span>Clientes</div>
+    <div class="nav-item" onclick="cambiarVista('cuentas', this)"><span>🏦</span>Cuentas</div>
+</nav>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg4Cyr9JYDQ4lfs7pYcCaJcPzFQ61pmz93hA4R6SG51Jk4H1JLJQEZkTkv3vkDKZPuxQ/exec";
+    
+    let historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
+    let sistemasData = JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [
+        { id: 'maxplay', nombre: 'Maxplay', comision: 14 },
+        { id: 'matrix', nombre: 'Matrix Comp', comision: 14 },
+        { id: 'srq', nombre: 'SRQ Polla', comision: 14 },
+        { id: 'atenas', nombre: 'Atenas', comision: 12 }
+    ];
+    let registrosSistemas = JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {};
+    let diaSeleccionado = 'Lunes';
+    let sincronizacionEnCurso = false;
+    let ultimaSincronizacion = null;
+    let referenciasHistoricas = JSON.parse(localStorage.getItem('taquilla_referencias_historicas') || '[]');
+    let saldoPronosticadorNube = Number(localStorage.getItem('taquilla_saldo_pronosticador_nube') || 0);
+
+    let clientesData = JSON.parse(localStorage.getItem('taquilla_clientes')) || [
+        { id: 'c1', nombre: 'Edgar', saldo: 0 },
+        { id: 'c2', nombre: 'Carlos', saldo: 0 }
+    ];
+
+    let cuentasBancariasData = JSON.parse(localStorage.getItem('taquilla_cuentas_bancarias')) || [
+        { id: 'acc1', nombre: 'Cuenta 1 (Principal - BDV)', numero: '01020613810000317201', saldo: 0 }
+    ];
+
+    window.onload = function() {
+        actualizarInterfazCaja();
+        renderizarModuloSistemas();
+        renderizarModuloClientes();
+        renderizarModuloCuentas();
+        cargarDatosReceptorGuardados();
+        sincronizarConNube();
+        reintentarPendientesNube();
+    };
+
+    window.addEventListener('online', function() {
+        reintentarPendientesNube();
+        sincronizarConNube();
+    });
+
+    function cambiarVista(vista, elemento) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + vista).classList.add('active');
+        elemento.classList.add('active');
+        if(vista === 'caja') {
+            sincronizarConNube();
+        } else if(vista === 'sistemas') {
+            renderizarModuloSistemas();
+        } else if(vista === 'clientes') {
+            renderizarModuloClientes();
+        } else if(vista === 'cuentas') {
+            renderizarModuloCuentas();
+        }
+    }
+
+    function manejarPegadoGlobal(event) {
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                const vistaCajaActiva = document.getElementById('view-caja').classList.contains('active');
+                if (vistaCajaActiva) {
+                    document.getElementById('fileNameProno').innerText = "Imagen pegada. Leyendo con OCR...";
+                    procesarOCR(blob, 'pronosticador');
+                } else {
+                    document.getElementById('fileNameTaquilla').innerText = "Imagen pegada. Leyendo con OCR...";
+                    procesarOCR(blob, 'taquilla');
+                }
+                break;
+            }
+        }
+    }
+
+    function cargarCapturaArchivo(event, destino) {
+        if(event.target.files.length > 0) {
+            if(destino === 'pronosticador') {
+                document.getElementById('fileNameProno').innerText = "Leyendo con OCR...";
+            } else {
+                document.getElementById('fileNameTaquilla').innerText = "Leyendo con OCR...";
+            }
+            procesarOCR(event.target.files[0], destino);
+        }
+    }
+
+    function normalizarRef(ref) {
+        if (!ref) return "";
+        let soloDigitos = ref.toString().replace(/\D/g, '');
+        return soloDigitos.replace(/^0+/, '') || soloDigitos;
+    }
+
+    function buscarDuplicado(ref) {
+        if (!ref) return null;
+        let refTarget = normalizarRef(ref);
+        if (!refTarget) return null;
+
+        let localData = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
+        let combinado = [...historialGlobal, ...localData];
+        
+        return combinado.find(item => {
+            if (!item.referencia) return false;
+            return normalizarRef(item.referencia) === refTarget;
+        });
+    }
+
+    function validarReferenciaEnVivo(ref) {
+        const alertBox = document.getElementById('alertBox');
+        if(!ref || ref.trim().length < 3) return;
+
+        let existente = buscarDuplicado(ref);
+        if(existente) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = `⛔ ¡ALERTA DUPLICADO! La referencia "${ref}" ya está registrada por "${existente.cliente || 'Desconocido'}" (${existente.tipo || 'Operación'} - ${existente.monto || '0.00'} Bs).`;
+        }
+    }
+
+    function procesarOCR(file, destino) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert-loading';
+        alertBox.innerText = '🔍 Leyendo comprobante con OCR y validando datos anti-fraude...';
+
+        Tesseract.recognize(file, 'spa').then(({ data: { text } }) => {
+            let refEncontrada = "";
+            let montoEncontrado = "";
+            
+            const lineas = text.split('\n');
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i].toLowerCase();
+                if (linea.includes('operación') || linea.includes('operacion') || linea.includes('referencia') || linea.includes('ref')) {
+                    let nums = lineas[i].match(/\d{6,15}/);
+                    if (nums) { refEncontrada = nums[0]; break; }
+                    else if (i + 1 < lineas.length) {
+                        let numsSig = lineas[i+1].match(/\d{6,15}/);
+                        if (numsSig) { refEncontrada = numsSig[0]; break; }
+                    }
+                }
+            }
+            if(!refEncontrada) { let match = text.match(/\d{8,14}/); if(match) refEncontrada = match[0]; }
+
+            let matchMonto = text.match(/(?:monto|bs\.?|bolivares)[\s\:\.]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i);
+            if(matchMonto) {
+                montoEncontrado = matchMonto[1].replace(/\./g, '').replace(',', '.');
+            } else {
+                let matchGen = text.match(/([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/);
+                if(matchGen) montoEncontrado = matchGen[1].replace(/\./g, '').replace(',', '.');
+            }
+
+            if(destino === 'pronosticador') {
+                if(refEncontrada) document.getElementById('pronoRef').value = refEncontrada;
+                if(montoEncontrado) document.getElementById('pronoMonto').value = montoEncontrado;
+                document.getElementById('fileNameProno').innerText = 'Imagen procesada correctamente';
+            } else {
+                if(refEncontrada) document.getElementById('referencia').value = refEncontrada;
+                if(montoEncontrado) document.getElementById('monto').value = montoEncontrado;
+                document.getElementById('fileNameTaquilla').innerText = 'Imagen procesada correctamente';
+            }
+
+            // Validar Anti-Fraude con los datos de Harold
+            let cedulaOficial = document.getElementById('recCedula').value.trim();
+            let telefonoOficial = document.getElementById('recTelefono').value.trim();
+            let tieneDatosValidos = text.includes(cedulaOficial) || text.includes(telefonoOficial) || text.includes("0102");
+            let existente = buscarDuplicado(refEncontrada);
+
+            if(existente) {
+                alertBox.className = 'alert-error';
+                alertBox.innerText = `⛔ ¡ALERTA DUPLICADO! La referencia ${refEncontrada} ya fue registrada por "${existente.cliente || 'Desconocido'}".`;
+            } else if (!tieneDatosValidos) {
+                alertBox.className = 'alert-error';
+                alertBox.innerText = `❌ ¡ALERTA ANTI-FRAUDE! El comprobante NO contiene tus datos oficiales (Cédula: ${cedulaOficial} / Teléfono: ${telefonoOficial}).`;
+            } else {
+                alertBox.className = 'alert-success';
+                alertBox.innerText = '✅ ¡Comprobante verificado con éxito! Datos correctos y referencia libre.';
+            }
+        }).catch(() => {
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'No se pudo leer automáticamente. Ingresa los datos manualmente.';
+        });
+    }
+
+    function actualizarEstadoSync(texto, clase) {
+        let el = document.getElementById('syncStatus');
+        if (!el) return;
+        el.textContent = texto;
+        el.className = 'sync-status ' + (clase || '');
+    }
+
+    function sincronizarConNube() {
+        if (sincronizacionEnCurso) return;
+        sincronizacionEnCurso = true;
+        actualizarEstadoSync('⏳ Sincronizando...', 'sync-loading');
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'GET',
+            cache: 'no-store',
+            signal: controller.signal
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            // Compatibilidad con la respuesta antigua (array) y la nueva (objeto).
+            if (Array.isArray(data)) {
+                historialGlobal = data;
+            } else if (data && Array.isArray(data.movimientos)) {
+                historialGlobal = data.movimientos;
+                if (Number.isFinite(Number(data.pronosticadorSaldo))) {
+                    saldoPronosticadorNube = Number(data.pronosticadorSaldo);
+                    localStorage.setItem(
+                        'taquilla_saldo_pronosticador_nube',
+                        String(saldoPronosticadorNube)
+                    );
+                }
+            } else {
+                throw new Error('Respuesta de nube no válida');
+            }
+
+            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            ultimaSincronizacion = new Date();
+            actualizarEstadoSync('☁️ Sincronizado', 'sync-ok');
+            actualizarInterfazCaja();
+        })
+        .catch(err => {
+            console.warn('Sincronización no disponible:', err.message);
+            actualizarEstadoSync('⚠️ Modo local', 'sync-error');
+            actualizarInterfazCaja();
+        })
+        .finally(() => {
+            clearTimeout(timeout);
+            sincronizacionEnCurso = false;
+        });
+    }
+
+    function guardarPagoTaquilla() {
+        const ref = document.getElementById('referencia').value.trim();
+        const cliente = document.getElementById('cliente').value.trim();
+        const monto = document.getElementById('monto').value.trim();
+        const alertBox = document.getElementById('alertBox');
+
+        const montoNumValidacion = Number(monto.replace(',', '.'));
+        if (!ref || !cliente || !monto || !Number.isFinite(montoNumValidacion) || montoNumValidacion <= 0) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Por favor completa todos los campos con datos válidos. El monto debe ser mayor que 0.';
+            return;
+        }
+
+        let existente = buscarDuplicado(ref);
+        if(existente) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya fue registrada.`;
+            return;
+        }
+
+        let montoNum = parseFloat(monto) || 0;
+        let clienteObj = clientesData.find(c => c.nombre.toLowerCase() === cliente.toLowerCase());
+        if (clienteObj) {
+            clienteObj.saldo += montoNum;
+        } else {
+            clientesData.push({ id: 'c_' + Date.now(), nombre: cliente, saldo: montoNum });
+        }
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert-loading';
+        alertBox.innerText = '🛡️ Guardando pago en la nube y actualizando saldo del cliente...';
+
+        const datos = { 
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: ref, 
+            cliente: cliente, 
+            monto: monto, 
+            tipo: "Ingreso Taquilla" 
+        };
+
+        enviarANubeYActualizar(datos, () => {
+            document.getElementById('referencia').value = '';
+            document.getElementById('cliente').value = '';
+            document.getElementById('monto').value = '';
+            document.getElementById('fileNameTaquilla').innerText = 'No se ha seleccionado archivo';
+            renderizarModuloClientes();
+        });
+    }
+
+    function guardarPronosticador(tipoAccion) {
+        const ref = document.getElementById('pronoRef').value.trim();
+        const monto = document.getElementById('pronoMonto').value.trim();
+        const alertBox = document.getElementById('alertBox');
+
+        const montoNumValidacion = Number(monto.replace(',', '.'));
+        if(!ref || !monto || !Number.isFinite(montoNumValidacion) || montoNumValidacion <= 0) { 
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = 'Por favor completa la referencia y coloca un monto válido mayor que 0.';
+            return; 
+        }
+
+        let existente = buscarDuplicado(ref);
+        if(existente) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-error';
+            alertBox.innerText = `⛔ ¡BLOQUEADO POR DUPLICADO! La referencia ${ref} ya existe.`;
+            return;
+        }
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: ref,
+            cliente: "Pronosticador",
+            monto: monto,
+            tipo: tipoAccion
+        };
+
+        if (tipoAccion === 'Ingreso Pronosticador') {
+            saldoPronosticadorNube += montoNumValidacion;
+        } else if (tipoAccion === 'Retiro Pronosticador') {
+            saldoPronosticadorNube -= montoNumValidacion;
+        }
+        localStorage.setItem('taquilla_saldo_pronosticador_nube', String(saldoPronosticadorNube));
+
+        enviarANubeYActualizar(datos, () => {
+            document.getElementById('pronoRef').value = '';
+            document.getElementById('pronoMonto').value = '';
+            document.getElementById('fileNameProno').innerText = 'No se ha seleccionado archivo';
+            actualizarInterfazCaja();
+        });
+    }
+
+    function registrarPremioModal() {
+        let concepto = prompt("Indica el beneficiario o concepto del premio:");
+        if (!concepto) return;
+        let montoStr = prompt("Monto del premio en Bs:");
+        let monto = parseFloat(montoStr);
+        if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: "PREMIO-" + Math.floor(100000 + Math.random() * 900000),
+            cliente: "Premio: " + concepto,
+            monto: monto,
+            tipo: "Premio Pagado"
+        };
+        enviarANubeYActualizar(datos);
+    }
+
+    function registrarGastoModal() {
+        let concepto = prompt("Descripción del gasto:");
+        if (!concepto) return;
+        let montoStr = prompt("Monto del gasto en Bs:");
+        let monto = parseFloat(montoStr);
+        if (isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+
+        const datos = {
+            fecha: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString(),
+            referencia: "GASTO-" + Math.floor(100000 + Math.random() * 900000),
+            cliente: "Gasto: " + concepto,
+            monto: monto,
+            tipo: "Gasto Registrado"
+        };
+        enviarANubeYActualizar(datos);
+    }
+
+
+    // --- PROTECCIÓN HISTÓRICA DE REFERENCIAS ---
+    function normalizarReferenciaHistorica(ref) {
+        return String(ref || '').trim().toUpperCase().replace(/\s+/g, '');
+    }
+
+    function referenciaYaRegistradaHistoricamente(ref) {
+        const normalizada = normalizarReferenciaHistorica(ref);
+        if (!normalizada) return null;
+        return referenciasHistoricas.find(r => r.referencia === normalizada) || null;
+    }
+
+    function registrarReferenciaHistorica(datos) {
+        const referencia = normalizarReferenciaHistorica(datos?.referencia || datos?.ref);
+        if (!referencia) return;
+        if (referenciaYaRegistradaHistoricamente(referencia)) return;
+
+        referenciasHistoricas.push({
+            referencia,
+            monto: Number(datos?.monto) || 0,
+            cliente: datos?.cliente || '',
+            fecha: datos?.fecha || new Date().toISOString(),
+            tipo: datos?.tipo || 'comprobante'
+        });
+
+        localStorage.setItem('taquilla_referencias_historicas', JSON.stringify(referenciasHistoricas));
+    }
+
+    function verificarReferenciaHistorica(ref) {
+        return referenciaYaRegistradaHistoricamente(ref);
+    }
+
+    function guardarPendienteNube(datos) {
+        const pendientes = JSON.parse(localStorage.getItem('taquilla_pendientes_nube')) || [];
+        pendientes.push(datos);
+        localStorage.setItem('taquilla_pendientes_nube', JSON.stringify(pendientes));
+    }
+
+    function enviarANubeYActualizar(datos, callback) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert-loading';
+        alertBox.innerText = '☁️ Registrando operación...';
+
+        // Mantiene el comportamiento actual del endpoint, pero evita bloquear
+        // la interfaz si la red falla. La operación queda guardada localmente.
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        })
+        .then(() => {
+            historialGlobal.push(datos);
+            registrarReferenciaHistorica(datos);
+            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            actualizarInterfazCaja();
+
+            alertBox.className = 'alert-success';
+            alertBox.innerText = '✅ Operación registrada.';
+
+            if(callback) callback();
+        })
+        .catch(() => {
+            guardarPendienteNube(datos);
+            historialGlobal.push(datos);
+            localStorage.setItem('taquilla_historial', JSON.stringify(historialGlobal));
+            actualizarInterfazCaja();
+
+            alertBox.className = 'alert-error';
+            alertBox.innerText = '⚠️ Guardado localmente. Se intentará sincronizar cuando haya conexión.';
+            if(callback) callback();
+        });
+    }
+
+    function reintentarPendientesNube() {
+        const pendientes = JSON.parse(localStorage.getItem('taquilla_pendientes_nube')) || [];
+        if (!pendientes.length || !navigator.onLine) return;
+
+        const restantes = [];
+        let cadena = Promise.resolve();
+
+        pendientes.forEach(datos => {
+            cadena = cadena.then(() => fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datos)
+            }).catch(() => { restantes.push(datos); }));
+        });
+
+        cadena.then(() => {
+            localStorage.setItem('taquilla_pendientes_nube', JSON.stringify(restantes));
+            if (!restantes.length) actualizarEstadoSync('☁️ Pendientes enviados', 'sync-ok');
+        });
+    }
+
+    function actualizarInterfazCaja() {
+        const contenedor = document.getElementById('historialLista');
+        let sumaTaquilla = 0;
+        let sumaPronosticador = Number(saldoPronosticadorNube) || 0;
+        let totalPremios = 0;
+        let totalGastos = 0;
+        let html = '';
+
+        if (historialGlobal && historialGlobal.length > 0) {
+            [...historialGlobal].reverse().forEach(item => {
+                let m = parseFloat(item.monto) || 0;
+                let tipo = item.tipo || "Ingreso Taquilla";
+                let signo = "+";
+                let colorMonto = "var(--accent)";
+                let claseItem = "history-item";
+
+                if(tipo === "Ingreso Pronosticador") {
+                    signo = "+";
+                } else if(tipo === "Retiro Pronosticador") {
+                    signo = "-";
+                    colorMonto = "#ef4444";
+                    claseItem += " retiro";
+                } else if(tipo === "Premio Pagado") {
+                    totalPremios += m;
+                    signo = "-";
+                    colorMonto = "#d97706";
+                    claseItem += " premio";
+                } else if(tipo === "Gasto Registrado") {
+                    totalGastos += m;
+                    signo = "-";
+                    colorMonto = "#ef4444";
+                    claseItem += " gasto";
+                } else {
+                    sumaTaquilla += m; 
+                }
+
+                html += `<div class="${claseItem}">
+                    <div><strong>${item.cliente || 'Sin nombre'}</strong><br><span style="font-size:10px; color:#64748b;">Ref: ${item.referencia || ''} | ${item.hora || ''}</span></div>
+                    <div style="text-align:right;"><strong style="color:${colorMonto};">${signo}${m.toFixed(2)} Bs</strong><br><span style="font-size:9px; background:#e0f2fe; padding:1px 4px; border-radius:3px;">${tipo}</span></div>
+                </div>`;
+            });
+            contenedor.innerHTML = html;
+        } else {
+            contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay movimientos registrados.</div>';
+        }
+
+        // Sumar cuentas bancarias actuales
+        let sumaTotalCuentasBancarias = 0;
+        cuentasBancariasData.forEach(acc => {
+            sumaTotalCuentasBancarias += parseFloat(acc.saldo) || 0;
+        });
+
+        let sumaTotalGlobal = sumaTotalCuentasBancarias + sumaPronosticador;
+        let saldoNeto = sumaTotalGlobal - totalPremios - totalGastos;
+
+        document.getElementById('lblSumaTotal').innerText = sumaTotalGlobal.toFixed(2) + " Bs";
+        document.getElementById('lblSaldoNeto').innerText = saldoNeto.toFixed(2) + " Bs";
+        document.getElementById('lblPremios').innerText = totalPremios.toFixed(2) + " Bs";
+        document.getElementById('lblGastos').innerText = totalGastos.toFixed(2) + " Bs";
+        document.getElementById('lblPronosticador').innerText = sumaPronosticador.toFixed(2) + " Bs";
+    }
+
+    // --- MÓDULO SISTEMAS ---
+    function cambiarDiaSistema(dia, elemento) {
+        diaSeleccionado = dia;
+        document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+        elemento.classList.add('active');
+        renderizarModuloSistemas();
+    }
+
+    function agregarNuevoSistemaModal() {
+        let nombre = prompt("Nombre del nuevo sistema (ej. Olimpo):");
+        if(!nombre) return;
+        let comisionStr = prompt("Porcentaje de comisión (ej. 14):");
+        let comision = parseFloat(comisionStr);
+        if(isNaN(comision) || comision < 0) { alert("Comisión inválida."); return; }
+
+        let id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        sistemasData.push({ id, nombre, comision });
+        localStorage.setItem('taquilla_sistemas_config', JSON.stringify(sistemasData));
+        renderizarModuloSistemas();
+    }
+
+    function eliminarSistema(id) {
+        if(confirm("¿Eliminar este sistema?")) {
+            sistemasData = sistemasData.filter(s => s.id !== id);
+            localStorage.setItem('taquilla_sistemas_config', JSON.stringify(sistemasData));
+            renderizarModuloSistemas();
+        }
+    }
+
+    function actualizarDatoSistemaDia(sistemaId, campo, valor) {
+        if(!registrosSistemas[sistemaId]) registrosSistemas[sistemaId] = {};
+        if(!registrosSistemas[sistemaId][diaSeleccionado]) registrosSistemas[sistemaId][diaSeleccionado] = { ventas: 0, premios: 0 };
+        registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
+        localStorage.setItem('taquilla_sistemas_registros', JSON.stringify(registrosSistemas));
+        renderizarResumenSistemas();
+    }
+
+    function renderizarModuloSistemas() {
+        const contenedorDia = document.getElementById('listaSistemasDia');
+        let htmlDia = '';
+
+        sistemasData.forEach(sis => {
+            if(!registrosSistemas[sis.id]) registrosSistemas[sis.id] = {};
+            if(!registrosSistemas[sis.id][diaSeleccionado]) registrosSistemas[sis.id][diaSeleccionado] = { ventas: 0, premios: 0 };
+
+            let datosDia = registrosSistemas[sis.id][diaSeleccionado];
+            let netoDia = datosDia.ventas - datosDia.premios - (datosDia.ventas * (sis.comision / 100));
+
+            htmlDia += `<div class="system-card">
+                <div class="system-header">
+                    <span>${sis.nombre} (${sis.comision}%)</span>
+                    <span>Neto: <strong style="color:${netoDia >= 0 ? '#10b981' : '#ef4444'}">${netoDia.toFixed(2)} Bs</strong> <span style="cursor:pointer; margin-left:6px;" onclick="eliminarSistema('${sis.id}')">🗑️</span></span>
+                </div>
+                <div class="system-inputs">
+                    <div>
+                        <label>Ventas (${diaSeleccionado})</label>
+                        <input type="number" value="${datosDia.ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'ventas', this.value)">
+                    </div>
+                    <div>
+                        <label>Premios (${diaSeleccionado})</label>
+                        <input type="number" value="${datosDia.premios || ''}" placeholder="0.00" oninput="actualizarDatoSistemaDia('${sis.id}', 'premios', this.value)">
+                    </div>
+                </div>
+            </div>`;
+        });
+        contenedorDia.innerHTML = htmlDia;
+        renderizarResumenSistemas();
+    }
+
+    function renderizarResumenSistemas() {
+        const contenedorResumen = document.getElementById('resumenSistemasSemana');
+        const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        let htmlResumen = '';
+        let totalGenVentas = 0, totalGenPremios = 0, totalGenComisiones = 0;
+
+        sistemasData.forEach(sis => {
+            let acVentas = 0, acPremios = 0;
+            dias.forEach(d => {
+                if(registrosSistemas[sis.id] && registrosSistemas[sis.id][d]) {
+                    acVentas += registrosSistemas[sis.id][d].ventas || 0;
+                    acPremios += registrosSistemas[sis.id][d].premios || 0;
+                }
+            });
+            let comisionTotal = acVentas * (sis.comision / 100);
+            let netoSistema = acVentas - acPremios - comisionTotal;
+
+            totalGenVentas += acVentas;
+            totalGenPremios += acPremios;
+            totalGenComisiones += comisionTotal;
+
+            htmlResumen += `<div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 3px;">
+                    <span>${sis.nombre}</span>
+                    <span style="color:${netoSistema >= 0 ? '#10b981' : '#ef4444'}">Neto: Bs. ${netoSistema.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #475569;">
+                    <span>Ventas: ${acVentas.toFixed(2)}</span>
+                    <span>Premios: ${acPremios.toFixed(2)}</span>
+                    <span>Comisión: ${comisionTotal.toFixed(2)}</span>
+                </div>
+            </div>`;
+        });
+        contenedorResumen.innerHTML = htmlResumen;
+        let saldoNetoGlobal = totalGenVentas - totalGenPremios - totalGenComisiones;
+        document.getElementById('resGenVentas').innerText = totalGenVentas.toFixed(2) + " Bs";
+        document.getElementById('resGenPremios').innerText = totalGenPremios.toFixed(2) + " Bs";
+        document.getElementById('resGenComisiones').innerText = totalGenComisiones.toFixed(2) + " Bs";
+        document.getElementById('resGenNeto').innerText = saldoNetoGlobal.toFixed(2) + " Bs";
+        document.getElementById('resGenNeto').style.color = saldoNetoGlobal >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    // --- MÓDULO CLIENTES ---
+    function agregarClienteModal() {
+        let nombre = prompt("Nombre del cliente:");
+        if(!nombre) return;
+        let id = 'c_' + Date.now();
+        clientesData.push({ id, nombre: nombre.trim(), saldo: 0 });
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+        renderizarModuloClientes();
+    }
+
+    function eliminarCliente(id) {
+        if(confirm("¿Eliminar este cliente?")) {
+            clientesData = clientesData.filter(c => c.id !== id);
+            localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+            renderizarModuloClientes();
+        }
+    }
+
+    function registrarAccionCliente(id, tipo) {
+        let cliente = clientesData.find(c => c.id === id);
+        if(!cliente) return;
+        let montoStr = prompt(`Monto a ${tipo === 'jugada' ? 'descontar por Jugada' : 'acreditar por Premio'} para ${cliente.nombre} (Bs):`);
+        let monto = parseFloat(montoStr);
+        if(isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
+
+        if(tipo === 'jugada') cliente.saldo -= monto;
+        else if(tipo === 'premio') cliente.saldo += monto;
+
+        localStorage.setItem('taquilla_clientes', JSON.stringify(clientesData));
+        renderizarModuloClientes();
+    }
+
+    function copiarWhatsAppCliente(id) {
+        let cliente = clientesData.find(c => c.id === id);
+        if(!cliente) return;
+
+        let estadoTexto = cliente.saldo >= 0 ? "a favor" : "en contra";
+        // Mensaje corto y preciso con doble asterisco para negrita en WhatsApp
+        let mensaje = `¡Hola **${cliente.nombre}**! 🎲 Tu saldo actual en Centro de Apuestas Harold José es de **Bs. ${Math.abs(cliente.saldo).toFixed(2)}** (${estadoTexto}). ¡Mucho éxito en tu jugada! 🏆`;
+
+        navigator.clipboard.writeText(mensaje).then(() => {
+            alert(`📋 ¡Mensaje copiado para ${cliente.nombre}!\nYa puedes ir al chat de WhatsApp y pegarlo.`);
+        }).catch(() => {
+            alert("Error al copiar al portapapeles.");
+        });
+    }
+
+    function renderizarModuloClientes() {
+        const contenedor = document.getElementById('listaClientesContainer');
+        if(!clientesData || clientesData.length === 0) {
+            contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay clientes registrados.</div>';
+            return;
+        }
+
+        let html = '';
+        clientesData.forEach(c => {
+            let colorSaldo = c.saldo >= 0 ? '#10b981' : '#ef4444';
+            html += `<div class="client-card">
+                <div class="client-header">
+                    <span>👤 ${c.nombre}</span>
+                    <span style="color:${colorSaldo};">Favor: Bs. ${c.saldo.toFixed(2)} <span style="cursor:pointer; margin-left:6px;" onclick="eliminarCliente('${c.id}')">🗑️</span></span>
+                </div>
+                <div class="client-actions">
+                    <button class="btn btn-jugada" onclick="registrarAccionCliente('${c.id}', 'jugada')">🎲 Jugada</button>
+                    <button class="btn btn-client-premio" onclick="registrarAccionCliente('${c.id}', 'premio')">🏆 Premio</button>
+                </div>
+                <button class="btn-whatsapp" onclick="copiarWhatsAppCliente('${c.id}')">
+                    <span>📋</span> Copiar Mensaje para WhatsApp
+                </button>
+            </div>`;
+        });
+        contenedor.innerHTML = html;
+    }
+
+    // --- CIERRE Y LIMPIEZA SEMANAL ---
+    function limpiarNuevaSemana() {
+        if (!confirm(
+            "⚠️ CIERRE SEMANAL\n\n" +
+            "La operación semanal será reiniciada también en la NUBE.\n\n" +
+            "SE LIMPIARÁ:\n" +
+            "• Historial de Movimientos\n" +
+            "• Premios y gastos de la semana\n" +
+            "• Clientes y saldos operativos\n" +
+            "• Registros semanales de Sistemas\n" +
+            "• Pendientes locales de sincronización\n\n" +
+            "SE CONSERVARÁ:\n" +
+            "• Saldo acumulado del Pronosticador\n" +
+            "• Cuentas bancarias y sus saldos\n" +
+            "• Referencias históricas antifraude\n" +
+            "• Datos del receptor\n\n" +
+            "¿Deseas continuar?"
+        )) return;
+
+        const clave = prompt("🔐 Escribe la contraseña para confirmar el cierre semanal:");
+        if (clave !== "1809") {
+            alert("❌ Contraseña incorrecta. La limpieza fue cancelada.");
+            return;
+        }
+
+        try { exportarRespaldo(); } catch (e) {
+            console.warn("No se pudo generar respaldo automático:", e);
+        }
+
+        const cuentasConservadas = Array.isArray(cuentasBancariasData)
+            ? cuentasBancariasData.map(acc => ({ ...acc, saldo: Number(acc.saldo) || 0 }))
+            : [];
+
+        // Evita que operaciones pendientes antiguas vuelvan a subirse después del cierre.
+        localStorage.removeItem('taquilla_pendientes_nube');
+
+        // El cierre se ejecuta en la nube. La hoja de referencias históricas NO se borra.
+        const alertBox = document.getElementById('alertBox');
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-loading';
+            alertBox.innerText = '☁️ Cerrando semana en la nube...';
+        }
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                accion: 'cerrarSemana',
+                contrasena: '1809'
+            })
+        })
+        .then(() => {
+            // Limpieza local después de solicitar el cierre cloud.
+            historialGlobal = [];
+            registrosSistemas = {};
+            clientesData = [];
+            cuentasBancariasData = cuentasConservadas;
+
+            localStorage.setItem('taquilla_historial', '[]');
+            localStorage.setItem('taquilla_sistemas_registros', '{}');
+            localStorage.setItem('taquilla_clientes', '[]');
+            localStorage.setItem('taquilla_pendientes_nube', '[]');
+            localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(cuentasConservadas));
+            localStorage.setItem('taquilla_saldo_pronosticador_nube', String(saldoPronosticadorNube));
+            localStorage.setItem('taquilla_referencias_historicas', JSON.stringify(referenciasHistoricas || []));
+            localStorage.setItem('taquilla_ultimo_cierre_semanal', new Date().toISOString());
+
+            actualizarInterfazCaja();
+            renderizarModuloSistemas();
+            renderizarModuloClientes();
+            renderizarModuloCuentas();
+
+            if (alertBox) {
+                alertBox.className = 'alert-success';
+                alertBox.innerText = '✅ Semana cerrada. La operación fue reiniciada y el saldo del Pronosticador se conservó.';
+            }
+
+            alert(
+                "✅ CIERRE SEMANAL COMPLETADO\n\n" +
+                "La operación actual fue reiniciada.\n" +
+                "El saldo del Pronosticador fue conservado.\n" +
+                "Las referencias históricas quedaron protegidas.\n" +
+                "La nueva semana comienza desde 0."
+            );
+
+            // Confirma visualmente lo que devuelve la nube.
+            sincronizarConNube();
+        })
+        .catch(err => {
+            console.error('Error solicitando cierre cloud:', err);
+            if (alertBox) {
+                alertBox.className = 'alert-error';
+                alertBox.innerText = '❌ No se pudo solicitar el cierre en la nube. No se borró la operación local.';
+            }
+            alert('❌ No se pudo cerrar la semana en la nube. La operación local NO fue eliminada.');
+        });
+    }
+
+    // --- MÓDULO CUENTAS Y BANCOS ---
+    function cargarDatosReceptorGuardados() {
+        const datos = JSON.parse(localStorage.getItem('taquilla_receptor_oficial'));
+        if (!datos) return;
+        if (datos.cedula) document.getElementById('recCedula').value = datos.cedula;
+        if (datos.telefono) document.getElementById('recTelefono').value = datos.telefono;
+        if (datos.banco) document.getElementById('recBanco').value = datos.banco;
+    }
+
+    function exportarRespaldo() {
+        const respaldo = {
+            version: 2,
+            fecha: new Date().toISOString(),
+            historial: JSON.parse(localStorage.getItem('taquilla_historial')) || [],
+            sistemas: JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [],
+            registrosSistemas: JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {},
+            clientes: JSON.parse(localStorage.getItem('taquilla_clientes')) || [],
+            cuentas: JSON.parse(localStorage.getItem('taquilla_cuentas_bancarias')) || [],
+            receptor: JSON.parse(localStorage.getItem('taquilla_receptor_oficial')) || null,
+            pendientesNube: JSON.parse(localStorage.getItem('taquilla_pendientes_nube')) || [],
+            referenciasHistoricas: JSON.parse(localStorage.getItem('taquilla_referencias_historicas')) || [],
+            saldoPronosticadorNube: Number(localStorage.getItem('taquilla_saldo_pronosticador_nube') || 0)
+        };
+        const blob = new Blob([JSON.stringify(respaldo, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'respaldo_taquilla_' + new Date().toISOString().slice(0,10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function importarRespaldo(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function() {
+            try {
+                const data = JSON.parse(reader.result);
+                if (!data || typeof data !== 'object') throw new Error('Formato inválido');
+
+                if (Array.isArray(data.historial)) localStorage.setItem('taquilla_historial', JSON.stringify(data.historial));
+                if (Array.isArray(data.sistemas)) localStorage.setItem('taquilla_sistemas_config', JSON.stringify(data.sistemas));
+                if (data.registrosSistemas && typeof data.registrosSistemas === 'object') localStorage.setItem('taquilla_sistemas_registros', JSON.stringify(data.registrosSistemas));
+                if (Array.isArray(data.clientes)) localStorage.setItem('taquilla_clientes', JSON.stringify(data.clientes));
+                if (Array.isArray(data.cuentas)) localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(data.cuentas));
+                if (data.receptor && typeof data.receptor === 'object') localStorage.setItem('taquilla_receptor_oficial', JSON.stringify(data.receptor));
+                if (Array.isArray(data.pendientesNube)) localStorage.setItem('taquilla_pendientes_nube', JSON.stringify(data.pendientesNube));
+                if (Array.isArray(data.referenciasHistoricas)) localStorage.setItem('taquilla_referencias_historicas', JSON.stringify(data.referenciasHistoricas));
+                if (Number.isFinite(Number(data.saldoPronosticadorNube))) {
+                    saldoPronosticadorNube = Number(data.saldoPronosticadorNube);
+                    localStorage.setItem('taquilla_saldo_pronosticador_nube', String(saldoPronosticadorNube));
+                }
+
+                historialGlobal = JSON.parse(localStorage.getItem('taquilla_historial')) || [];
+                sistemasData = JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [];
+                registrosSistemas = JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {};
+                clientesData = JSON.parse(localStorage.getItem('taquilla_clientes')) || [];
+                cuentasBancariasData = JSON.parse(localStorage.getItem('taquilla_cuentas_bancarias')) || [];
+
+                cargarDatosReceptorGuardados();
+                actualizarInterfazCaja();
+                renderizarModuloSistemas();
+                renderizarModuloClientes();
+                renderizarModuloCuentas();
+
+                alert('✅ Respaldo restaurado correctamente.');
+            } catch (e) {
+                alert('❌ El archivo de respaldo no es válido.');
+            } finally {
+                event.target.value = '';
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function guardarDatosReceptor() {
+        // Guardado automático en localStorage
+        let datos = {
+            cedula: document.getElementById('recCedula').value,
+            telefono: document.getElementById('recTelefono').value,
+            banco: document.getElementById('recBanco').value
+        };
+        localStorage.setItem('taquilla_receptor_oficial', JSON.stringify(datos));
+    }
+
+    function agregarCuentaBancariaModal() {
+        let nombre = prompt("Nombre o Tipo de Cuenta (ej. Cuenta 2 - Banesco):");
+        if(!nombre) return;
+        let numero = prompt("Número de cuenta (o últimos 4 dígitos):") || "";
+        let saldoStr = prompt("Saldo actual de esta cuenta (Bs):") || "0";
+        let saldo = parseFloat(saldoStr) || 0;
+
+        let id = 'acc_' + Date.now();
+        cuentasBancariasData.push({ id, nombre, numero, saldo });
+        localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(cuentasBancariasData));
+        renderizarModuloCuentas();
+        actualizarInterfazCaja();
+    }
+
+    function eliminarCuentaBancaria(id) {
+        if(confirm("¿Estás seguro de eliminar esta cuenta?")) {
+            cuentasBancariasData = cuentasBancariasData.filter(a => a.id !== id);
+            localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(cuentasBancariasData));
+            renderizarModuloCuentas();
+            actualizarInterfazCaja();
+        }
+    }
+
+    function actualizarSaldoCuentaInput(id, valor) {
+        let acc = cuentasBancariasData.find(a => a.id === id);
+        if(acc) {
+            acc.saldo = parseFloat(valor) || 0;
+            localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(cuentasBancariasData));
+            actualizarInterfazCaja();
+        }
+    }
+
+    function renderizarModuloCuentas() {
+        const contenedor = document.getElementById('listaCuentasBancariasContainer');
+        if(!cuentasBancariasData || cuentasBancariasData.length === 0) {
+            contenedor.innerHTML = '<div style="text-align: center; font-size: 11px; color: #64748b; padding: 10px;">No hay cuentas configuradas.</div>';
+            return;
+        }
+
+        let html = '';
+        cuentasBancariasData.forEach(acc => {
+            html += `<div class="account-item">
+                <button class="btn btn-danger" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 8px; font-size: 10px;" onclick="eliminarCuentaBancaria('${acc.id}')">🗑️</button>
+                <div class="form-group">
+                    <label>Nombre / Tipo de Cuenta</label>
+                    <input type="text" value="${acc.nombre}" readonly style="background: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta (o últimos 4 dígitos)</label>
+                    <input type="text" value="${acc.numero}" readonly style="background: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Saldo Actual (Bs)</label>
+                    <input type="number" step="0.01" value="${acc.saldo}" placeholder="0.00" oninput="actualizarSaldoCuentaInput('${acc.id}', this.value)">
+                </div>
+            </div>`;
+        });
+        contenedor.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
