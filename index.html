@@ -100,7 +100,7 @@
                 <span>💜 Control Especial SRQ</span>
             </div>
             <div style="font-size: 11px; color: #475569; margin-bottom: 8px;">
-                <div>📊 Venta Acumulada Total (No se reinicia): <strong id="srqVentaAcumulada">0.00 Bs</strong></div>
+                <div>📊 Ventas SRQ Acumuladas (No se reinician): <strong id="srqVentaAcumulada">0.00 Bs</strong></div>
                 <div>💜 Comisión Pendiente de Pago: <strong id="srqComisionPendiente" style="color: #8b5cf6;">0.00 Bs</strong></div>
             </div>
             <button class="btn" style="background: #8b5cf6; color: white;" onclick="pagarComisionSRQ()">💵 Pagar Comisión SRQ</button>
@@ -155,15 +155,15 @@
 
 <script>
     let sistemasData = JSON.parse(localStorage.getItem('taquilla_sistemas_config')) || [
-        { id: 'srq', nombre: 'SRQ', comision: 10 }
+        { id: 'srq_def', nombre: 'SRQ', comision: 10 }
     ];
     let registrosSistemas = JSON.parse(localStorage.getItem('taquilla_sistemas_registros')) || {};
     let clientesData = JSON.parse(localStorage.getItem('taquilla_clientes')) || [];
     let cuentasBancariasData = JSON.parse(localStorage.getItem('taquilla_cuentas_bancarias')) || [];
     let diaSeleccionado = 'Lunes';
     
-    // Control SRQ Independiente
-    let srqControl = JSON.parse(localStorage.getItem('taquilla_srq_control')) || { acumuladoVentas: 0, comisionPendiente: 0 };
+    // Control SRQ Independiente: Guarda las ventas acumuladas y el monto de comisión ya pagada acumulada en el ciclo actual
+    let srqControl = JSON.parse(localStorage.getItem('taquilla_srq_control')) || { comisionPagadaAcumulada: 0 };
 
     function cambiarTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -182,7 +182,7 @@
     }
 
     function agregarSistemaModal() {
-        let nombre = prompt("Nombre del sistema (ej. Troya, Selva):");
+        let nombre = prompt("Nombre del sistema (ej. Troya, Selva, SRQ):");
         if(!nombre) return;
         let comision = parseFloat(prompt("Porcentaje de comisión (%):") || "0");
         let id = 'sys_' + Date.now();
@@ -205,48 +205,51 @@
         registrosSistemas[sistemaId][diaSeleccionado][campo] = parseFloat(valor) || 0;
         localStorage.setItem('taquilla_sistemas_registros', JSON.stringify(registrosSistemas));
         
-        recalcularSRQIndependiente();
         renderizarResumenSistemas();
     }
 
-    function recalcularSRQIndependiente() {
-        // Buscar el sistema SRQ o calcular sus ventas totales y comisión acumulada
-        let totalVentasSRQ = 0;
-        let totalComisionSRQ = 0;
+    function calcularDatosSRQ() {
         const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        
+        let ventasAcumuladasSRQ = 0;
+        let comisionTotalCalculada = 0;
+
         sistemasData.forEach(sis => {
             if(sis.nombre.toUpperCase() === 'SRQ') {
                 dias.forEach(d => {
                     if(registrosSistemas[sis.id] && registrosSistemas[sis.id][d]) {
                         let v = registrosSistemas[sis.id][d].ventas || 0;
-                        totalVentasSRQ += v;
-                        totalComisionSRQ += v * (sis.comision / 100);
+                        ventasAcumuladasSRQ += v;
+                        comisionTotalCalculada += v * (sis.comision / 100);
                     }
                 });
             }
         });
 
-        srqControl.acumuladoVentas = totalVentasSRQ;
-        // La comisión pendiente es el total calculado menos lo que ya se haya pagado en ciclos previos (manejado lógicamente)
-        localStorage.setItem('taquilla_srq_control', JSON.stringify(srqControl));
-        
-        document.getElementById('srqVentaAcumulada').innerText = srqControl.acumuladoVentas.toFixed(2) + " Bs";
-        document.getElementById('srqComisionPendiente').innerText = totalComisionSRQ.toFixed(2) + " Bs";
+        let comisionPendiente = comisionTotalCalculada - (srqControl.comisionPagadaAcumulada || 0);
+        if(comisionPendiente < 0) comisionPendiente = 0;
+
+        return { ventasAcumuladasSRQ, comisionPendiente };
     }
 
     function pagarComisionSRQ() {
-        let montoStr = prompt("Monto de comisión SRQ a pagar de las cuentas:");
+        let { comisionPendiente } = calcularDatosSRQ();
+        let montoStr = prompt("Monto de comisión SRQ a pagar de las cuentas:", comisionPendiente.toFixed(2));
         let monto = parseFloat(montoStr);
         if(isNaN(monto) || monto <= 0) { alert("Monto inválido."); return; }
         
-        // Descuenta de la primera cuenta disponible como ejemplo o reduce el saldo
+        // Sumamos al acumulado pagado para que la comisión pendiente baje a 0, pero las ventas se mantienen intactas
+        srqControl.comisionPagadaAcumulada = (srqControl.comisionPagadaAcumulada || 0) + monto;
+        localStorage.setItem('taquilla_srq_control', JSON.stringify(srqControl));
+
+        // Descontar de la primera cuenta bancaria/efectivo disponible si existe
         if(cuentasBancariasData.length > 0) {
             cuentasBancariasData[0].saldo -= monto;
             localStorage.setItem('taquilla_cuentas_bancarias', JSON.stringify(cuentasBancariasData));
             renderizarModuloCuentas();
         }
-        alert("Comisión pagada y descontada de cuentas. Las ventas acumuladas SRQ se mantienen intactas.");
+
+        alert("¡Comisión SRQ pagada con éxito! Las ventas acumuladas se mantienen intactas y la comisión pendiente se ha actualizado.");
+        renderizarModuloSistemas();
         actualizarInterfazCaja();
     }
 
@@ -279,7 +282,12 @@
             </div>`;
         });
         contenedorDia.innerHTML = htmlDia;
-        recalcularSRQIndependiente();
+        
+        // Actualizar panel SRQ visualmente
+        let { ventasAcumuladasSRQ, comisionPendiente } = calcularDatosSRQ();
+        document.getElementById('srqVentaAcumulada').innerText = ventasAcumuladasSRQ.toFixed(2) + " Bs";
+        document.getElementById('srqComisionPendiente').innerText = comisionPendiente.toFixed(2) + " Bs";
+
         renderizarResumenSistemas();
     }
 
@@ -452,7 +460,7 @@
         let sumaCuentasPronost = totalCuentas + pronosticador;
         
         const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        let totalVentasGen = 0, totalPremiosGen = 0, totalComisionesGen = 0;
+        let totalVentasGen = 0, totalPremiosGen = 0;
 
         sistemasData.forEach(sis => {
             dias.forEach(d => {
@@ -461,17 +469,18 @@
                     totalPremiosGen += registrosSistemas[sis.id][d].premios || 0;
                 }
             });
-            totalComisionesGen += (sistemasData.find(s => s.id === sis.id)?.comision || 0) / 100 * totalVentasGen;
         });
+
+        let { comisionPendiente } = calcularDatosSRQ();
 
         document.getElementById('balCuentasPronost').innerText = sumaCuentasPronost.toFixed(2) + " Bs";
         document.getElementById('resGenVentas').innerText = totalVentasGen.toFixed(2) + " Bs";
-        document.getElementById('resGenComisiones').innerText = document.getElementById('srqComisionPendiente').innerText;
+        document.getElementById('resGenComisiones').innerText = comisionPendiente.toFixed(2) + " Bs";
         document.getElementById('resGenPremios').innerText = totalPremiosGen.toFixed(2) + " Bs";
         document.getElementById('resGenGastosComis').innerText = (gastos + miComision).toFixed(2) + " Bs";
 
-        // Balance = Cuentas - Ventas - Mi Comisión - Comisión SRQ - Pronosticador - Premios - Gastos (aplicado con los signos correctos de tu fórmula)
-        let balanceFinal = sumaCuentasPronost - totalVentasGen - miComision - parseFloat(document.getElementById('srqComisionPendiente').innerText) - pronosticador - totalPremiosGen - gastos;
+        // Balance de conciliación general exacto
+        let balanceFinal = sumaCuentasPronost - totalVentasGen - miComision - comisionPendiente - pronosticador - totalPremiosGen - gastos;
         
         let elNeto = document.getElementById('resGenNeto');
         elNeto.innerText = balanceFinal.toFixed(2) + " Bs";
