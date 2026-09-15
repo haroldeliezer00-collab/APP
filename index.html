@@ -92,13 +92,20 @@
                     <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
-                <!-- 2. Saldo Neto Global de Sistemas -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
+                <!-- 2. Saldo Neto Global de Sistemas (+ Semana Pasada Manual) -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-2">
                     <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
                         <i class="fa-solid fa-server mr-1"></i> Saldo Neto Global de Sistemas
                     </p>
                     <p id="display-caja-neto-sistemas" class="text-xl font-extrabold text-green-300">Bs. 0,00</p>
                     <p class="text-[10px] text-gray-400">Ventas menos premios y comisiones de todos los sistemas.</p>
+                    
+                    <!-- Casilla manual para saldo de la semana pasada -->
+                    <div class="pt-2 border-t border-gray-800 text-left">
+                        <label class="text-[11px] text-yellow-400 font-semibold uppercase">Saldo Neto Sistemas Semana Pasada (Manual):</label>
+                        <input type="text" id="input-neto-sistemas-pasado" value="0,00" placeholder="0.00" oninput="actualizarNetoSistemasPasado(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-yellow-400 font-bold text-center outline-none focus:border-yellow-400 mt-1">
+                        <p class="text-[10px] text-gray-500 mt-0.5">Se suma al neto global de sistemas para el cuadre hasta que se pague.</p>
+                    </div>
                 </div>
 
                 <!-- 3. Total Créditos Cashea (Semanal) -->
@@ -119,7 +126,16 @@
                     <p class="text-[10px] text-gray-400">Comisión automática generada por SRQ Polla.</p>
                 </div>
 
-                <!-- 5. Comisiones Totales (con Botones Agregar / Gasto) -->
+                <!-- 5. Remanente / Comisión Arrastrada (Domingo a Lunes) -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
+                    <p class="text-xs text-gray-400 uppercase font-semibold">
+                        <i class="fa-solid fa-piggy-bank mr-1 text-yellow-400"></i> Remanente / Comisión Arrastrada (Dom-Lun)
+                    </p>
+                    <input type="text" id="input-remanente-dom" value="0,00" placeholder="0.00" oninput="actualizarRemanenteDom(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-sm text-yellow-400 font-bold text-center outline-none focus:border-yellow-400">
+                    <p class="text-[10px] text-gray-500">Saldo inicial arrastrado que se encuentra en taquilla/banco.</p>
+                </div>
+
+                <!-- 6. Comisiones Totales (con Botones Agregar / Gasto) -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
                     <div class="flex justify-between items-center">
                         <div>
@@ -136,25 +152,7 @@
                     <p class="text-[10px] text-gray-400">Incluye comisiones de sistemas, SRQ, remanente y propinas/gastos.</p>
                 </div>
 
-                <!-- 6. Remanente / Comisión Arrastrada (Domingo a Lunes) -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
-                    <p class="text-xs text-gray-400 uppercase font-semibold">
-                        <i class="fa-solid fa-piggy-bank mr-1 text-yellow-400"></i> Remanente / Comisión Arrastrada (Dom-Lun)
-                    </p>
-                    <input type="text" id="input-remanente-dom" value="0,00" placeholder="0.00" oninput="actualizarRemanenteDom(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-sm text-yellow-400 font-bold text-center outline-none focus:border-yellow-400">
-                    <p class="text-[10px] text-gray-500">Saldo inicial arrastrado que se encuentra en taquilla/banco.</p>
-                </div>
-
-                <!-- 7. Comisión Gastada / Retirada -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
-                    <p class="text-xs text-gray-400 uppercase font-semibold">
-                        <i class="fa-solid fa-wallet mr-1 text-red-400"></i> Comisión Gastada / Retirada
-                    </p>
-                    <input type="text" id="input-comision-gastada" value="0,00" placeholder="0.00" oninput="actualizarComisionGastada(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-sm text-red-400 font-bold text-center outline-none focus:border-yellow-400">
-                    <p class="text-[10px] text-gray-500">Dinero gastado o retirado de la comisión.</p>
-                </div>
-
-                <!-- 8. Saldos Positivos de los Clientes -->
+                <!-- 7. Saldos Positivos de los Clientes -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
                     <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">
                         <i class="fa-solid fa-users mr-1 text-green-400"></i> Saldos Positivos de Clientes
@@ -163,13 +161,13 @@
                     <p class="text-[10px] text-gray-400">Suma total de saldos de clientes (Cashea + Cartera Premium).</p>
                 </div>
 
-                <!-- 9. Casilla de Cuadre de Caja -->
+                <!-- 8. Casilla de Cuadre de Caja -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-yellow-500/50 text-center space-y-1">
                     <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
                         <i class="fa-solid fa-scale-balanced mr-1"></i> Cuadre de Caja (Saldo Real)
                     </p>
                     <p id="display-cuadre-caja" class="text-2xl font-extrabold text-green-400">Bs. 0,00</p>
-                    <p class="text-[10px] text-gray-400">Banco menos (Saldos Clientes), menos (Neto Sistemas), menos (Remanente) y menos (Comisión Gastada). Debe ser 0,00 Bs si todo cuadra.</p>
+                    <p class="text-[10px] text-gray-400">Banco menos (Saldos Clientes), menos (Neto Sistemas) y menos (Remanente). Debe ser 0,00 Bs si todo cuadra.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
@@ -430,7 +428,7 @@
             });
 
             if (dbState.ag_remanente_dom === undefined) dbState.ag_remanente_dom = 0;
-            if (dbState.ag_comision_gastada === undefined) dbState.ag_comision_gastada = 0;
+            if (dbState.ag_neto_sistemas_pasado === undefined) dbState.ag_neto_sistemas_pasado = 0;
             if (dbState.ag_extra_comision === undefined) dbState.ag_extra_comision = 0;
         }
 
@@ -568,9 +566,9 @@
             actualizarSaldoTaquilla();
         }
 
-        function actualizarComisionGastada(valor) {
+        function actualizarNetoSistemasPasado(valor) {
             let monto = parseFloat(valor.replace(',', '.')) || 0;
-            dbState.ag_comision_gastada = monto;
+            dbState.ag_neto_sistemas_pasado = monto;
             guardarDatosRemotos();
             actualizarSaldoTaquilla();
         }
@@ -606,9 +604,18 @@
             const elClientes = document.getElementById('display-caja-saldos-clientes');
             if(elClientes) elClientes.innerText = `Bs. ${totalClientes.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
-            const totalNetoSistemas = calcularNetoGlobalSistemas();
+            const netoCalculadoSistemas = calcularNetoGlobalSistemas();
+            const netoSistemasPasado = parseFloat(dbState.ag_neto_sistemas_pasado) || 0;
+            const totalNetoSistemas = netoCalculadoSistemas + netoSistemasPasado;
+
             const elNetoSistemas = document.getElementById('display-caja-neto-sistemas');
-            if(elNetoSistemas) elNetoSistemas.innerText = `Bs. ${totalNetoSistemas.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            if(elNetoSistemas) {
+                let textoNeto = `Bs. ${totalNetoSistemas.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+                if (netoSistemasPasado > 0) {
+                    textoNeto += ` (Incluye Bs. ${netoSistemasPasado.toLocaleString('es-VE', {minimumFractionDigits: 2})} sem. pasada)`;
+                }
+                elNetoSistemas.innerText = textoNeto;
+            }
 
             // Calcular comisiones SRQ y comisiones totales de sistemas
             const sistemas = dbState.ag_sistemas || [];
@@ -639,9 +646,8 @@
 
             const remanenteDom = parseFloat(dbState.ag_remanente_dom) || 0;
             const extraComision = parseFloat(dbState.ag_extra_comision) || 0;
-            const comisionGastada = parseFloat(dbState.ag_comision_gastada) || 0;
 
-            const comisionesTotales = comisionesSistemas + comisionSRQ + remanenteDom + extraComision - comisionGastada;
+            const comisionesTotales = comisionesSistemas + comisionSRQ + remanenteDom + extraComision;
             const elComisionesTotales = document.getElementById('display-caja-comisiones-totales');
             if(elComisionesTotales) elComisionesTotales.innerText = `Bs. ${comisionesTotales.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
@@ -650,12 +656,12 @@
                 inputRem.value = remanenteDom > 0 ? remanenteDom.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
             }
 
-            const inputGastada = document.getElementById('input-comision-gastada');
-            if (inputGastada && document.activeElement !== inputGastada) {
-                inputGastada.value = comisionGastada > 0 ? comisionGastada.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
+            const inputNetoPasado = document.getElementById('input-neto-sistemas-pasado');
+            if (inputNetoPasado && document.activeElement !== inputNetoPasado) {
+                inputNetoPasado.value = netoSistemasPasado > 0 ? netoSistemasPasado.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
             }
 
-            const cuadre = totalBancos - totalClientes - totalNetoSistemas - remanenteDom - comisionGastada;
+            const cuadre = totalBancos - totalClientes - totalNetoSistemas - remanenteDom;
             const elCuadre = document.getElementById('display-cuadre-caja');
             if (elCuadre) {
                 elCuadre.innerText = `Bs. ${cuadre.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
@@ -823,7 +829,7 @@
             });
             dbState.ag_sistemas_datos = datos;
             dbState.ag_cashea_creditos = [];
-            dbState.ag_comision_gastada = 0;
+            dbState.ag_neto_sistemas_pasado = 0;
             dbState.ag_extra_comision = 0;
 
             if (dbState.ag_clientes) {
