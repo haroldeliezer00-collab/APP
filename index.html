@@ -81,15 +81,27 @@
             </div>
         </section>
 
-        <!-- VISTA: CAJA (CONTROL SALDO TAQUILLA) -->
+        <!-- VISTA: CAJA (CONTROL SALDO TAQUILLA Y CUADRE) -->
         <section id="view-caja" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla</h2>
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-4 text-center">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
+                <h2 class="text-lg font-bold text-yellow-400 mb-2"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla y Cuadre</h2>
+                
+                <!-- Saldo Total en Bancos -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
                     <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
                     <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+
+                <!-- Casilla de Cuadre de Caja -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-yellow-500/50 text-center space-y-1">
+                    <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
+                        <i class="fa-solid fa-scale-balanced mr-1"></i> Cuadre de Caja (Saldo Real)
+                    </p>
+                    <p id="display-cuadre-caja" class="text-2xl font-extrabold text-green-400">Bs. 0,00</p>
+                    <p class="text-[10px] text-gray-400">Banco menos (Saldos Clientes) y menos (Neto Sistemas). Debe ser 0,00 Bs si todo cuadra.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
                     <button onclick="ajusteCaja('ingreso')" class="bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-plus mr-1"></i> Ingreso General</button>
                     <button onclick="ajusteCaja('retiro')" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-minus mr-1"></i> Retiro General</button>
                 </div>
@@ -193,11 +205,11 @@
                     <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos</h2>
                     <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
                 </div>
-                <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pago de premios para pronosticadores.</p>
+                <p class="text-xs text-gray-400">Control de créditos Cashea, saldos de premios y jugadas.</p>
                 
                 <!-- Tarjeta Suma Total de Saldos Positivos -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
-                    <p class="text-xs text-gray-400">Suma Total de Saldos Positivos (Clientes)</p>
+                    <p class="text-xs text-gray-400">Suma Total de Saldos (Cashea + Premios)</p>
                     <p id="display-total-saldos-clientes" class="text-xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
@@ -337,7 +349,7 @@
             });
         }
 
-        // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
+        // --- CÁLCULO DE SALDO TOTAL TAQUILLA Y CUADRE ---
         function obtenerSaldoTotalTaquilla() {
             const pmList = dbState.ag_pago_movil || [];
             const trList = dbState.ag_transferencia || [];
@@ -347,10 +359,67 @@
             return total;
         }
 
+        function calcularNetoGlobalSistemas() {
+            const sistemas = dbState.ag_sistemas || [];
+            const datos = dbState.ag_sistemas_datos || {};
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            let totalNetoGlobal = 0;
+
+            sistemas.forEach(sys => {
+                let sysVentas = 0;
+                let sysPremios = 0;
+                let sysComision = 0;
+
+                dias.forEach(dia => {
+                    if (datos[dia] && datos[dia][sys.id]) {
+                        let v = datos[dia][sys.id].ventas || 0;
+                        let p = datos[dia][sys.id].premios || 0;
+                        let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (datos[dia][sys.id].comision || 0);
+                        sysVentas += v;
+                        sysPremios += p;
+                        sysComision += c;
+                    }
+                });
+                totalNetoGlobal += (sysVentas - sysComision - sysPremios);
+            });
+            return totalNetoGlobal;
+        }
+
+        function calcularSumaTotalSaldosClientes() {
+            const clientes = dbState.ag_clientes || [];
+            let total = 0;
+            clientes.forEach(c => {
+                if (c.saldo !== undefined && c.saldoCashea === undefined) {
+                    c.saldoCashea = 0;
+                    c.saldoPremio = c.saldo;
+                    delete c.saldo;
+                }
+                let cashea = parseFloat(c.saldoCashea) || 0;
+                let premio = parseFloat(c.saldoPremio) || 0;
+                total += (cashea + premio);
+            });
+            return total;
+        }
+
         function actualizarSaldoTaquilla() {
-            const total = obtenerSaldoTotalTaquilla();
+            const totalBancos = obtenerSaldoTotalTaquilla();
             const el = document.getElementById('display-saldo-taquilla');
-            if(el) el.innerText = `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            if(el) el.innerText = `Bs. ${totalBancos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            const totalClientes = calcularSumaTotalSaldosClientes();
+            const totalNetoSistemas = calcularNetoGlobalSistemas();
+
+            // Cuadre de Caja = Banco - Saldos Clientes - Neto Sistemas
+            const cuadre = totalBancos - totalClientes - totalNetoSistemas;
+            const elCuadre = document.getElementById('display-cuadre-caja');
+            if (elCuadre) {
+                elCuadre.innerText = `Bs. ${cuadre.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+                if (Math.abs(cuadre) < 0.01) {
+                    elCuadre.className = "text-2xl font-extrabold text-green-400";
+                } else {
+                    elCuadre.className = "text-2xl font-extrabold text-red-400";
+                }
+            }
         }
 
         function ajusteCaja(tipo) {
@@ -418,7 +487,7 @@
         }
 
         function reiniciarHistorialSemanal() {
-            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas para toda la semana, y también pondrá en 0 el saldo de los clientes.")) return;
+            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas y los saldos de los clientes.")) return;
 
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
             const sistemas = dbState.ag_sistemas || [];
@@ -432,12 +501,13 @@
             dbState.ag_sistemas_datos = datos;
 
             if (dbState.ag_clientes) {
-                dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldo: 0 }));
+                dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldoCashea: 0, saldoPremio: 0 }));
             }
 
             guardarDatosRemotos();
             renderizarSistemas();
             renderizarClientes();
+            actualizarSaldoTaquilla();
             alert("Historial semanal eliminado correctamente.");
         }
 
@@ -450,6 +520,7 @@
             dbState.ag_sistemas_datos[diaSeleccionado][sistemaId][campo] = val;
             guardarDatosRemotos();
             renderizarResumenSistemas();
+            actualizarSaldoTaquilla();
         }
 
         function renderizarResumenDiario() {
@@ -610,7 +681,7 @@
             document.getElementById('acum-neto').innerText = `${totalNetoGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
         }
 
-        // --- GESTIÓN DE CLIENTES Y ACCIONES ---
+        // --- GESTIÓN DE CLIENTES, CASHEA Y PREMIOS ---
         function renderizarClientes() {
             const clientes = dbState.ag_clientes || [];
             generarHTMLClientes(clientes);
@@ -627,11 +698,18 @@
             const original = listaOriginal || listaAMostrar;
             const todosClientes = dbState.ag_clientes || [];
 
-            // Calcular suma total de saldos positivos de TODOS los clientes
             let sumaTotalSaldos = 0;
             todosClientes.forEach(c => {
-                sumaTotalSaldos += (parseFloat(c.saldo) || 0);
+                if (c.saldo !== undefined && c.saldoCashea === undefined) {
+                    c.saldoCashea = 0;
+                    c.saldoPremio = c.saldo;
+                    delete c.saldo;
+                }
+                let cashea = parseFloat(c.saldoCashea) || 0;
+                let premio = parseFloat(c.saldoPremio) || 0;
+                sumaTotalSaldos += (cashea + premio);
             });
+
             const elTotalSaldos = document.getElementById('display-total-saldos-clientes');
             if (elTotalSaldos) {
                 elTotalSaldos.innerText = `Bs. ${sumaTotalSaldos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
@@ -642,20 +720,34 @@
                 html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
             } else {
                 listaAMostrar.forEach((c) => {
+                    if (c.saldo !== undefined && c.saldoCashea === undefined) {
+                        c.saldoCashea = 0;
+                        c.saldoPremio = c.saldo;
+                        delete c.saldo;
+                    }
+                    let cashea = parseFloat(c.saldoCashea) || 0;
+                    let premio = parseFloat(c.saldoPremio) || 0;
+                    let totalCliente = cashea + premio;
+
                     let index = original.findIndex(orig => orig.nombre === c.nombre);
                     html += `
                     <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex flex-col space-y-2">
                         <div class="flex justify-between items-center">
                             <div>
                                 <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
-                                <p class="text-xs text-gray-300">Saldo Positivo: <strong class="text-green-400">Bs. ${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                                <div class="text-[11px] text-gray-300 space-x-2 mt-0.5">
+                                    <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
+                                    <span>Premio: <strong class="text-green-400">Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
                             <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="grid grid-cols-3 gap-1.5 pt-1">
-                            <button onclick="modificarSaldoCliente(${index}, 'agregar')" class="bg-green-700 hover:bg-green-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-plus mr-0.5"></i> Agregar</button>
-                            <button onclick="modificarSaldoCliente(${index}, 'descontar')" class="bg-blue-700 hover:bg-blue-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
-                            <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> Premio</button>
+                        <div class="grid grid-cols-4 gap-1.5 pt-1">
+                            <button onclick="modificarSaldoCliente(${index}, 'cashea')" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-credit-card mr-0.5"></i> +Cashea</button>
+                            <button onclick="modificarSaldoCliente(${index}, 'premio')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> +Premio</button>
+                            <button onclick="descontarJugadaCliente(${index})" class="bg-yellow-700 hover:bg-yellow-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
+                            <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-money-bill-wave mr-0.5"></i> Pagar</button>
                         </div>
                     </div>`;
                 });
@@ -666,57 +758,93 @@
         function agregarClienteManual() {
             let nombre = prompt("Ingrese el nombre del nuevo cliente:");
             if (!nombre) return;
-            let saldoStr = prompt("Ingrese el saldo inicial (Bs):", "0");
-            let saldo = parseFloat((saldoStr || "0").replace(',', '.')) || 0;
+            let casheaStr = prompt("Ingrese saldo inicial Cashea (Crédito):", "0");
+            let saldoCashea = parseFloat((casheaStr || "0").replace(',', '.')) || 0;
+            let premioStr = prompt("Ingrese saldo inicial Premio (Retirable):", "0");
+            let saldoPremio = parseFloat((premioStr || "0").replace(',', '.')) || 0;
             
             if (!dbState.ag_clientes) dbState.ag_clientes = [];
-            dbState.ag_clientes.push({ nombre: nombre.trim(), saldo: saldo });
+            dbState.ag_clientes.push({ nombre: nombre.trim(), saldoCashea, saldoPremio });
             guardarDatosRemotos();
             renderizarClientes();
+            actualizarSaldoTaquilla();
             alert("Cliente agregado con éxito.");
         }
 
         function modificarSaldoCliente(index, tipo) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
-            let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar (jugada/gasto) a ${c.nombre}:`;
+            let mensaje = tipo === 'cashea' ? `Ingrese monto a sumar al crédito Cashea de ${c.nombre}:` : `Ingrese monto a sumar al saldo de Premio de ${c.nombre}:`;
             let montoStr = prompt(mensaje);
             if (!montoStr) return;
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) {
-                alert("Monto inválido.");
-                return;
-            }
-            if (tipo === 'agregar') {
-                c.saldo += monto;
+            if (monto <= 0) return alert("Monto inválido.");
+
+            if (tipo === 'cashea') {
+                c.saldoCashea = (c.saldoCashea || 0) + monto;
             } else {
-                if (c.saldo < monto) {
-                    if(!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
-                }
-                c.saldo -= monto;
+                c.saldoPremio = (c.saldoPremio || 0) + monto;
             }
+
             dbState.ag_clientes = clientes;
             guardarDatosRemotos();
             renderizarClientes();
+            actualizarSaldoTaquilla();
+            alert("Saldo actualizado con éxito.");
+        }
+
+        function descontarJugadaCliente(index) {
+            let clientes = dbState.ag_clientes || [];
+            let c = clientes[index];
+            let montoStr = prompt(`Ingrese el monto de la jugada realizada por ${c.nombre} (Se descuenta primero de Cashea y luego de Premio):`);
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) return alert("Monto inválido.");
+
+            let cashea = c.saldoCashea || 0;
+            let premio = c.saldoPremio || 0;
+            let totalDisponible = cashea + premio;
+
+            if (totalDisponible < monto) {
+                if (!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
+            }
+
+            // Regla: Descontar primero de Cashea, si no alcanza, del Premio
+            if (cashea >= monto) {
+                c.saldoCashea -= monto;
+            } else if (cashea > 0) {
+                let resto = monto - cashea;
+                c.saldoCashea = 0;
+                c.saldoPremio = Math.max(0, premio - resto);
+            } else {
+                c.saldoPremio = Math.max(0, premio - monto);
+            }
+
+            dbState.ag_clientes = clientes;
+            guardarDatosRemotos();
+            renderizarClientes();
+            actualizarSaldoTaquilla();
+            alert(`Jugada descontada a ${c.nombre}.`);
         }
 
         function pagarPremioCliente(index) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre} (Se descontará de su saldo y de las cuentas de la taquilla):`);
+            let montoStr = prompt(`Ingrese el monto del premio a pagar / retirar a ${c.nombre} (Se descontará de su saldo de premio y de la taquilla):`);
             if (!montoStr) return;
             let premio = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (premio <= 0) {
-                alert("Monto inválido.");
-                return;
+            if (premio <= 0) return alert("Monto inválido.");
+
+            if ((c.saldoPremio || 0) < premio) {
+                if (!confirm("El cliente no tiene suficiente saldo de premio. ¿Desea continuar igual?")) return;
             }
 
-            c.saldo -= premio;
+            c.saldoPremio = Math.max(0, (c.saldoPremio || 0) - premio);
 
             let pmList = dbState.ag_pago_movil || [];
             let trList = dbState.ag_transferencia || [];
-            
             let descontado = false;
+
             for (let pm of pmList) {
                 if (pm.saldo >= premio) {
                     pm.saldo -= premio;
@@ -743,6 +871,7 @@
 
             guardarDatosRemotos();
             renderizarClientes();
+            renderizarCuentas();
             actualizarSaldoTaquilla();
             alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}!`);
         }
@@ -752,6 +881,7 @@
             dbState.ag_clientes.splice(index, 1);
             guardarDatosRemotos();
             renderizarClientes();
+            actualizarSaldoTaquilla();
         }
 
         // --- GESTIÓN DE CUENTAS ---
@@ -871,7 +1001,7 @@
             renderizarCuentas();
         }
 
-        // --- PROCESAMIENTO OCR Y REGISTRO (MULTI-BANCO Y REFERENCIA ROBUSTA) ---
+        // --- PROCESAMIENTO OCR Y REGISTRO ---
         function procesarComprobanteArchivo(event) {
             const file = event.target.files[0];
             if (file) procesarBlobImagen(file);
@@ -916,7 +1046,6 @@
                 if (l.includes('IDENTIFICACION') || l.includes('IDENTIFICACIÓN') || l.includes('BENEFICIARIO')) lineaIdentificacion = l;
             }
 
-            // 1. Validar si nuestros datos están en el ORIGEN (Pago Saliente / Fraude)
             let origenContieneMisDatos = false;
             for (let pm of pmList) {
                 if ((pm.cedula && lineaOrigen.includes(pm.cedula)) || (pm.telefono && lineaOrigen.includes(pm.telefono))) {
@@ -937,7 +1066,6 @@
                 return;
             }
 
-            // 2. Validar si el pago viene hacia nuestras cuentas (Destino o Identificación)
             let esParaMisCuentas = false;
             let tipoDetectado = "";
 
@@ -965,7 +1093,6 @@
                 tipoDetectado = "Comprobante Válido";
             }
 
-            // 3. Extraer Referencia y Monto (Con soporte multilinea para etiquetas de bancos)
             let refEncontrada = '';
             let montoEncontrado = '';
 
@@ -977,9 +1104,7 @@
                         refEncontrada = nums[0];
                     } else if (i + 1 < lineas.length) {
                         let numsNext = lineas[i + 1].match(/\d{6,}/);
-                        if (numsNext) {
-                            refEncontrada = numsNext[0];
-                        }
+                        if (numsNext) refEncontrada = numsNext[0];
                     }
                 }
                 if (linea.includes('BS') || linea.includes(',00')) {
@@ -1042,6 +1167,7 @@
             const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
             const monto = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
             const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
+            const esCashea = document.getElementById('check-cashea').checked;
             
             if(!referencia || !monto) return alert("Rellena la referencia y el monto.");
             
@@ -1061,10 +1187,25 @@
 
             if (!dbState.ag_clientes) dbState.ag_clientes = [];
             let clienteExistente = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
+            
             if (clienteExistente) {
-                clienteExistente.saldo += monto;
+                if (clienteExistente.saldo !== undefined && clienteExistente.saldoCashea === undefined) {
+                    clienteExistente.saldoCashea = 0;
+                    clienteExistente.saldoPremio = clienteExistente.saldo;
+                    delete clienteExistente.saldo;
+                }
+                if (esCashea) {
+                    clienteExistente.saldoCashea = (clienteExistente.saldoCashea || 0) + monto;
+                } else {
+                    clienteExistente.saldoPremio = (clienteExistente.saldoPremio || 0) + monto;
+                }
             } else {
-                dbState.ag_clientes.push({ nombre: clienteNombre, saldo: monto });
+                let nuevoCliente = {
+                    nombre: clienteNombre,
+                    saldoCashea: esCashea ? monto : 0,
+                    saldoPremio: esCashea ? 0 : monto
+                };
+                dbState.ag_clientes.push(nuevoCliente);
             }
             
             dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, monto, fecha: new Date().toLocaleString() });
@@ -1075,10 +1216,12 @@
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente').value = '';
             document.getElementById('input-monto').value = '';
+            document.getElementById('check-cashea').checked = false;
             document.getElementById('resultado-container').classList.add('hidden');
             document.getElementById('alerta-antifraude').classList.add('hidden');
             renderizarClientes();
             renderizarCuentas();
+            actualizarSaldoTaquilla();
         }
     </script>
 </body>
