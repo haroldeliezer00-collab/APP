@@ -868,9 +868,41 @@
             let valido = false;
             let tipoDetectado = "";
 
+            // --- NUEVO: EVITAR PAGOS ENVIADOS POR TI (DONDE TUS DATOS ESTÁN EN ORIGEN) ---
+            const lineas = texto.split('\n');
+            let textoOrigen = '';
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i];
+                if (linea.includes('ORIGEN')) {
+                    textoOrigen = linea;
+                    if (i + 1 < lineas.length) textoOrigen += ' ' + lineas[i+1];
+                }
+            }
+
+            let origenContieneMisDatos = false;
             for (let pm of pmList) {
-                const tieneCedula = texto.includes(pm.cedula);
-                const tieneTel = texto.includes(pm.telefono);
+                if ((pm.cedula && textoOrigen.includes(pm.cedula)) || (pm.telefono && textoOrigen.includes(pm.telefono))) {
+                    origenContieneMisDatos = true;
+                }
+            }
+            for (let tr of trList) {
+                if (tr.terminacion && textoOrigen.includes(tr.terminacion)) {
+                    origenContieneMisDatos = true;
+                }
+            }
+
+            if (origenContieneMisDatos) {
+                alerta.classList.remove('hidden');
+                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Este comprobante corresponde a un pago SALIENTE (enviado desde tu cuenta en el Origen), no a un pago recibido.`;
+                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
+                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado: Es un pago enviado por ti, no un ingreso.`;
+                return;
+            }
+            // --------------------------------------------------------------------------
+
+            for (let pm of pmList) {
+                const tieneCedula = pm.cedula && texto.includes(pm.cedula);
+                const tieneTel = pm.telefono && texto.includes(pm.telefono);
                 if (tieneCedula || tieneTel || texto.includes("PAGOMOVIL") || texto.includes("PAGO MOVIL")) {
                     if (tieneCedula || tieneTel) {
                         valido = true;
@@ -882,8 +914,8 @@
 
             if (!valido) {
                 for (let tr of trList) {
-                    const tieneTerminacion = texto.includes(tr.terminacion);
-                    const tieneNombre = (texto.includes("HAROLD") && texto.includes("GALEA")) || texto.includes(tr.titular.toUpperCase().split(' ')[0]);
+                    const tieneTerminacion = tr.terminacion && texto.includes(tr.terminacion);
+                    const tieneNombre = (texto.includes("HAROLD") && texto.includes("GALEA")) || (tr.titular && texto.includes(tr.titular.toUpperCase().split(' ')[0]));
                     if (tieneTerminacion || (texto.includes("DESTINO") && tieneNombre)) {
                         valido = true;
                         tipoDetectado = "Transferencia Válida";
@@ -892,17 +924,17 @@
                 }
             }
 
-            const lineas = texto.split('\n');
+            const refLineas = texto.split('\n');
             let refEncontrada = '';
             let montoEncontrado = '';
 
-            for (let i = 0; i < lineas.length; i++) {
-                let linea = lineas[i];
+            for (let i = 0; i < refLineas.length; i++) {
+                let linea = refLineas[i];
                 if (linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('REFERENCIA')) {
                     let nums = linea.match(/\d{6,}/);
                     if (nums) refEncontrada = nums[0];
-                    else if (i + 1 < lineas.length) {
-                        let numsNext = lineas[i+1].match(/\d{6,}/);
+                    else if (i + 1 < refLineas.length) {
+                        let numsNext = refLineas[i+1].match(/\d{6,}/);
                         if (numsNext) refEncontrada = numsNext[0];
                     }
                 }
