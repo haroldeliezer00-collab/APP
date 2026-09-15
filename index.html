@@ -125,6 +125,31 @@
                 </div>
             </div>
 
+            <!-- Resumen Diario del Día Seleccionado -->
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-xl shadow border border-yellow-500/50 space-y-3">
+                <h3 id="titulo-resumen-diario" class="text-xs font-bold text-yellow-400 uppercase tracking-wider text-center bg-gray-800/80 py-1.5 rounded border border-gray-700">
+                    <i class="fa-solid fa-calendar-day mr-1"></i> RESUMEN DIARIO (LUNES)
+                </h3>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Ventas del Día:</span>
+                        <strong id="dia-ventas" class="text-white">Bs. 0,00</strong>
+                    </div>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Premios del Día:</span>
+                        <strong id="dia-premios" class="text-red-400">Bs. 0,00</strong>
+                    </div>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Comisiones del Día:</span>
+                        <strong id="dia-comisiones" class="text-yellow-400">Bs. 0,00</strong>
+                    </div>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800 text-sm font-bold mt-2">
+                        <span class="text-gray-200">Saldo Neto del Día:</span>
+                        <strong id="dia-neto" class="text-green-400">0,00 Bs</strong>
+                    </div>
+                </div>
+            </div>
+
             <!-- Resumen de Todos los Sistemas -->
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
                 <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center">
@@ -170,6 +195,12 @@
                 </div>
                 <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pago de premios para pronosticadores.</p>
                 
+                <!-- Tarjeta Suma Total de Saldos Positivos -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
+                    <p class="text-xs text-gray-400">Suma Total de Saldos Positivos (Clientes)</p>
+                    <p id="display-total-saldos-clientes" class="text-xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
+                </div>
+
                 <!-- Buscador rápido -->
                 <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
 
@@ -421,6 +452,35 @@
             renderizarResumenSistemas();
         }
 
+        function renderizarResumenDiario() {
+            const sistemas = dbState.ag_sistemas || [];
+            const datos = dbState.ag_sistemas_datos || {};
+            const datosDia = datos[diaSeleccionado] || {};
+
+            let ventasDia = 0;
+            let premiosDia = 0;
+            let comisionesDia = 0;
+
+            sistemas.forEach(sys => {
+                let d = datosDia[sys.id] || { ventas: 0, premios: 0, comision: 0 };
+                let v = d.ventas || 0;
+                let p = d.premios || 0;
+                let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (d.comision || 0);
+
+                ventasDia += v;
+                premiosDia += p;
+                comisionesDia += c;
+            });
+
+            let netoDia = ventasDia - comisionesDia - premiosDia;
+
+            document.getElementById('titulo-resumen-diario').innerHTML = `<i class="fa-solid fa-calendar-day mr-1"></i> RESUMEN DIARIO (${diaSeleccionado.toUpperCase()})`;
+            document.getElementById('dia-ventas').innerText = `Bs. ${ventasDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('dia-premios').innerText = `Bs. ${premiosDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('dia-comisiones').innerText = `Bs. ${comisionesDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('dia-neto').innerText = `${netoDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+        }
+
         function renderizarSistemas() {
             const sistemas = dbState.ag_sistemas || [];
             const datos = dbState.ag_sistemas_datos || {};
@@ -491,6 +551,7 @@
                 });
             }
             document.getElementById('lista-sistemas-dia').innerHTML = html;
+            renderizarResumenDiario();
             renderizarResumenSistemas();
         }
 
@@ -564,6 +625,18 @@
 
         function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
             const original = listaOriginal || listaAMostrar;
+            const todosClientes = dbState.ag_clientes || [];
+
+            // Calcular suma total de saldos positivos de TODOS los clientes
+            let sumaTotalSaldos = 0;
+            todosClientes.forEach(c => {
+                sumaTotalSaldos += (parseFloat(c.saldo) || 0);
+            });
+            const elTotalSaldos = document.getElementById('display-total-saldos-clientes');
+            if (elTotalSaldos) {
+                elTotalSaldos.innerText = `Bs. ${sumaTotalSaldos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            }
+
             let html = '';
             if (listaAMostrar.length === 0) {
                 html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
@@ -899,12 +972,10 @@
             for (let i = 0; i < lineas.length; i++) {
                 let linea = lineas[i];
                 if (linea.includes('REFERENCIA') || linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF')) {
-                    // Buscar número en la misma línea
                     let nums = linea.match(/\d{6,}/);
                     if (nums) {
                         refEncontrada = nums[0];
                     } else if (i + 1 < lineas.length) {
-                        // Buscar en la línea siguiente (caso BNC y otros)
                         let numsNext = lineas[i + 1].match(/\d{6,}/);
                         if (numsNext) {
                             refEncontrada = numsNext[0];
@@ -917,7 +988,6 @@
                 }
             }
 
-            // Fallback robusto si la etiqueta no se leyó bien
             if (!refEncontrada) {
                 let matches = texto.match(/\b\d{8,12}\b/g);
                 if (matches) {
@@ -943,7 +1013,6 @@
             if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
             if (montoEncontrado) document.getElementById('input-monto').value = montoEncontrado.replace(/\./g, '').replace(',', '.');
 
-            // Verificar si la referencia ya fue usada
             if (refEncontrada) {
                 const refsUsadas = dbState.ag_referencias_usadas || [];
                 const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
