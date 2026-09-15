@@ -101,7 +101,10 @@
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
                 <div class="flex justify-between items-center">
                     <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-laptop-code mr-2"></i> Sistemas y Loterías</h2>
-                    <button onclick="agregarSistemaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-plus mr-1"></i> Sistema</button>
+                    <div class="flex space-x-2">
+                        <button onclick="agregarSistemaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-plus mr-1"></i> Sistema</button>
+                        <button onclick="reiniciarHistorialSemanal()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-trash-can mr-1"></i> Eliminar</button>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-400">Control diario y desglose semanal por sistema</p>
                 
@@ -401,6 +404,33 @@
             sistemas = sistemas.filter(s => s.id !== id);
             localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
             renderizarSistemas();
+        }
+
+        // --- REINICIAR / ELIMINAR HISTORIAL SEMANAL ---
+        function reiniciarHistorialSemanal() {
+            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas para toda la semana, y también pondrá en 0 el saldo de los clientes. Las cuentas y la caja no se tocarán.")) return;
+
+            // 1. Resetear ventas y premios de todos los sistemas de lunes a domingo
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const datos = {};
+            dias.forEach(dia => {
+                datos[dia] = {};
+                sistemas.forEach(sys => {
+                    datos[dia][sys.id] = { ventas: 0, premios: 0 };
+                });
+            });
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+
+            // 2. Resetear saldos de clientes a 0
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            clientes = clientes.map(c => ({ ...c, saldo: 0 }));
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+
+            // Actualizar vistas
+            renderizarSistemas();
+            renderizarClientes();
+            alert("Historial semanal eliminado correctamente. ¡Todo listo para empezar de nuevo el lunes!");
         }
 
         function actualizarDatoSistema(sistemaId, campo, valor) {
