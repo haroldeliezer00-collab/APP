@@ -149,7 +149,7 @@
                             <button onclick="modificarExtraComision('gasto')" class="bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded text-xs font-bold" title="Gasto o retiro de comisión"><i class="fa-solid fa-minus mr-0.5"></i> Gasto</button>
                         </div>
                     </div>
-                    <p class="text-[10px] text-gray-400">Incluye comisiones de sistemas, SRQ, remanente y propinas/gastos.</p>
+                    <p class="text-[10px] text-gray-400">Incluye comisiones de sistemas, remanente y propinas/gastos (Sin SRQ).</p>
                 </div>
 
                 <!-- 7. Saldos Positivos de los Clientes -->
@@ -647,7 +647,8 @@
             const remanenteDom = parseFloat(dbState.ag_remanente_dom) || 0;
             const extraComision = parseFloat(dbState.ag_extra_comision) || 0;
 
-            const comisionesTotales = comisionesSistemas + comisionSRQ + remanenteDom + extraComision;
+            // COMISIONES TOTALES (MIS COMISIONES) - Excluye SRQ para evitar duplicación
+            const comisionesTotales = comisionesSistemas + remanenteDom + extraComision;
             const elComisionesTotales = document.getElementById('display-caja-comisiones-totales');
             if(elComisionesTotales) elComisionesTotales.innerText = `Bs. ${comisionesTotales.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
