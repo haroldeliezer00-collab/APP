@@ -98,37 +98,61 @@
 
         <!-- VISTA: SISTEMAS -->
         <section id="view-sistemas" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-laptop-code mr-2"></i> Gestión de Sistemas</h2>
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-laptop-code mr-2"></i> Sistemas y Loterías</h2>
+                    <button onclick="agregarSistemaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-plus mr-1"></i> Sistema</button>
+                </div>
+                <p class="text-xs text-gray-400">Control diario y desglose semanal por sistema</p>
                 
                 <!-- Días de la semana -->
-                <div class="flex overflow-x-auto space-x-2 pb-2 mb-3">
-                    <button class="px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
+                <div class="flex overflow-x-auto space-x-2 pb-2">
+                    <button onclick="cambiarDiaSistema('Lunes')" id="btn-dia-Lunes" class="px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
+                    <button onclick="cambiarDiaSistema('Martes')" id="btn-dia-Martes" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
+                    <button onclick="cambiarDiaSistema('Miércoles')" id="btn-dia-Miércoles" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
+                    <button onclick="cambiarDiaSistema('Jueves')" id="btn-dia-Jueves" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
+                    <button onclick="cambiarDiaSistema('Viernes')" id="btn-dia-Viernes" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
+                    <button onclick="cambiarDiaSistema('Sábado')" id="btn-dia-Sábado" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
+                    <button onclick="cambiarDiaSistema('Domingo')" id="btn-dia-Domingo" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
                 </div>
 
-                <!-- Tarjetas de Sistemas -->
-                <div class="space-y-2">
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Maxplay</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                <!-- Contenedor Dinámico de Sistemas por Día -->
+                <div id="lista-sistemas-dia" class="space-y-3">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+
+            <!-- Resumen de Todos los Sistemas -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center">
+                    <i class="fa-solid fa-file-lines mr-2 text-yellow-400"></i> Resumen de Todos los Sistemas
+                </h3>
+                <div id="resumen-todos-sistemas" class="space-y-2 text-xs">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+
+            <!-- Resumen General Acumulado -->
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-xl shadow border border-yellow-500/50 space-y-3">
+                <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-wider text-center bg-gray-800/80 py-1.5 rounded border border-gray-700">
+                    <i class="fa-solid fa-chart-pie mr-1"></i> RESUMEN GENERAL ACUMULADO
+                </h3>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Ventas Totales:</span>
+                        <strong id="acum-ventas" class="text-white">Bs. 0,00</strong>
                     </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Matrix Comp</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Premios Totales:</span>
+                        <strong id="acum-premios" class="text-red-400">Bs. 0,00</strong>
                     </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">SRQ Polla</p><span class="text-xs text-yellow-400">Pendiente</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Comisiones Totales:</span>
+                        <strong id="acum-comisiones" class="text-yellow-400">Bs. 0,00</strong>
                     </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Atenas</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800 text-sm font-bold mt-2">
+                        <span class="text-gray-200">Saldo Neto Global:</span>
+                        <strong id="acum-neto" class="text-green-400">0,00 Bs</strong>
                     </div>
                 </div>
             </div>
@@ -212,7 +236,7 @@
         </button>
     </nav>
 
-    <!-- Script de Lógica, Saldos y Clientes -->
+    <!-- Script de Lógica, Saldos, Clientes y Sistemas -->
     <script>
         // Inicializar localStorage
         if (!localStorage.getItem('ag_pago_movil')) {
@@ -234,12 +258,35 @@
         if (!localStorage.getItem('ag_referencias_usadas')) {
             localStorage.setItem('ag_referencias_usadas', JSON.stringify([]));
         }
+        if (!localStorage.getItem('ag_sistemas')) {
+            localStorage.setItem('ag_sistemas', JSON.stringify([
+                { id: 'maxplay', nombre: 'Maxplay', porcentaje: 14 },
+                { id: 'matrix', nombre: 'Matrix Comp', porcentaje: 14 },
+                { id: 'srq', nombre: 'SRQ Polla', porcentaje: 14 },
+                { id: 'atenas', nombre: 'Atenas', porcentaje: 12 }
+            ]));
+        }
+        if (!localStorage.getItem('ag_sistemas_datos')) {
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const sistemasIniciales = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const datos = {};
+            dias.forEach(dia => {
+                datos[dia] = {};
+                sistemasIniciales.forEach(sys => {
+                    datos[dia][sys.id] = { ventas: 0, premios: 0 };
+                });
+            });
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+        }
+
+        let diaSeleccionado = 'Lunes';
 
         document.addEventListener("DOMContentLoaded", () => {
             renderizarCuentas();
             renderizarClientes();
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
+            renderizarSistemas();
         });
 
         // Soporte global para Pegar imágenes (Ctrl+V)
@@ -269,6 +316,7 @@
             if (vistaId === 'clientes') renderizarClientes();
             if (vistaId === 'caja') actualizarSaldoTaquilla();
             if (vistaId === 'pagos') poblarSelectCuentas();
+            if (vistaId === 'sistemas') renderizarSistemas();
         }
 
         // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
@@ -303,6 +351,163 @@
             } else {
                 alert("Debe tener al menos una cuenta registrada.");
             }
+        }
+
+        // --- GESTIÓN DE SISTEMAS Y LOTERÍAS ---
+        function cambiarDiaSistema(dia) {
+            diaSeleccionado = dia;
+            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(d => {
+                const btn = document.getElementById('btn-dia-' + d);
+                if (btn) {
+                    if (d === dia) {
+                        btn.className = "px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap";
+                    } else {
+                        btn.className = "px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap";
+                    }
+                }
+            });
+            renderizarSistemas();
+        }
+
+        function agregarSistemaModal() {
+            let nombre = prompt("Ingrese el nombre del nuevo sistema (ej: MasPlay):");
+            if (!nombre) return;
+            let porcStr = prompt("Ingrese el porcentaje del sistema (ej: 14):", "14");
+            let porcentaje = parseFloat((porcStr || "0").replace(',', '.')) || 0;
+            if (porcentaje <= 0) {
+                alert("Porcentaje inválido.");
+                return;
+            }
+
+            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            let id = 'sys_' + Date.now();
+            sistemas.push({ id, nombre: nombre.trim(), porcentaje });
+            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+
+            let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => {
+                if (!datos[dia]) datos[dia] = {};
+                datos[dia][id] = { ventas: 0, premios: 0 };
+            });
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+
+            renderizarSistemas();
+            alert("Sistema agregado correctamente.");
+        }
+
+        function eliminarSistema(id) {
+            if (!confirm("¿Está seguro de eliminar este sistema?")) return;
+            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            sistemas = sistemas.filter(s => s.id !== id);
+            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+            renderizarSistemas();
+        }
+
+        function actualizarDatoSistema(sistemaId, campo, valor) {
+            let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            if (!datos[diaSeleccionado]) datos[diaSeleccionado] = {};
+            if (!datos[diaSeleccionado][sistemaId]) datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0 };
+
+            let val = parseFloat(valor.replace(',', '.')) || 0;
+            datos[diaSeleccionado][sistemaId][campo] = val;
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+            renderizarResumenSistemas();
+        }
+
+        function renderizarSistemas() {
+            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            const datosDia = datos[diaSeleccionado] || {};
+
+            let html = '';
+            if (sistemas.length === 0) {
+                html = `<p class="text-xs text-gray-400 text-center py-4">No hay sistemas registrados.</p>`;
+            } else {
+                sistemas.forEach(sys => {
+                    if (!datosDia[sys.id]) datosDia[sys.id] = { ventas: 0, premios: 0 };
+                    let ventas = datosDia[sys.id].ventas || 0;
+                    let premios = datosDia[sys.id].premios || 0;
+                    let comision = ventas * (sys.porcentaje / 100);
+                    let neto = ventas - comision - premios;
+
+                    html += `
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sm text-yellow-400">${sys.nombre} (${sys.porcentaje}%)</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                                <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
+                                <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
+                                <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('lista-sistemas-dia').innerHTML = html;
+            renderizarResumenSistemas();
+        }
+
+        function renderizarResumenSistemas() {
+            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+            let resumenHtml = '';
+            let totalVentasGlobal = 0;
+            let totalPremiosGlobal = 0;
+            let totalComisionesGlobal = 0;
+            let totalNetoGlobal = 0;
+
+            sistemas.forEach(sys => {
+                let sysVentas = 0;
+                let sysPremios = 0;
+                let sysComision = 0;
+
+                dias.forEach(dia => {
+                    if (datos[dia] && datos[dia][sys.id]) {
+                        let v = datos[dia][sys.id].ventas || 0;
+                        let p = datos[dia][sys.id].premios || 0;
+                        sysVentas += v;
+                        sysPremios += p;
+                    }
+                });
+
+                sysComision = sysVentas * (sys.porcentaje / 100);
+                let sysNeto = sysVentas - sysComision - sysPremios;
+
+                totalVentasGlobal += sysVentas;
+                totalPremiosGlobal += sysPremios;
+                totalComisionesGlobal += sysComision;
+                totalNetoGlobal += sysNeto;
+
+                resumenHtml += `
+                <div class="bg-gray-900 p-2.5 rounded border border-gray-700 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-yellow-400">${sys.nombre}</p>
+                        <p class="text-[11px] text-gray-400">Ventas: ${sysVentas.toLocaleString('es-VE', {minimumFractionDigits: 2})} | Premios: ${sysPremios.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-green-400 font-bold">Neto: ${sysNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
+                        <p class="text-[10px] text-gray-400">Comisión: ${sysComision.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('resumen-todos-sistemas').innerHTML = resumenHtml || '<p class="text-xs text-gray-400 text-center">No hay datos de sistemas.</p>';
+
+            document.getElementById('acum-ventas').innerText = `Bs. ${totalVentasGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('acum-premios').innerText = `Bs. ${totalPremiosGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('acum-comisiones').innerText = `Bs. ${totalComisionesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('acum-neto').innerText = `${totalNetoGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
         }
 
         // --- GESTIÓN DE CLIENTES Y ACCIONES ---
