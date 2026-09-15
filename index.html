@@ -25,7 +25,7 @@
         <section id="view-pagos" class="space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
                 <h2 class="text-lg font-bold text-yellow-400 mb-3 flex items-center">
-                    <i class="fa-solid fa-receipt mr-2"></i> Validador de Comprobantes (BDV)
+                    <i class="fa-solid fa-receipt mr-2"></i> Validador de Comprobantes (Multi-Banco)
                 </h2>
                 
                 <!-- Subir / Capturar / Pegar Comprobante -->
@@ -239,7 +239,7 @@
         </button>
     </nav>
 
-    <!-- Script con Sincronización Remota y OCR Corregido -->
+    <!-- Script con Sincronización Remota y OCR Multi-Banco Robusto -->
     <script>
         let dbState = {};
         let diaSeleccionado = 'Lunes';
@@ -798,7 +798,7 @@
             renderizarCuentas();
         }
 
-        // --- PROCESAMIENTO OCR Y REGISTRO (CORREGIDO PARA PAGOS MÓVILES) ---
+        // --- PROCESAMIENTO OCR Y REGISTRO (MULTI-BANCO Y REFERENCIA ROBUSTA) ---
         function procesarComprobanteArchivo(event) {
             const file = event.target.files[0];
             if (file) procesarBlobImagen(file);
@@ -838,9 +838,9 @@
             let lineaIdentificacion = '';
 
             for (let l of lineas) {
-                if (l.includes('ORIGEN')) lineaOrigen = l;
-                if (l.includes('DESTINO')) lineaDestino = l;
-                if (l.includes('IDENTIFICACION') || l.includes('IDENTIFICACIÓN')) lineaIdentificacion = l;
+                if (l.includes('ORIGEN') || l.includes('DEBITADA')) lineaOrigen = l;
+                if (l.includes('DESTINO') || l.includes('BENEFICIARIO')) lineaDestino = l;
+                if (l.includes('IDENTIFICACION') || l.includes('IDENTIFICACIÓN') || l.includes('BENEFICIARIO')) lineaIdentificacion = l;
             }
 
             // 1. Validar si nuestros datos están en el ORIGEN (Pago Saliente / Fraude)
@@ -868,14 +868,12 @@
             let esParaMisCuentas = false;
             let tipoDetectado = "";
 
-            if (texto.includes("PAGOMOVIL") || texto.includes("PAGO MÓVIL")) {
-                for (let pm of pmList) {
-                    if ((pm.cedula && (lineaIdentificacion.includes(pm.cedula) || texto.includes(pm.cedula))) ||
-                        (pm.telefono && (lineaDestino.includes(pm.telefono) || texto.includes(pm.telefono)))) {
-                        esParaMisCuentas = true;
-                        tipoDetectado = "Pago Móvil Válido";
-                        break;
-                    }
+            for (let pm of pmList) {
+                if ((pm.cedula && (lineaIdentificacion.includes(pm.cedula) || lineaDestino.includes(pm.cedula) || texto.includes(pm.cedula))) ||
+                    (pm.telefono && (lineaDestino.includes(pm.telefono) || texto.includes(pm.telefono)))) {
+                    esParaMisCuentas = true;
+                    tipoDetectado = "Pago Móvil Válido";
+                    break;
                 }
             }
 
@@ -889,20 +887,29 @@
                 }
             }
 
-            if (!esParaMisCuentas && (texto.includes("HAROLD") || texto.includes("BANCO DE VENEZUELA"))) {
+            if (!esParaMisCuentas && (texto.includes("HAROLD") || texto.includes("BANCO DE VENEZUELA") || texto.includes("BNC"))) {
                 esParaMisCuentas = true;
                 tipoDetectado = "Comprobante Válido";
             }
 
-            // Extraer Referencia y Monto
+            // 3. Extraer Referencia y Monto (Con soporte multilinea para etiquetas de bancos)
             let refEncontrada = '';
             let montoEncontrado = '';
 
             for (let i = 0; i < lineas.length; i++) {
                 let linea = lineas[i];
-                if (linea.includes('OPERACIÓN') || linea.includes('REF')) {
+                if (linea.includes('REFERENCIA') || linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF')) {
+                    // Buscar número en la misma línea
                     let nums = linea.match(/\d{6,}/);
-                    if (nums) refEncontrada = nums[0];
+                    if (nums) {
+                        refEncontrada = nums[0];
+                    } else if (i + 1 < lineas.length) {
+                        // Buscar en la línea siguiente (caso BNC y otros)
+                        let numsNext = lineas[i + 1].match(/\d{6,}/);
+                        if (numsNext) {
+                            refEncontrada = numsNext[0];
+                        }
+                    }
                 }
                 if (linea.includes('BS') || linea.includes(',00')) {
                     let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
@@ -910,10 +917,24 @@
                 }
             }
 
+            // Fallback robusto si la etiqueta no se leyó bien
             if (!refEncontrada) {
-                let matchRef = texto.match(/\b\d{8,15}\b/);
-                if (matchRef) refEncontrada = matchRef[0];
+                let matches = texto.match(/\b\d{8,12}\b/g);
+                if (matches) {
+                    for (let m of matches) {
+                        let esCedulaOTel = false;
+                        for (let pm of pmList) {
+                            if (m === pm.cedula || m === pm.telefono) esCedulaOTel = true;
+                        }
+                        if (!esCedulaOTel) {
+                            refEncontrada = m;
+                            break;
+                        }
+                    }
+                    if (!refEncontrada && matches.length > 0) refEncontrada = matches[0];
+                }
             }
+
             if (!montoEncontrado) {
                 let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
                 if (matchesMonto) montoEncontrado = matchesMonto[0];
