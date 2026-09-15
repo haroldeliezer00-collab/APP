@@ -214,7 +214,7 @@
 
     <!-- Script de Lógica, Saldos y Clientes -->
     <script>
-        // Inicializar localStorage con saldos iniciales por cuenta
+        // Inicializar localStorage
         if (!localStorage.getItem('ag_pago_movil')) {
             localStorage.setItem('ag_pago_movil', JSON.stringify([
                 { cedula: "18274410", telefono: "04124489363", saldo: 0 }
@@ -230,6 +230,9 @@
             localStorage.setItem('ag_clientes', JSON.stringify([
                 { nombre: "Cliente General", saldo: 0 }
             ]));
+        }
+        if (!localStorage.getItem('ag_referencias_usadas')) {
+            localStorage.setItem('ag_referencias_usadas', JSON.stringify([]));
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -289,7 +292,6 @@
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
             if (monto <= 0) return;
 
-            // Se aplica a la primera cuenta disponible por defecto
             let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             if (pmList.length > 0) {
                 if (tipo === 'ingreso') pmList[0].saldo += monto;
@@ -391,10 +393,8 @@
                 return;
             }
 
-            // Descontar saldo del cliente
             c.saldo -= premio;
 
-            // Descontar de la cuenta principal/taquilla (primera cuenta con saldo disponible)
             let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             
@@ -416,7 +416,7 @@
                 }
             }
             if (!descontado && pmList.length > 0) {
-                pmList[0].saldo -= premio; // Permitir negativo o ajuste directo
+                pmList[0].saldo -= premio;
             }
 
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
@@ -653,6 +653,20 @@
                 document.getElementById('input-monto').value = montoLimpio;
             }
 
+            // NUEVA VALIDACIÓN: Verificar si la referencia ya fue utilizada
+            if (refEncontrada) {
+                const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
+                const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
+                
+                if (duplicada) {
+                    alerta.classList.remove('hidden');
+                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! La referencia ${refEncontrada} ya fue utilizada por el cliente "${duplicada.cliente}" (Monto: Bs. ${duplicada.monto.toLocaleString('es-VE')}).`;
+                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
+                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante ya registrado previamente. No se puede reutilizar.`;
+                    return;
+                }
+            }
+
             if (valido) {
                 alerta.classList.add('hidden');
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
@@ -677,6 +691,13 @@
                 return;
             }
             
+            // Validar duplicado antes de registrar
+            let refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
+            if (refsUsadas.some(r => r.referencia === referencia)) {
+                alert(`¡Error! La referencia ${referencia} ya se encuentra registrada en el sistema.`);
+                return;
+            }
+
             // 1. Acreditar saldo a la cuenta seleccionada
             if (cuentaDestinoSel) {
                 let partes = cuentaDestinoSel.split('_');
@@ -707,6 +728,15 @@
                 clientes.push({ nombre: clienteNombre, saldo: monto });
             }
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            
+            // 3. Guardar la referencia como utilizada
+            refsUsadas.push({
+                referencia: referencia,
+                cliente: clienteNombre,
+                monto: monto,
+                fecha: new Date().toLocaleString()
+            });
+            localStorage.setItem('ag_referencias_usadas', JSON.stringify(refsUsadas));
             
             alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
             
