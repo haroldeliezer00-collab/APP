@@ -12,7 +12,7 @@
         body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-20">
+<body class="min-h-screen flex flex-col justify-between pb-24">
 
     <!-- Header Principal -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
@@ -29,7 +29,7 @@
             <div class="flex items-center space-x-2">
                 <button onclick="limpiarSemanaSistema()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer" title="Borrar datos de sistemas para nueva semana">
                     <i class="fa-solid fa-broom"></i>
-                    <span>Limpiar Semana</span>
+                    <span class="hidden sm:inline">Limpiar Semana</span>
                 </button>
                 <button onclick="abrirModalSistema()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
                     <i class="fa-solid fa-plus"></i>
@@ -44,7 +44,6 @@
         
         <!-- VISTA: SISTEMAS -->
         <section id="vista-sistemas" class="view-section">
-            <!-- Selector de Días de la Semana -->
             <div class="mb-6">
                 <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin">
                     <button onclick="cambiarDia('lunes')" id="btn-lunes" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Lunes</button>
@@ -57,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Vista de Sistemas en Tabla Horizontal Detallada -->
             <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-gray-850 border-b border-gray-800 flex justify-between items-center">
                     <h2 class="text-sm font-bold text-amber-400 flex items-center space-x-2">
@@ -79,60 +77,146 @@
                                 <th class="p-3.5 font-semibold text-center">Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-sistemas-cuerpo" class="divide-y divide-gray-800 text-sm">
-                            <!-- Inyectado por JS una sola vez -->
-                        </tbody>
+                        <tbody id="tabla-sistemas-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Resumen General Semanal -->
             <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
                 <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Resumen General de Todos los Sistemas</span>
                 </h3>
-                <div id="resumen-general-contenedor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <!-- Inyectado por JS -->
-                </div>
+                <div id="resumen-general-contenedor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </div>
         </section>
 
         <!-- VISTA: PAGOS -->
         <section id="vista-pagos" class="view-section hidden">
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-base font-bold text-amber-400 mb-2"><i class="fa-solid fa-receipt mr-2"></i>Control de Pagos</h2>
-                <p class="text-xs text-gray-400">Módulo de registro y validación de pagos de clientes.</p>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-receipt mr-2"></i>Control de Pagos</h2>
+                    <p class="text-xs text-gray-400">Registro y validación de pagos de clientes y taquilla.</p>
+                </div>
+                <button onclick="abrirModalPago()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nuevo Pago</span>
+                </button>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
+                                <th class="p-3.5 font-semibold">Cliente</th>
+                                <th class="p-3.5 font-semibold">Referencia / Banco</th>
+                                <th class="p-3.5 font-semibold">Monto</th>
+                                <th class="p-3.5 font-semibold">Estado</th>
+                                <th class="p-3.5 font-semibold text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pagos-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <!-- VISTA: CAJA -->
         <section id="vista-caja" class="view-section hidden">
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-base font-bold text-amber-400 mb-2"><i class="fa-solid fa-cash-register mr-2"></i>Control de Caja</h2>
-                <p class="text-xs text-gray-400">Módulo de arqueo y flujo de efectivo diario.</p>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-cash-register mr-2"></i>Control de Caja</h2>
+                    <p class="text-xs text-gray-400">Arqueo y flujo de efectivo diario.</p>
+                </div>
+                <button onclick="abrirModalCaja()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Movimiento Caja</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                    <div class="text-xs text-gray-400 mb-1">Total Ingresos Caja</div>
+                    <div id="caja-ingresos" class="text-lg font-bold text-emerald-400">0,00 Bs</div>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                    <div class="text-xs text-gray-400 mb-1">Total Egresos Caja</div>
+                    <div id="caja-egresos" class="text-lg font-bold text-red-400">0,00 Bs</div>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                    <div class="text-xs text-gray-400 mb-1">Balance Actual Caja</div>
+                    <div id="caja-balance" class="text-lg font-bold text-amber-400">0,00 Bs</div>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-4 bg-gray-850 border-b border-gray-800 font-bold text-xs text-amber-400">Historial de Movimientos de Caja</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
+                                <th class="p-3.5 font-semibold">Tipo</th>
+                                <th class="p-3.5 font-semibold">Descripción</th>
+                                <th class="p-3.5 font-semibold">Monto</th>
+                                <th class="p-3.5 font-semibold text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-caja-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <!-- VISTA: CLIENTES -->
         <section id="vista-clientes" class="view-section hidden">
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-base font-bold text-amber-400 mb-2"><i class="fa-solid fa-users mr-2"></i>Gestión de Clientes</h2>
-                <p class="text-xs text-gray-400">Listado de clientes y saldos pendientes.</p>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-users mr-2"></i>Gestión de Clientes</h2>
+                    <p class="text-xs text-gray-400">Listado de clientes y saldos pendientes.</p>
+                </div>
+                <button onclick="abrirModalCliente()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nuevo Cliente</span>
+                </button>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
+                                <th class="p-3.5 font-semibold">Nombre del Cliente</th>
+                                <th class="p-3.5 font-semibold">Teléfono</th>
+                                <th class="p-3.5 font-semibold">Saldo / Deuda</th>
+                                <th class="p-3.5 font-semibold text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-clientes-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <!-- VISTA: CUENTAS -->
         <section id="vista-cuentas" class="view-section hidden">
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-base font-bold text-amber-400 mb-2"><i class="fa-solid fa-wallet mr-2"></i>Cuentas Bancarias</h2>
-                <p class="text-xs text-gray-400">Control de saldos en bancos y plataformas digitales.</p>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-wallet mr-2"></i>Cuentas Bancarias y Digitales</h2>
+                    <p class="text-xs text-gray-400">Control de saldos en bancos y plataformas (Binance, Banesco, etc.).</p>
+                </div>
+                <button onclick="abrirModalCuenta()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nueva Cuenta</span>
+                </button>
             </div>
+
+            <div id="grid-cuentas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </section>
 
     </main>
 
-    <!-- Navegación Inferior Fija (Funcional) -->
+    <!-- Navegación Inferior Fija -->
     <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2.5 px-4 z-50">
         <div class="max-w-md mx-auto flex justify-around text-gray-400 text-xs font-medium">
             <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center hover:text-amber-400 transition cursor-pointer">
@@ -153,7 +237,8 @@
         </div>
     </nav>
 
-    <!-- Modal para Agregar Nuevo Sistema -->
+    <!-- MODALES -->
+    <!-- Modal Sistema -->
     <div id="modal-sistema" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
             <h3 class="text-base font-bold text-amber-400 mb-4 flex items-center space-x-2">
@@ -177,20 +262,132 @@
         </div>
     </div>
 
-    <!-- Script de Gestión -->
+    <!-- Modal Pago -->
+    <div id="modal-pago" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-receipt mr-2"></i>Registrar Nuevo Pago</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Cliente</label>
+                    <input type="text" id="pago-cliente" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nombre del cliente">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Referencia / Banco</label>
+                    <input type="text" id="pago-ref" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. Ref 1234 - Banesco">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Monto (Bs)</label>
+                    <input type="number" id="pago-monto" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-5">
+                <button onclick="cerrarModalPago()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
+                <button onclick="guardarPago()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Registrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Caja -->
+    <div id="modal-caja" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-cash-register mr-2"></i>Movimiento de Caja</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Tipo</label>
+                    <select id="caja-tipo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                        <option value="ingreso">Ingreso</option>
+                        <option value="egreso">Egreso</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Descripción</label>
+                    <input type="text" id="caja-desc" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Motivo del movimiento">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Monto (Bs)</label>
+                    <input type="number" id="caja-monto" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-5">
+                <button onclick="cerrarModalCaja()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
+                <button onclick="guardarCaja()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cliente -->
+    <div id="modal-cliente" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-users mr-2"></i>Nuevo Cliente</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nombre</label>
+                    <input type="text" id="cliente-nombre" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nombre y apellido">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Teléfono</label>
+                    <input type="text" id="cliente-telefono" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0414-0000000">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Saldo / Deuda Inicial (Bs)</label>
+                    <input type="number" id="cliente-saldo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-5">
+                <button onclick="cerrarModalCliente()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
+                <button onclick="guardarCliente()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cuenta -->
+    <div id="modal-cuenta" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-wallet mr-2"></i>Nueva Cuenta o Plataforma</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nombre / Banco</label>
+                    <input type="text" id="cuenta-nombre" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. Banesco / Binance">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Número / Identificador</label>
+                    <input type="text" id="cuenta-numero" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nro de cuenta o correo">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Saldo Inicial</label>
+                    <input type="number" id="cuenta-saldo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-5">
+                <button onclick="cerrarModalCuenta()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
+                <button onclick="guardarCuenta()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script General y de Gestión -->
     <script>
         let diaActual = 'domingo';
         
+        // Datos iniciales persistentes
         let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [
             { id: 'maxplay', name: 'Maxplay', commissionRate: 14 },
             { id: 'matrix', name: 'Matrix Comp', commissionRate: 14 },
             { id: 'srq', name: 'SRQ Polla', commissionRate: 14 },
             { id: 'atenas', name: 'Atenas', commissionRate: 12 },
-            { id: 'winbig', name: 'winbig', commissionRate: 15 }
+            { id: 'winbig', name: 'Winbig', commissionRate: 15 }
         ];
 
         let registrosVentas = JSON.parse(localStorage.getItem('ag_registrosVentas')) || {};
+        let pagos = JSON.parse(localStorage.getItem('ag_pagos')) || [];
+        let movimientosCaja = JSON.parse(localStorage.getItem('ag_caja')) || [];
+        let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+        let cuentas = JSON.parse(localStorage.getItem('ag_cuentas')) || [
+            { id: 'banesco', name: 'Banesco', number: 'Pago Móvil / Corriente', saldo: 0 },
+            { id: 'binance', name: 'Binance', number: 'USDT Wallet', saldo: 0 }
+        ];
 
+        // Navegación entre Vistas
         function cambiarVista(vistaId) {
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById(`vista-${vistaId}`).classList.remove('hidden');
@@ -199,8 +396,14 @@
                 btn.className = "nav-btn flex flex-col items-center text-gray-400 hover:text-amber-400 transition cursor-pointer";
             });
             document.getElementById(`nav-${vistaId}`).className = "nav-btn flex flex-col items-center text-amber-400 cursor-pointer";
+
+            if(vistaId === 'pagos') renderizarPagos();
+            if(vistaId === 'caja') renderizarCaja();
+            if(vistaId === 'clientes') renderizarClientes();
+            if(vistaId === 'cuentas') renderizarCuentas();
         }
 
+        // --- SISTEMAS ---
         function cambiarDia(dia) {
             diaActual = dia;
             document.querySelectorAll('.dia-btn').forEach(btn => {
@@ -211,24 +414,22 @@
                 activoBtn.className = "dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20";
             }
             document.getElementById('titulo-dia-activo').innerText = `Gestión de Sistemas - ${dia.charAt(0).toUpperCase() + dia.slice(1)}`;
-            inicializarTabla();
+            inicializarTablaSistemas();
         }
 
         function obtenerClaveDato(sistemaId, dia, tipo) {
             return `${dia}_${sistemaId}_${tipo}`;
         }
 
-        function actualizarDato(sistemaId, tipo, valor) {
+        function actualizarDatoSistema(sistemaId, tipo, valor) {
             const clave = obtenerClaveDato(sistemaId, diaActual, tipo);
             registrosVentas[clave] = parseFloat(valor) || 0;
             localStorage.setItem('ag_registrosVentas', JSON.stringify(registrosVentas));
-            
-            // Actualizar solo los cálculos de esta fila sin volver a renderizar los inputs (evita que pierdan el foco)
-            actualizarCalculosFila(sistemaId);
+            actualizarCalculosFilaSistema(sistemaId);
             renderizarResumenGeneral();
         }
 
-        function actualizarCalculosFila(sistemaId) {
+        function actualizarCalculosFilaSistema(sistemaId) {
             const sis = sistemas.find(s => s.id === sistemaId);
             if (!sis) return;
 
@@ -248,7 +449,7 @@
             }
         }
 
-        function inicializarTabla() {
+        function inicializarTablaSistemas() {
             const tbody = document.getElementById('tabla-sistemas-cuerpo');
             tbody.innerHTML = '';
 
@@ -259,11 +460,8 @@
             }
 
             sistemas.forEach(sis => {
-                const claveVentas = obtenerClaveDato(sis.id, diaActual, 'ventas');
-                const clavePremios = obtenerClaveDato(sis.id, diaActual, 'premios');
-
-                const ventas = registrosVentas[claveVentas] || 0;
-                const premios = registrosVentas[clavePremios] || 0;
+                const ventas = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'ventas')] || 0;
+                const premios = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'premios')] || 0;
 
                 const comision = ventas * (sis.commissionRate / 100);
                 const neto = ventas - premios - comision;
@@ -276,10 +474,10 @@
                         <div class="text-[10px] text-gray-400">Comisión: ${sis.commissionRate}%</div>
                     </td>
                     <td class="p-3.5">
-                        <input type="number" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDato('${sis.id}', 'ventas', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                        <input type="number" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sis.id}', 'ventas', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
                     </td>
                     <td class="p-3.5">
-                        <input type="number" value="${premios || ''}" placeholder="0.00" oninput="actualizarDato('${sis.id}', 'premios', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                        <input type="number" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sis.id}', 'premios', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
                     </td>
                     <td id="comision-${sis.id}" class="p-3.5 text-amber-400/90 font-semibold text-xs">
                         ${comision.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs
@@ -301,6 +499,7 @@
 
         function renderizarResumenGeneral() {
             const contenedor = document.getElementById('resumen-general-contenedor');
+            if(!contenedor) return;
             contenedor.innerHTML = '';
 
             const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -337,52 +536,233 @@
             });
         }
 
-        function abrirModalSistema() {
-            document.getElementById('modal-sistema').classList.remove('hidden');
-        }
-
-        function cerrarModalSistema() {
+        function abrirModalSistema() { document.getElementById('modal-sistema').classList.remove('hidden'); }
+        function cerrarModalSistema() { 
             document.getElementById('modal-sistema').classList.add('hidden');
             document.getElementById('nuevo-nombre-sistema').value = '';
             document.getElementById('nuevo-comision-sistema').value = '';
         }
-
         function guardarNuevoSistema() {
             const nombre = document.getElementById('nuevo-nombre-sistema').value.trim();
             const comision = parseFloat(document.getElementById('nuevo-comision-sistema').value);
-
-            if (!nombre || isNaN(comision)) {
-                alert('Por favor, ingresa un nombre válido y un porcentaje de comisión.');
-                return;
-            }
-
+            if (!nombre || isNaN(comision)) { alert('Ingresa nombre y comisión válidos.'); return; }
             const id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
             sistemas.push({ id, name: nombre, commissionRate: comision });
             localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
             cerrarModalSistema();
-            inicializarTabla();
+            inicializarTablaSistemas();
         }
-
         function eliminarSistema(id) {
-            if (confirm('¿Estás seguro de eliminar este sistema?')) {
+            if (confirm('¿Eliminar este sistema?')) {
                 sistemas = sistemas.filter(s => s.id !== id);
                 localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
-                inicializarTabla();
+                inicializarTablaSistemas();
             }
         }
-
         function limpiarSemanaSistema() {
-            if (confirm('¿Estás seguro de realizar la limpieza de la semana? Esto borrará todas las ventas y premios ingresados en los sistemas, dejándote en cero para empezar la nueva semana. Los saldos de bancos y clientes no se verán afectados.')) {
+            if (confirm('¿Limpiar todas las ventas y premios de la semana actual?')) {
                 registrosVentas = {};
                 localStorage.removeItem('ag_registrosVentas');
-                inicializarTabla();
-                alert('¡Limpieza completada con éxito! Ya puedes comenzar a anotar la nueva semana.');
+                inicializarTablaSistemas();
+                alert('Semana limpiada con éxito.');
             }
         }
 
-        // Inicializar al cargar
+        // --- PAGOS ---
+        function abrirModalPago() { document.getElementById('modal-pago').classList.remove('hidden'); }
+        function cerrarModalPago() { 
+            document.getElementById('modal-pago').classList.add('hidden');
+            document.getElementById('pago-cliente').value = '';
+            document.getElementById('pago-ref').value = '';
+            document.getElementById('pago-monto').value = '';
+        }
+        function guardarPago() {
+            const cliente = document.getElementById('pago-cliente').value.trim();
+            const ref = document.getElementById('pago-ref').value.trim();
+            const monto = parseFloat(document.getElementById('pago-monto').value);
+            if(!cliente || !ref || isNaN(monto)) { alert('Completa todos los campos.'); return; }
+            pagos.push({ id: Date.now(), cliente, ref, monto, estado: 'Aprobado' });
+            localStorage.setItem('ag_pagos', JSON.stringify(pagos));
+            cerrarModalPago();
+            renderizarPagos();
+        }
+        function eliminarPago(id) {
+            pagos = pagos.filter(p => p.id !== id);
+            localStorage.setItem('ag_pagos', JSON.stringify(pagos));
+            renderizarPagos();
+        }
+        function renderizarPagos() {
+            const tbody = document.getElementById('tabla-pagos-cuerpo');
+            tbody.innerHTML = '';
+            if(pagos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-gray-500 text-xs">No hay pagos registrados.</td></tr>`;
+                return;
+            }
+            pagos.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/50 transition";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold text-amber-400">${p.cliente}</td>
+                    <td class="p-3.5 text-gray-300">${p.ref}</td>
+                    <td class="p-3.5 text-emerald-400 font-semibold">${p.monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
+                    <td class="p-3.5"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[10px] font-bold">${p.estado}</span></td>
+                    <td class="p-3.5 text-center"><button onclick="eliminarPago(${p.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- CAJA ---
+        function abrirModalCaja() { document.getElementById('modal-caja').classList.remove('hidden'); }
+        function cerrarModalCaja() { 
+            document.getElementById('modal-caja').classList.add('hidden');
+            document.getElementById('caja-desc').value = '';
+            document.getElementById('caja-monto').value = '';
+        }
+        function guardarCaja() {
+            const tipo = document.getElementById('caja-tipo').value;
+            const desc = document.getElementById('caja-desc').value.trim();
+            const monto = parseFloat(document.getElementById('caja-monto').value);
+            if(!desc || isNaN(monto)) { alert('Completa los campos.'); return; }
+            movimientosCaja.push({ id: Date.now(), tipo, desc, monto });
+            localStorage.setItem('ag_caja', JSON.stringify(movimientosCaja));
+            cerrarModalCaja();
+            renderizarCaja();
+        }
+        function eliminarCaja(id) {
+            movimientosCaja = movimientosCaja.filter(m => m.id !== id);
+            localStorage.setItem('ag_caja', JSON.stringify(movimientosCaja));
+            renderizarCaja();
+        }
+        function renderizarCaja() {
+            const tbody = document.getElementById('tabla-caja-cuerpo');
+            tbody.innerHTML = '';
+            let totalIngresos = 0;
+            let totalEgresos = 0;
+
+            if(movimientosCaja.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-gray-500 text-xs">No hay movimientos en caja.</td></tr>`;
+            }
+
+            movimientosCaja.forEach(m => {
+                if(m.tipo === 'ingreso') totalIngresos += m.monto;
+                else totalEgresos += m.monto;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/50 transition";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold ${m.tipo === 'ingreso' ? 'text-emerald-400' : 'text-red-400'} uppercase text-xs">${m.tipo}</td>
+                    <td class="p-3.5 text-gray-200">${m.desc}</td>
+                    <td class="p-3.5 font-semibold text-gray-200">${m.monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
+                    <td class="p-3.5 text-center"><button onclick="eliminarCaja(${m.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const balance = totalIngresos - totalEgresos;
+            document.getElementById('caja-ingresos').innerText = totalIngresos.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
+            document.getElementById('caja-egresos').innerText = totalEgresos.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
+            const elBal = document.getElementById('caja-balance');
+            elBal.innerText = balance.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
+            elBal.className = `text-lg font-bold ${balance >= 0 ? 'text-amber-400' : 'text-red-400'}`;
+        }
+
+        // --- CLIENTES ---
+        function abrirModalCliente() { document.getElementById('modal-cliente').classList.remove('hidden'); }
+        function cerrarModalCliente() { 
+            document.getElementById('modal-cliente').classList.add('hidden');
+            document.getElementById('cliente-nombre').value = '';
+            document.getElementById('cliente-telefono').value = '';
+            document.getElementById('cliente-saldo').value = '';
+        }
+        function guardarCliente() {
+            const nombre = document.getElementById('cliente-nombre').value.trim();
+            const telefono = document.getElementById('cliente-telefono').value.trim();
+            const saldo = parseFloat(document.getElementById('cliente-saldo').value) || 0;
+            if(!nombre) { alert('Ingresa el nombre del cliente.'); return; }
+            clientes.push({ id: Date.now(), nombre, telefono, saldo });
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            cerrarModalCliente();
+            renderizarClientes();
+        }
+        function eliminarCliente(id) {
+            clientes = clientes.filter(c => c.id !== id);
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+        }
+        function renderizarClientes() {
+            const tbody = document.getElementById('tabla-clientes-cuerpo');
+            tbody.innerHTML = '';
+            if(clientes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-gray-500 text-xs">No hay clientes registrados.</td></tr>`;
+                return;
+            }
+            clientes.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/50 transition";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold text-amber-400">${c.nombre}</td>
+                    <td class="p-3.5 text-gray-300">${c.telefono || 'Sin teléfono'}</td>
+                    <td class="p-3.5 font-semibold ${c.saldo >= 0 ? 'text-emerald-400' : 'text-red-400'}">${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
+                    <td class="p-3.5 text-center"><button onclick="eliminarCliente(${c.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- CUENTAS ---
+        function abrirModalCuenta() { document.getElementById('modal-cuenta').classList.remove('hidden'); }
+        function cerrarModalCuenta() { 
+            document.getElementById('modal-cuenta').classList.add('hidden');
+            document.getElementById('cuenta-nombre').value = '';
+            document.getElementById('cuenta-numero').value = '';
+            document.getElementById('cuenta-saldo').value = '';
+        }
+        function guardarCuenta() {
+            const name = document.getElementById('cuenta-nombre').value.trim();
+            const number = document.getElementById('cuenta-numero').value.trim();
+            const saldo = parseFloat(document.getElementById('cuenta-saldo').value) || 0;
+            if(!name) { alert('Ingresa el nombre de la cuenta.'); return; }
+            cuentas.push({ id: Date.now(), name, number, saldo });
+            localStorage.setItem('ag_cuentas', JSON.stringify(cuentas));
+            cerrarModalCuenta();
+            renderizarCuentas();
+        }
+        function eliminarCuenta(id) {
+            cuentas = cuentas.filter(c => c.id !== id);
+            localStorage.setItem('ag_cuentas', JSON.stringify(cuentas));
+            renderizarCuentas();
+        }
+        function renderizarCuentas() {
+            const grid = document.getElementById('grid-cuentas');
+            grid.innerHTML = '';
+            if(cuentas.length === 0) {
+                grid.innerHTML = `<div class="col-span-3 text-center p-6 text-gray-500 text-xs">No hay cuentas registradas.</div>`;
+                return;
+            }
+            cuentas.forEach(c => {
+                const card = document.createElement('div');
+                card.className = "bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl relative";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-bold text-amber-400 text-sm">${c.name}</h3>
+                            <p class="text-[11px] text-gray-400">${c.number || ''}</p>
+                        </div>
+                        <button onclick="eliminarCuenta(${c.id})" class="text-gray-500 hover:text-red-400 cursor-pointer p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">Saldo Disponible</span>
+                        <span class="font-bold text-emerald-400 text-sm">${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Inicialización al cargar
         window.onload = function() {
-            inicializarTabla();
+            inicializarTablaSistemas();
         };
     </script>
 </body>
