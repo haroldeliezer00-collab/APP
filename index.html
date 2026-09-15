@@ -167,7 +167,7 @@
                         <i class="fa-solid fa-scale-balanced mr-1"></i> Cuadre de Caja (Saldo Real)
                     </p>
                     <p id="display-cuadre-caja" class="text-2xl font-extrabold text-green-400">Bs. 0,00</p>
-                    <p class="text-[10px] text-gray-400">Banco menos (Saldos Clientes), menos (Neto Sistemas) y menos (Remanente). Debe ser 0,00 Bs si todo cuadra.</p>
+                    <p class="text-[10px] text-gray-400">Banco menos Neto Sistemas, menos Comisiones Totales, menos Comisión SRQ y menos Saldos Clientes. Debe ser 0,00 Bs si todo cuadra.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
@@ -662,7 +662,9 @@
                 inputNetoPasado.value = netoSistemasPasado > 0 ? netoSistemasPasado.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
             }
 
-            const cuadre = totalBancos - totalClientes - totalNetoSistemas - remanenteDom;
+            // CORRECCIÓN APLICADA AQUÍ: Se restan Comisiones Totales y Comisión SRQ para igualar tu Excel (=B19 - B15 - B22 - B23 - B24 - B25)
+            const cuadre = totalBancos - totalNetoSistemas - comisionesTotales - comisionSRQ - totalClientes;
+            
             const elCuadre = document.getElementById('display-cuadre-caja');
             if (elCuadre) {
                 elCuadre.innerText = `Bs. ${cuadre.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
