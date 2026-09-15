@@ -71,10 +71,6 @@
                         <!-- Relleno dinámico -->
                     </select>
                 </div>
-                <div class="flex items-center space-x-2 pt-1">
-                    <input type="checkbox" id="check-cashea" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0">
-                    <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
-                </div>
                 <button onclick="registrarPago()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2.5 rounded-lg transition text-sm shadow">
                     Registrar y Acreditar Saldo
                 </button>
@@ -96,40 +92,66 @@
             </div>
         </section>
 
-        <!-- VISTA: SISTEMAS -->
+        <!-- VISTA: SISTEMAS (ACTUALIZADA) -->
         <section id="view-sistemas" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-laptop-code mr-2"></i> Gestión de Sistemas</h2>
-                
-                <!-- Días de la semana -->
-                <div class="flex overflow-x-auto space-x-2 pb-2 mb-3">
-                    <button class="px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
-                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-server mr-2"></i> Sistemas y Loterías</h2>
+                        <p class="text-[11px] text-gray-400">Control día a día y desglose semanal por sistema.</p>
+                    </div>
+                    <button onclick="abrirModalSistema()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs whitespace-nowrap shadow">
+                        <i class="fa-solid fa-plus mr-1"></i> Sistema
+                    </button>
                 </div>
 
-                <!-- Tarjetas de Sistemas -->
-                <div class="space-y-2">
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Maxplay</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
-                    </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Matrix Comp</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
-                    </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">SRQ Polla</p><span class="text-xs text-yellow-400">Pendiente</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
-                    </div>
-                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div><p class="font-bold text-sm">Atenas</p><span class="text-xs text-green-400">Activo</span></div>
-                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
-                    </div>
+                <!-- Días de la semana -->
+                <div id="days-container" class="flex overflow-x-auto space-x-1.5 pb-2 scrollbar-none">
+                    <button onclick="cambiarDiaSistema('lunes')" id="btn-dia-lunes" class="dia-tab px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
+                    <button onclick="cambiarDiaSistema('martes')" id="btn-dia-martes" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
+                    <button onclick="cambiarDiaSistema('miercoles')" id="btn-dia-miercoles" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
+                    <button onclick="cambiarDiaSistema('jueves')" id="btn-dia-jueves" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
+                    <button onclick="cambiarDiaSistema('viernes')" id="btn-dia-viernes" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
+                    <button onclick="cambiarDiaSistema('sabado')" id="btn-dia-sabado" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
+                    <button onclick="cambiarDiaSistema('domingo')" id="btn-dia-domingo" class="dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
+                </div>
+
+                <!-- Contenedor de Sistemas para el Día Seleccionado -->
+                <div id="lista-sistemas-dia" class="space-y-3 pt-2">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+
+            <!-- Resumen de Todos los Sistemas (Semanal) -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <h3 class="text-sm font-bold text-yellow-400 flex items-center">
+                    <i class="fa-solid fa-chart-pie mr-2"></i> Resumen de Todos los Sistemas
+                </h3>
+                <div id="resumen-sistemas-lista" class="space-y-2 text-xs divide-y divide-gray-700">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+
+            <!-- Resumen General Acumulado -->
+            <div class="bg-gray-950 p-4 rounded-xl shadow border border-yellow-500/40 space-y-2">
+                <h3 class="text-xs font-extrabold text-yellow-400 uppercase tracking-widest text-center mb-2">
+                    <i class="fa-solid fa-trophy mr-1"></i> Resumen General Acumulado
+                </h3>
+                <div class="flex justify-between text-xs text-gray-300">
+                    <span>Ventas Totales:</span>
+                    <strong id="res-ventas-totales" class="text-white">0,00 Bs.</strong>
+                </div>
+                <div class="flex justify-between text-xs text-gray-300">
+                    <span>Premios Totales:</span>
+                    <strong id="res-premios-totales" class="text-red-400">0,00 Bs.</strong>
+                </div>
+                <div class="flex justify-between text-xs text-gray-300">
+                    <span>Comisiones Totales:</span>
+                    <strong id="res-comisiones-totales" class="text-yellow-400">0,00 Bs.</strong>
+                </div>
+                <div class="border-t border-gray-800 pt-2 flex justify-between text-sm font-extrabold text-green-400">
+                    <span>Saldo Neto Global:</span>
+                    <span id="res-saldo-neto">0,00 Bs.</span>
                 </div>
             </div>
         </section>
@@ -143,10 +165,8 @@
                 </div>
                 <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pago de premios para pronosticadores.</p>
                 
-                <!-- Buscador rápido -->
                 <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
 
-                <!-- Lista de Clientes -->
                 <div id="lista-clientes" class="space-y-3 pt-2">
                     <!-- Renderizado dinámico -->
                 </div>
@@ -212,7 +232,7 @@
         </button>
     </nav>
 
-    <!-- Script de Lógica, Saldos y Clientes -->
+    <!-- Script de Lógica General y Módulo de Sistemas -->
     <script>
         // Inicializar localStorage
         if (!localStorage.getItem('ag_pago_movil')) {
@@ -234,12 +254,26 @@
         if (!localStorage.getItem('ag_referencias_usadas')) {
             localStorage.setItem('ag_referencias_usadas', JSON.stringify([]));
         }
+        if (!localStorage.getItem('ag_sistemas')) {
+            localStorage.setItem('ag_sistemas', JSON.stringify([
+                { id: 'maxplay', nombre: 'Maxplay', porcentaje: 14 },
+                { id: 'matrix', nombre: 'Matrix Comp', porcentaje: 14 },
+                { id: 'srq', nombre: 'SRQ Polla', porcentaje: 14 },
+                { id: 'atenas', nombre: 'Atenas', porcentaje: 12 }
+            ]));
+        }
+        if (!localStorage.getItem('ag_sistemas_datos')) {
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify({}));
+        }
+
+        let diaSeleccionado = 'lunes';
 
         document.addEventListener("DOMContentLoaded", () => {
             renderizarCuentas();
             renderizarClientes();
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
+            renderizarSistemas();
         });
 
         // Soporte global para Pegar imágenes (Ctrl+V)
@@ -269,6 +303,144 @@
             if (vistaId === 'clientes') renderizarClientes();
             if (vistaId === 'caja') actualizarSaldoTaquilla();
             if (vistaId === 'pagos') poblarSelectCuentas();
+            if (vistaId === 'sistemas') renderizarSistemas();
+        }
+
+        // --- MÓDULO DE SISTEMAS ---
+        function cambiarDiaSistema(dia) {
+            diaSeleccionado = dia;
+            ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(d => {
+                const btn = document.getElementById('btn-dia-' + d);
+                if (d === dia) {
+                    btn.className = "dia-tab px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap";
+                } else {
+                    btn.className = "dia-tab px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap";
+                }
+            });
+            renderizarSistemas();
+        }
+
+        function abrirModalSistema() {
+            let nombre = prompt("Ingrese el nombre del nuevo sistema (Ej: MegaBet):");
+            if (!nombre || !nombre.trim()) return;
+            let porcentajeStr = prompt("Ingrese el porcentaje de comisión del sistema (Ej: 14):", "14");
+            let porcentaje = parseFloat((porcentajeStr || "14").replace(',', '.')) || 0;
+
+            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            let id = 'sys_' + Date.now();
+            sistemas.push({ id, nombre: nombre.trim(), porcentaje });
+            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+            renderizarSistemas();
+            alert(`Sistema "${nombre}" agregado con éxito (${porcentaje}%).`);
+        }
+
+        function actualizarDatoSistema(sysId, campo, valor) {
+            let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            if (!datos[sysId]) datos[sysId] = {};
+            if (!datos[sysId][diaSeleccionado]) datos[sysId][diaSeleccionado] = { ventas: 0, premios: 0 };
+
+            let numVal = parseFloat(valor.replace(',', '.')) || 0;
+            datos[sysId][diaSeleccionado][campo] = numVal;
+            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+            renderizarSistemas();
+        }
+
+        function renderizarSistemas() {
+            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+
+            let htmlDia = '';
+            let htmlResumenSistemas = '';
+
+            let ventasTotalesGlobal = 0;
+            let premiosTotalesGlobal = 0;
+            let comisionesTotalesGlobal = 0;
+            let netoTotalGlobal = 0;
+
+            sistemas.forEach(sys => {
+                let sysDatosDia = datos[sys.id]?.[diaSeleccionado] || { ventas: 0, premios: 0 };
+                let ventasDia = sysDatosDia.ventas || 0;
+                let premiosDia = sysDatosDia.premios || 0;
+                let comisionDia = ventasDia * (sys.porcentaje / 100);
+                let netoDia = ventasDia - premiosDia - comisionDia;
+
+                // Render Tarjeta del Día
+                htmlDia += `
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm text-yellow-400">${sys.nombre} (${sys.porcentaje}%)</span>
+                        <div class="text-[11px] text-right">
+                            <span class="text-gray-400">Neto:</span> <strong class="text-green-400">${netoDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</strong>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-gray-400">Ventas (${capitalize(diaSeleccionado)})</label>
+                            <input type="text" value="${ventasDia || ''}" onchange="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white focus:border-yellow-400 outline-none" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400">Premios (${capitalize(diaSeleccionado)})</label>
+                            <input type="text" value="${premiosDia || ''}" onchange="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-gray-400 pt-1 border-t border-gray-800">
+                        <span>Comisión: <strong class="text-yellow-400">${comisionDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</strong></span>
+                        <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                    </div>
+                </div>`;
+
+                // Calcular Acumulado Semanal de este sistema (lunes a domingo)
+                let ventasSemanal = 0;
+                let premiosSemanal = 0;
+                let comisionSemanal = 0;
+                ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(d => {
+                    let dData = datos[sys.id]?.[d] || { ventas: 0, premios: 0 };
+                    let v = dData.ventas || 0;
+                    let p = dData.premios || 0;
+                    ventasSemanal += v;
+                    premiosSemanal += p;
+                    comisionSemanal += v * (sys.porcentaje / 100);
+                });
+                let netoSemanal = ventasSemanal - premiosSemanal - comisionSemanal;
+
+                ventasTotalesGlobal += ventasSemanal;
+                premiosTotalesGlobal += premiosSemanal;
+                comisionesTotalesGlobal += comisionSemanal;
+                netoTotalGlobal += netoSemanal;
+
+                htmlResumenSistemas += `
+                <div class="py-2 flex justify-between items-center text-xs">
+                    <div>
+                        <p class="font-bold text-white">${sys.nombre} <span class="text-yellow-400">(${sys.porcentaje}%)</span></p>
+                        <p class="text-[10px] text-gray-400">Ventas: ${ventasSemanal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs | Premios: ${premiosSemanal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-yellow-300">Comisión: ${comisionSemanal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
+                        <p class="font-extrabold text-green-400">Neto: ${netoSemanal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('lista-sistemas-dia').innerHTML = htmlDia || `<p class="text-xs text-gray-400 text-center py-4">No hay sistemas registrados.</p>`;
+            document.getElementById('resumen-sistemas-lista').innerHTML = htmlResumenSistemas || `<p class="text-xs text-gray-400 text-center py-2">Sin registros semanales.</p>`;
+
+            // Actualizar Resumen General Acumulado
+            document.getElementById('res-ventas-totales').innerText = `${ventasTotalesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+            document.getElementById('res-premios-totales').innerText = `${premiosTotalesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+            document.getElementById('res-comisiones-totales').innerText = `${comisionesTotalesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+            document.getElementById('res-saldo-neto').innerText = `${netoTotalGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+        }
+
+        function eliminarSistema(sysId) {
+            if (!confirm("¿Está seguro de eliminar este sistema y todos sus registros?")) return;
+            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            sistemas = sistemas.filter(s => s.id !== sysId);
+            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+            renderizarSistemas();
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
         // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
@@ -305,7 +477,7 @@
             }
         }
 
-        // --- GESTIÓN DE CLIENTES Y ACCIONES ---
+        // --- GESTIÓN DE CLIENTES ---
         function renderizarClientes() {
             const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             generarHTMLClientes(clientes);
@@ -366,18 +538,9 @@
             let montoStr = prompt(mensaje);
             if (!montoStr) return;
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) {
-                alert("Monto inválido.");
-                return;
-            }
-            if (tipo === 'agregar') {
-                c.saldo += monto;
-            } else {
-                if (c.saldo < monto) {
-                    if(!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
-                }
-                c.saldo -= monto;
-            }
+            if (monto <= 0) return;
+            if (tipo === 'agregar') c.saldo += monto;
+            else c.saldo -= monto;
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             renderizarClientes();
         }
@@ -385,47 +548,20 @@
         function pagarPremioCliente(index) {
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre} (Se descontará de su saldo y de las cuentas de la taquilla):`);
+            let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre}:`);
             if (!montoStr) return;
             let premio = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (premio <= 0) {
-                alert("Monto inválido.");
-                return;
-            }
+            if (premio <= 0) return;
 
             c.saldo -= premio;
-
             let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-            
-            let descontado = false;
-            for (let pm of pmList) {
-                if (pm.saldo >= premio) {
-                    pm.saldo -= premio;
-                    descontado = true;
-                    break;
-                }
-            }
-            if (!descontado) {
-                for (let tr of trList) {
-                    if (tr.saldo >= premio) {
-                        tr.saldo -= premio;
-                        descontado = true;
-                        break;
-                    }
-                }
-            }
-            if (!descontado && pmList.length > 0) {
-                pmList[0].saldo -= premio;
-            }
+            if (pmList.length > 0) pmList[0].saldo = Math.max(0, pmList[0].saldo - premio);
 
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
-            localStorage.setItem('ag_transferencia', JSON.stringify(trList));
-
             renderizarClientes();
             actualizarSaldoTaquilla();
-            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}! Descontado del saldo del cliente y de la taquilla.`);
+            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}!`);
         }
 
         function eliminarCliente(index) {
@@ -436,7 +572,7 @@
             renderizarClientes();
         }
 
-        // --- GESTIÓN DE CUENTAS ---
+        // --- GESTIÓN DE CUENTAS Y COPIAR ---
         function renderizarCuentas() {
             const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
@@ -449,9 +585,8 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
-                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
                     </div>
                 </div>`;
             });
@@ -466,9 +601,8 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
-                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
                     </div>
                 </div>`;
             });
@@ -477,55 +611,28 @@
             poblarSelectCuentas();
         }
 
-        // --- COPIAR DATOS PARA CLIENTE ---
         function copiarDatosPM(index) {
             const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             const item = pmList[index];
             if (!item) return;
-
-            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n` +
-                          `• *Banco:* Banco de Venezuela (0102)\n` +
-                          `• *Teléfono:* ${item.telefono}\n` +
-                          `• *Cédula:* ${item.cedula}\n` +
-                          `📌 *Agencia Harold José*`;
-
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Datos de Pago Móvil copiados al portapapeles! Ya puedes pegárselos al cliente.");
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
-            });
+            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Teléfono:* ${item.telefono}\n• *Cédula:* ${item.cedula}\n📌 *Agencia Harold José*`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Datos de Pago Móvil copiados!"));
         }
 
         function copiarDatosTR(index) {
             const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             const item = trList[index];
             if (!item) return;
-
-            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n` +
-                          `• *Banco:* Banco de Venezuela (0102)\n` +
-                          `• *Nro. de Cuenta (Terminación):* ${item.terminacion}\n` +
-                          `• *Titular:* ${item.titular}\n` +
-                          `📌 *Agencia Harold José*`;
-
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Datos de Transferencia copiados al portapapeles! Ya puedes pegárselos al cliente.");
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
-            });
+            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Nro. de Cuenta (Terminación):* ${item.terminacion}\n• *Titular:* ${item.titular}\n📌 *Agencia Harold José*`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Datos de Transferencia copiados!"));
         }
 
         function poblarSelectCuentas() {
             const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             let html = '';
-            pmList.forEach((pm, i) => {
-                html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`;
-            });
-            trList.forEach((tr, i) => {
-                html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`;
-            });
+            pmList.forEach((pm, i) => html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`);
+            trList.forEach((tr, i) => html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`);
             const sel = document.getElementById('select-cuenta-destino');
             if(sel) sel.innerHTML = html;
         }
@@ -534,10 +641,9 @@
             let listKey = tipo === 'pm' ? 'ag_pago_movil' : 'ag_transferencia';
             let list = JSON.parse(localStorage.getItem(listKey)) || [];
             let cuenta = list[index];
-            let nuevoSaldoStr = prompt(`Ingrese el nuevo saldo para la cuenta (${tipo === 'pm' ? cuenta.telefono : cuenta.terminacion}):`, cuenta.saldo || 0);
+            let nuevoSaldoStr = prompt("Ingrese el nuevo saldo:", cuenta.saldo || 0);
             if (nuevoSaldoStr === null) return;
-            let nuevoSaldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
-            cuenta.saldo = nuevoSaldo;
+            cuenta.saldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
             localStorage.setItem(listKey, JSON.stringify(list));
             renderizarCuentas();
         }
@@ -546,10 +652,7 @@
             const cedula = document.getElementById('nuevo-pm-cedula').value.trim();
             const telefono = document.getElementById('nuevo-pm-tel').value.trim();
             const saldo = parseFloat((document.getElementById('nuevo-pm-saldo').value || "0").replace(',', '.')) || 0;
-            if (!cedula || !telefono) {
-                alert("Por favor ingresa la cédula y el teléfono.");
-                return;
-            }
+            if (!cedula || !telefono) return alert("Completa cédula y teléfono.");
             let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             list.push({ cedula, telefono, saldo });
             localStorage.setItem('ag_pago_movil', JSON.stringify(list));
@@ -557,17 +660,14 @@
             document.getElementById('nuevo-pm-tel').value = '';
             document.getElementById('nuevo-pm-saldo').value = '';
             renderizarCuentas();
-            alert("Pago móvil agregado correctamente.");
+            alert("Pago móvil agregado.");
         }
 
         function agregarTransferencia() {
             const terminacion = document.getElementById('nuevo-tr-term').value.trim();
             const titular = document.getElementById('nuevo-tr-titular').value.trim();
             const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
-            if (!terminacion || !titular) {
-                alert("Por favor ingresa la terminación de cuenta y el titular.");
-                return;
-            }
+            if (!terminacion || !titular) return alert("Completa terminación y titular.");
             let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             list.push({ terminacion, titular, saldo });
             localStorage.setItem('ag_transferencia', JSON.stringify(list));
@@ -575,21 +675,7 @@
             document.getElementById('nuevo-tr-titular').value = '';
             document.getElementById('nuevo-tr-saldo').value = '';
             renderizarCuentas();
-            alert("Cuenta de transferencia agregada correctamente.");
-        }
-
-        function eliminarPM(index) {
-            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            list.splice(index, 1);
-            localStorage.setItem('ag_pago_movil', JSON.stringify(list));
-            renderizarCuentas();
-        }
-
-        function eliminarTR(index) {
-            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-            list.splice(index, 1);
-            localStorage.setItem('ag_transferencia', JSON.stringify(list));
-            renderizarCuentas();
+            alert("Cuenta agregada.");
         }
 
         // --- PROCESAMIENTO OCR Y REGISTRO ---
@@ -606,11 +692,7 @@
                 document.getElementById('resultado-container').classList.remove('hidden');
                 document.getElementById('loading-ocr').classList.remove('hidden');
                 
-                Tesseract.recognize(
-                    e.target.result,
-                    'spa',
-                    { logger: m => console.log(m) }
-                ).then(({ data: { text } }) => {
+                Tesseract.recognize(e.target.result, 'spa').then(({ data: { text } }) => {
                     document.getElementById('loading-ocr').classList.add('hidden');
                     analizarTextoYExtraer(text);
                 }).catch(err => {
@@ -634,22 +716,16 @@
             let tipoDetectado = "";
 
             for (let pm of pmList) {
-                const tieneCedula = texto.includes(pm.cedula);
-                const tieneTel = texto.includes(pm.telefono);
-                if (tieneCedula || tieneTel || texto.includes("PAGOMOVIL") || texto.includes("PAGO MOVIL")) {
-                    if (tieneCedula || tieneTel) {
-                        valido = true;
-                        tipoDetectado = "Pago Móvil Válido";
-                        break;
-                    }
+                if (texto.includes(pm.cedula) || texto.includes(pm.telefono) || texto.includes("PAGOMOVIL")) {
+                    valido = true;
+                    tipoDetectado = "Pago Móvil Válido";
+                    break;
                 }
             }
 
             if (!valido) {
                 for (let tr of trList) {
-                    const tieneTerminacion = texto.includes(tr.terminacion);
-                    const tieneNombre = (texto.includes("HAROLD") && texto.includes("GALEA")) || texto.includes(tr.titular.toUpperCase().split(' ')[0]);
-                    if (tieneTerminacion || (texto.includes("DESTINO") && tieneNombre)) {
+                    if (texto.includes(tr.terminacion) || texto.includes("HAROLD")) {
                         valido = true;
                         tipoDetectado = "Transferencia Válida";
                         break;
@@ -657,64 +733,22 @@
                 }
             }
 
-            const lineas = texto.split('\n');
             let refEncontrada = '';
             let montoEncontrado = '';
-
-            for (let i = 0; i < lineas.length; i++) {
-                let linea = lineas[i];
-                if (linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('REFERENCIA')) {
-                    let nums = linea.match(/\d{6,}/);
-                    if (nums) refEncontrada = nums[0];
-                    else if (i + 1 < lineas.length) {
-                        let numsNext = lineas[i+1].match(/\d{6,}/);
-                        if (numsNext) refEncontrada = numsNext[0];
-                    }
-                }
-                if (linea.includes('BS') || linea.includes('BOLÍVARES') || linea.includes(',00')) {
-                    let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
-                    if (matchMonto && matchMonto[1].length > 1) {
-                        montoEncontrado = matchMonto[1];
-                    }
-                }
-            }
-
-            if (!refEncontrada) {
-                let matchRef = texto.match(/\b\d{8,15}\b/);
-                if (matchRef) refEncontrada = matchRef[0];
-            }
-            if (!montoEncontrado) {
-                let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
-                if (matchesMonto) montoEncontrado = matchesMonto[0];
-            }
+            let matchRef = texto.match(/\b\d{6,15}\b/);
+            if (matchRef) refEncontrada = matchRef[0];
+            let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
+            if (matchesMonto) montoEncontrado = matchesMonto[0];
 
             if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
-            if (montoEncontrado) {
-                let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
-                document.getElementById('input-monto').value = montoLimpio;
-            }
-
-            // Validación de Referencia Duplicada
-            if (refEncontrada) {
-                const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
-                const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
-                
-                if (duplicada) {
-                    alerta.classList.remove('hidden');
-                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! La referencia ${refEncontrada} ya fue utilizada por el cliente "${duplicada.cliente}" (Monto: Bs. ${duplicada.monto.toLocaleString('es-VE')}).`;
-                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante ya registrado previamente. No se puede reutilizar.`;
-                    return;
-                }
-            }
+            if (montoEncontrado) document.getElementById('input-monto').value = montoEncontrado.replace(/\./g, '').replace(',', '.');
 
             if (valido) {
                 alerta.classList.add('hidden');
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado} aprobada con éxito. Datos extraídos automáticamente.`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado} aprobada con éxito.`;
             } else {
                 alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! El comprobante NO coincide con tus cuentas configuradas.`;
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
                 statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado por seguridad.`;
             }
@@ -723,65 +757,34 @@
         function registrarPago() {
             const referencia = document.getElementById('input-ref').value.trim();
             const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
-            const montoStr = document.getElementById('input-monto').value.trim();
-            const monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            const monto = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
             const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
             
-            if(!referencia || !monto) {
-                alert("Por favor asegúrate de que la referencia y el monto estén rellenados.");
-                return;
-            }
-            
-            // Validar duplicado antes de registrar
-            let refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
-            if (refsUsadas.some(r => r.referencia === referencia)) {
-                alert(`¡Error! La referencia ${referencia} ya se encuentra registrada en el sistema.`);
-                return;
-            }
+            if(!referencia || !monto) return alert("Asegúrate de rellenar la referencia y el monto.");
 
-            // 1. Acreditar saldo a la cuenta seleccionada
             if (cuentaDestinoSel) {
                 let partes = cuentaDestinoSel.split('_');
                 let tipo = partes[0];
                 let idx = parseInt(partes[1]);
                 if (tipo === 'pm') {
                     let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-                    if (pmList[idx]) {
-                        pmList[idx].saldo = (pmList[idx].saldo || 0) + monto;
-                        localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
-                    }
+                    if (pmList[idx]) pmList[idx].saldo = (pmList[idx].saldo || 0) + monto;
+                    localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
                 } else if (tipo === 'tr') {
                     let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-                    if (trList[idx]) {
-                        trList[idx].saldo = (trList[idx].saldo || 0) + monto;
-                        localStorage.setItem('ag_transferencia', JSON.stringify(trList));
-                    }
+                    if (trList[idx]) trList[idx].saldo = (trList[idx].saldo || 0) + monto;
+                    localStorage.setItem('ag_transferencia', JSON.stringify(trList));
                 }
             }
 
-            // 2. Acreditar saldo al cliente
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
-            
-            if (clienteExistente) {
-                clienteExistente.saldo += monto;
-            } else {
-                clientes.push({ nombre: clienteNombre, saldo: monto });
-            }
+            if (clienteExistente) clienteExistente.saldo += monto;
+            else clientes.push({ nombre: clienteNombre, saldo: monto });
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+
+            alert(`¡Pago registrado exitosamente! Bs. ${monto.toLocaleString('es-VE')} acreditados a ${clienteNombre}.`);
             
-            // 3. Guardar la referencia como utilizada
-            refsUsadas.push({
-                referencia: referencia,
-                cliente: clienteNombre,
-                monto: monto,
-                fecha: new Date().toLocaleString()
-            });
-            localStorage.setItem('ag_referencias_usadas', JSON.stringify(refsUsadas));
-            
-            alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
-            
-            // Limpiar campos
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente').value = '';
             document.getElementById('input-monto').value = '';
