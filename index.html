@@ -351,31 +351,41 @@
         let diaSeleccionado = 'Lunes';
 
         function inicializarSistemasPorDefecto() {
-            if (!dbState.ag_sistemas || dbState.ag_sistemas.length === 0) {
-                const sistemasDefault = [
-                    { id: 'sys_maxplay', nombre: 'Maxplay', porcentaje: 14 },
-                    { id: 'sys_matrix', nombre: 'Matrix Comp', porcentaje: 14 },
-                    { id: 'sys_srq', nombre: 'SRQ Polla', porcentaje: 14 },
-                    { id: 'sys_atenas', nombre: 'Atenas', porcentaje: 12 },
-                    { id: 'sys_pozo', nombre: 'POZO', porcentaje: 0 },
-                    { id: 'sys_winbig', nombre: 'WIN BIG', porcentaje: 14 },
-                    { id: 'sys_premier', nombre: 'PREMIER', porcentaje: 14 },
-                    { id: 'sys_fenix', nombre: 'FENIX', porcentaje: 14 },
-                    { id: 'sys_maxplayapp', nombre: 'MAX PLAY APP', porcentaje: 14 }
-                ];
-                dbState.ag_sistemas = sistemasDefault;
+            const sistemasDefault = [
+                { id: 'sys_maxplay', nombre: 'Maxplay', porcentaje: 14 },
+                { id: 'sys_matrix', nombre: 'Matrix Comp', porcentaje: 14 },
+                { id: 'sys_srq', nombre: 'SRQ Polla', porcentaje: 14 },
+                { id: 'sys_atenas', nombre: 'Atenas', porcentaje: 12 },
+                { id: 'sys_pozo', nombre: 'POZO', porcentaje: 0 },
+                { id: 'sys_winbig', nombre: 'WIN BIG', porcentaje: 14 },
+                { id: 'sys_premier', nombre: 'PREMIER', porcentaje: 14 },
+                { id: 'sys_fenix', nombre: 'FENIX', porcentaje: 14 },
+                { id: 'sys_maxplayapp', nombre: 'MAX PLAY APP', porcentaje: 14 }
+            ];
 
-                if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
-                const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-                dias.forEach(dia => {
-                    if (!dbState.ag_sistemas_datos[dia]) dbState.ag_sistemas_datos[dia] = {};
-                    sistemasDefault.forEach(sys => {
-                        if (!dbState.ag_sistemas_datos[dia][sys.id]) {
-                            dbState.ag_sistemas_datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
-                        }
-                    });
-                });
+            if (!dbState.ag_sistemas) {
+                dbState.ag_sistemas = [];
             }
+
+            // Fusión inteligente: Asegura que los sistemas oficiales estén, pero respeta tus sistemas personalizados y no los borra
+            sistemasDefault.forEach(defSys => {
+                const existe = dbState.ag_sistemas.some(s => s.nombre.trim().toLowerCase() === defSys.nombre.trim().toLowerCase() || s.id === defSys.id);
+                if (!existe) {
+                    dbState.ag_sistemas.push(defSys);
+                }
+            });
+
+            if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            dias.forEach(dia => {
+                if (!dbState.ag_sistemas_datos[dia]) dbState.ag_sistemas_datos[dia] = {};
+                dbState.ag_sistemas.forEach(sys => {
+                    if (!dbState.ag_sistemas_datos[dia][sys.id]) {
+                        dbState.ag_sistemas_datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
+                    }
+                });
+            });
+
             if (dbState.ag_remanente_dom === undefined) dbState.ag_remanente_dom = 0;
             if (dbState.ag_comision_gastada === undefined) dbState.ag_comision_gastada = 0;
         }
