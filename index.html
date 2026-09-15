@@ -3,1416 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agencia Harold José - Taquilla</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tesseract.js para OCR -->
-    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
-    <!-- FontAwesome para iconos -->
+    <title>Agencia Harold José - Control de Taquilla</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b1329;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .card-dark {
+            background-color: #131d35;
+            border: 1px solid #1e293b;
+        }
+        .input-dark {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #fff;
+        }
+        .input-dark:focus {
+            border-color: #eab308;
+            outline: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans pb-20">
+<body class="min-h-screen pb-24">
 
-    <!-- Alerta Anti-Fraude Dinámica -->
-    <div id="alerta-antifraude" class="hidden bg-red-600 text-white p-3 text-sm font-semibold text-center shadow-md transition-all duration-300">
-        <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="texto-alerta">¡ALERTA ANTI-FRAUDE! El comprobante NO contiene tus datos oficiales.</span>
-    </div>
-
-    <!-- Contenedor Principal -->
-    <main class="p-4 max-w-md mx-auto">
-        
-        <!-- VISTA: PAGOS -->
-        <section id="view-pagos" class="space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3 flex items-center">
-                    <i class="fa-solid fa-receipt mr-2"></i> Validador de Comprobantes (Multi-Banco)
-                </h2>
-                
-                <!-- Subir / Capturar / Pegar Comprobante -->
-                <div id="drop-zone" class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-yellow-400 transition focus:outline-none" tabindex="0" onclick="document.getElementById('file-input').click()">
-                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-yellow-400 mb-2"></i>
-                    <p class="text-sm text-gray-300">Toca aquí o <span class="text-yellow-400 font-bold">pega (Ctrl+V)</span> la captura</p>
-                    <span class="text-xs text-gray-500">Pago Móvil o Transferencia</span>
-                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="procesarComprobanteArchivo(event)">
-                </div>
-
-                <!-- Preview de Imagen y Estado -->
-                <div id="loading-ocr" class="hidden text-center py-4">
-                    <i class="fa-solid fa-spinner fa-spin text-yellow-400 text-2xl mb-2"></i>
-                    <p class="text-xs text-gray-300">Leyendo datos del comprobante (OCR)...</p>
-                </div>
-
-                <div id="resultado-container" class="mt-4 hidden space-y-3">
-                    <div class="relative">
-                        <img id="img-preview" class="w-full h-40 object-contain rounded bg-black/40 border border-gray-700" alt="Preview">
-                    </div>
-                    <div id="status-badge" class="p-2 rounded text-xs font-bold text-center"></div>
-                </div>
+    <!-- Header / Navbar Superior -->
+    <header class="p-4 card-dark border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-dice text-amber-400 text-2xl"></i>
+                <h1 class="font-bold text-lg text-amber-400 tracking-wide">Agencia Harold José</h1>
             </div>
-
-            <!-- Formulario de Registro -->
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
-                <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider">Datos de la Transacción</h3>
-                <div>
-                    <label class="text-xs text-gray-400">Referencia (Operación)</label>
-                    <input type="text" id="input-ref" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Autocompletado por OCR">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">Cliente / Pronosticador</label>
-                    <input type="text" id="input-cliente" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Nombre del cliente">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">Monto (Bs)</label>
-                    <input type="text" id="input-monto" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="0.00">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">Cuenta de Destino (Acreditar Saldo)</label>
-                    <select id="select-cuenta-destino" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none">
-                        <!-- Relleno dinámico -->
-                    </select>
-                </div>
-                <div class="flex items-center space-x-2 pt-1">
-                    <input type="checkbox" id="check-cashea" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0">
-                    <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
-                </div>
-                <button onclick="registrarPago()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2.5 rounded-lg transition text-sm shadow">
-                    Registrar y Acreditar Saldo
+            <div class="flex space-x-2">
+                <button onclick="openAddSystemModal()" class="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-sm transition flex items-center shadow">
+                    <i class="fa-solid fa-plus mr-1"></i> Sistema
+                </button>
+                <button onclick="resetData()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-sm transition flex items-center shadow">
+                    <i class="fa-solid fa-trash mr-1"></i> Eliminar
                 </button>
             </div>
-        </section>
+        </div>
+    </header>
 
-        <!-- VISTA: CAJA (CONTROL SALDO TAQUILLA Y CUADRE) -->
-        <section id="view-caja" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
-                <h2 class="text-lg font-bold text-yellow-400 mb-2"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla y Cuadre</h2>
-                
-                <!-- Saldo Total en Bancos -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
-                    <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
-                    <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
+    <main class="max-w-4xl mx-auto p-4 space-y-6">
+
+        <!-- Selector de Días de la Semana -->
+        <div class="card-dark p-3 rounded-2xl shadow-lg">
+            <p class="text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">Control diario y desglose semanal por sistema</p>
+            <div id="daysContainer" class="flex space-x-2 overflow-x-auto pb-1 scrollbar-thin">
+                <!-- Se generan dinámicamente o por pestañas -->
+                <button onclick="setDay('Lunes')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-amber-400 text-slate-950 shadow">Lunes</button>
+                <button onclick="setDay('Martes')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Martes</button>
+                <button onclick="setDay('Miércoles')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Miércoles</button>
+                <button onclick="setDay('Jueves')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Jueves</button>
+                <button onclick="setDay('Viernes')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Viernes</button>
+                <button onclick="setDay('Sábado')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Sábado</button>
+                <button onclick="setDay('Domingo')" class="day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Domingo</button>
+            </div>
+        </div>
+
+        <!-- Lista de Sistemas -->
+        <div id="systemsList" class="space-y-4">
+            <!-- Los sistemas se renderizan aquí mediante JavaScript -->
+        </div>
+
+        <!-- RESUMEN GENERAL ACUMULADO -->
+        <div class="card-dark p-5 rounded-2xl shadow-xl border border-amber-500/30">
+            <div class="flex items-center space-x-2 border-b border-slate-800 pb-3 mb-4">
+                <i class="fa-solid fa-chart-pie text-amber-400 text-lg"></i>
+                <h2 class="text-amber-400 font-bold uppercase tracking-wider text-sm">Resumen General Acumulado</h2>
+            </div>
+            
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                    <span class="text-slate-300 font-medium">Ventas Totales:</span>
+                    <span id="resVentas" class="font-bold text-white text-base">Bs. 0,00</span>
                 </div>
-
-                <!-- Total Créditos Cashea (Semanal) -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-blue-500/50 text-center space-y-1">
-                    <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                        <i class="fa-solid fa-credit-card mr-1"></i> Total Créditos Cashea (Semanal)
-                    </p>
-                    <p id="display-caja-cashea" class="text-xl font-extrabold text-blue-300">Bs. 0,00</p>
-                    <p class="text-[10px] text-gray-400">Créditos cubiertos por los sistemas (Descontados del neto).</p>
+                <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                    <span class="text-slate-300 font-medium">Premios Totales:</span>
+                    <span id="resPremios" class="font-bold text-red-400 text-base">Bs. 0,00</span>
                 </div>
-
-                <!-- Remanente / Comisión Arrastrada (Domingo a Lunes) -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
-                    <p class="text-xs text-gray-400 uppercase font-semibold">
-                        <i class="fa-solid fa-piggy-bank mr-1 text-yellow-400"></i> Remanente / Comisión Arrastrada (Dom-Lun)
-                    </p>
-                    <input type="text" id="input-remanente-dom" value="0,00" placeholder="0.00" oninput="actualizarRemanenteDom(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-sm text-yellow-400 font-bold text-center outline-none focus:border-yellow-400">
-                    <p class="text-[10px] text-gray-500">Saldo inicial arrastrado que se encuentra en taquilla/banco.</p>
+                <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                    <span class="text-slate-300 font-medium">Comisiones Totales (Sin SRQ):</span>
+                    <span id="resComisiones" class="font-bold text-amber-400 text-base">Bs. 0,00</span>
                 </div>
-
-                <!-- Casilla de Cuadre de Caja -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-yellow-500/50 text-center space-y-1">
-                    <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
-                        <i class="fa-solid fa-scale-balanced mr-1"></i> Cuadre de Caja (Saldo Real)
-                    </p>
-                    <p id="display-cuadre-caja" class="text-2xl font-extrabold text-green-400">Bs. 0,00</p>
-                    <p class="text-[10px] text-gray-400">Banco menos (Saldos Clientes), menos (Neto Sistemas) y menos (Remanente Dom-Lun). Debe ser 0,00 Bs si todo cuadra.</p>
+                <!-- NUEVA LÍNEA: Comisión SRQ separada -->
+                <div class="flex justify-between items-center py-1 border-b border-slate-800/60 bg-amber-950/20 px-2 rounded">
+                    <span class="text-amber-300 font-medium"><i class="fa-solid fa-star text-xs mr-1 text-amber-400"></i> Comisiones SRQ (Aparte):</span>
+                    <span id="resComisionSRQ" class="font-bold text-amber-300 text-base">Bs. 0,00</span>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="ajusteCaja('ingreso')" class="bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-plus mr-1"></i> Ingreso General</button>
-                    <button onclick="ajusteCaja('retiro')" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-minus mr-1"></i> Retiro General</button>
+                <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                    <span class="text-slate-300 font-medium">Total Créditos Cashea (Descuento):</span>
+                    <span id="resCashea" class="font-bold text-blue-400 text-base">- Bs. 0,00</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <span class="text-slate-200 font-bold uppercase">Saldo Neto Global:</span>
+                    <span id="resSaldoNeto" class="font-extrabold text-green-400 text-lg">0,00 Bs</span>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- VISTA: SISTEMAS -->
-        <section id="view-sistemas" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
+        <!-- CONTROL SALDO TAQUILLA Y CUADRE -->
+        <div class="card-dark p-5 rounded-2xl shadow-xl border border-slate-800 space-y-4">
+            <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+                <i class="fa-solid fa-cash-register text-amber-400 text-lg"></i>
+                <h2 class="text-amber-400 font-bold uppercase tracking-wider text-sm">Control Saldo Taquilla y Cuadre</h2>
+            </div>
+
+            <!-- Saldo Disponible -->
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Saldo Total Disponible en Taquilla (Todas las Cuentas)</span>
+                <span id="ctrlSaldoTaquilla" class="text-2xl font-black text-green-400">Bs. 0,00</span>
+            </div>
+
+            <!-- Créditos Cashea Semanal -->
+            <div class="bg-blue-950/30 p-4 rounded-xl border border-blue-900/40">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs text-blue-300 font-bold uppercase tracking-wider flex items-center">
+                        <i class="fa-solid fa-credit-card mr-1.5"></i> Total Créditos Cashea (Semanal)
+                    </span>
+                    <input type="number" id="inputCashea" value="83250" oninput="calculateAll()" class="input-dark w-32 px-2 py-1 rounded text-right text-sm font-bold text-blue-400">
+                </div>
+                <p class="text-[11px] text-slate-400">Créditos cubiertos por los sistemas (Descontados del neto).</p>
+            </div>
+
+            <!-- Remanente / Comisión Arrastrada con opción de descuento por gasto -->
+            <div class="bg-amber-950/20 p-4 rounded-xl border border-amber-900/40 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-server mr-2"></i> Sistemas y Loterías</h2>
-                    <div class="flex space-x-2">
-                        <button onclick="agregarSistemaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-plus mr-1"></i> Sistema</button>
-                        <button onclick="reiniciarHistorialSemanal()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-trash-can mr-1"></i> Eliminar</button>
-                    </div>
+                    <span class="text-xs text-amber-300 font-bold uppercase tracking-wider flex items-center">
+                        <i class="fa-solid fa-wallet mr-1.5"></i> Remanente / Comisión Arrastrada (Dom-Lun)
+                    </span>
+                    <input type="number" id="inputRemanenteBase" value="12030.35" oninput="calculateAll()" class="input-dark w-32 px-2 py-1 rounded text-right text-sm font-bold text-amber-400">
                 </div>
-                <p class="text-xs text-gray-400">Control diario y desglose semanal por sistema</p>
                 
-                <!-- Días de la semana -->
-                <div class="flex overflow-x-auto space-x-2 pb-2">
-                    <button onclick="cambiarDiaSistema('Lunes')" id="btn-dia-Lunes" class="px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
-                    <button onclick="cambiarDiaSistema('Martes')" id="btn-dia-Martes" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
-                    <button onclick="cambiarDiaSistema('Miércoles')" id="btn-dia-Miércoles" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
-                    <button onclick="cambiarDiaSistema('Jueves')" id="btn-dia-Jueves" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
-                    <button onclick="cambiarDiaSistema('Viernes')" id="btn-dia-Viernes" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
-                    <button onclick="cambiarDiaSistema('Sábado')" id="btn-dia-Sábado" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
-                    <button onclick="cambiarDiaSistema('Domingo')" id="btn-dia-Domingo" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
+                <!-- NUEVO: Campo para restar lo gastado de la comisión -->
+                <div class="flex justify-between items-center pt-2 border-t border-amber-900/30">
+                    <div>
+                        <span class="text-xs text-slate-300 font-medium block">Comisión Gastada / Retirada Hoy:</span>
+                        <span class="text-[10px] text-slate-400">Resta automáticamente del remanente para cuadrar caja</span>
+                    </div>
+                    <input type="number" id="inputComisionGastada" value="0" placeholder="0.00" oninput="calculateAll()" class="input-dark w-32 px-2 py-1 rounded text-right text-sm font-bold text-red-400">
                 </div>
-
-                <!-- Contenedor Dinámico de Sistemas por Día -->
-                <div id="lista-sistemas-dia" class="space-y-3">
-                    <!-- Renderizado dinámico -->
-                </div>
-            </div>
-
-            <!-- Resumen Diario del Día Seleccionado -->
-            <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-xl shadow border border-yellow-500/50 space-y-3">
-                <h3 id="titulo-resumen-diario" class="text-xs font-bold text-yellow-400 uppercase tracking-wider text-center bg-gray-800/80 py-1.5 rounded border border-gray-700">
-                    <i class="fa-solid fa-calendar-day mr-1"></i> RESUMEN DIARIO (LUNES)
-                </h3>
-                <div class="space-y-1.5 text-xs">
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Ventas del Día:</span>
-                        <strong id="dia-ventas" class="text-white">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Premios del Día:</span>
-                        <strong id="dia-premios" class="text-red-400">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Comisiones del Día:</span>
-                        <strong id="dia-comisiones" class="text-yellow-400">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800 text-sm font-bold mt-2">
-                        <span class="text-gray-200">Saldo Neto del Día:</span>
-                        <strong id="dia-neto" class="text-green-400">0,00 Bs</strong>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Resumen de Todos los Sistemas -->
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
-                <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center">
-                    <i class="fa-solid fa-file-lines mr-2 text-yellow-400"></i> Resumen de Todos los Sistemas
-                </h3>
-                <div id="resumen-todos-sistemas" class="space-y-2 text-xs">
-                    <!-- Renderizado dinámico -->
-                </div>
-            </div>
-
-            <!-- Resumen General Acumulado -->
-            <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-xl shadow border border-yellow-500/50 space-y-3">
-                <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-wider text-center bg-gray-800/80 py-1.5 rounded border border-gray-700">
-                    <i class="fa-solid fa-chart-pie mr-1"></i> RESUMEN GENERAL ACUMULADO
-                </h3>
-                <div class="space-y-1.5 text-xs">
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Ventas Totales:</span>
-                        <strong id="acum-ventas" class="text-white">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Premios Totales:</span>
-                        <strong id="acum-premios" class="text-red-400">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Comisiones Totales:</span>
-                        <strong id="acum-comisiones" class="text-yellow-400">Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Total Créditos Cashea (Descuento):</span>
-                        <strong id="acum-cashea-desc" class="text-blue-400">- Bs. 0,00</strong>
-                    </div>
-                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800 text-sm font-bold mt-2">
-                        <span class="text-gray-200">Saldo Neto Global:</span>
-                        <strong id="acum-neto" class="text-green-400">0,00 Bs</strong>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA: CLIENTES (CARTERA PREMIUM / PREMIOS Y CREDITO CASHEA) -->
-        <section id="view-clientes" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos (Cartera Premium)</h2>
-                    <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
-                </div>
-                <p class="text-xs text-gray-400">Control de créditos Cashea, saldos de cartera premium (premios retirables) y jugadas.</p>
                 
-                <!-- Tarjeta Suma Total de Saldos Positivos -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
-                    <p class="text-xs text-gray-400">Suma Total de Saldos (Cashea + Cartera Premium)</p>
-                    <p id="display-total-saldos-clientes" class="text-xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
-                </div>
-
-                <!-- Buscador rápido -->
-                <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
-
-                <!-- Lista de Clientes -->
-                <div id="lista-clientes" class="space-y-3 pt-2">
-                    <!-- Renderizado dinámico -->
+                <div class="flex justify-between items-center pt-1 text-xs">
+                    <span class="text-slate-400">Remanente Neto Disponible:</span>
+                    <span id="lblRemanenteNeto" class="font-bold text-amber-400">Bs. 12.030,35</span>
                 </div>
             </div>
-        </section>
 
-        <!-- VISTA: CASHEA -->
-        <section id="view-cashea" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-credit-card mr-2"></i> Créditos Cashea</h2>
-                    <button onclick="agregarCreditoCasheaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center">
-                        <i class="fa-solid fa-plus mr-1"></i> Otorgar Crédito
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400">Registro de créditos Cashea otorgados. Este monto se descuenta automáticamente del saldo neto global de los sistemas.</p>
-                
-                <!-- Total Cashea Otorgado -->
-                <div class="bg-gray-900 p-3 rounded-lg border border-blue-500/50 text-center">
-                    <p class="text-xs text-gray-400">Total Créditos Cashea Otorgados (Semanal)</p>
-                    <p id="display-total-cashea-view" class="text-2xl font-extrabold text-blue-400 mt-1">Bs. 0,00</p>
-                </div>
-
-                <!-- Lista de Créditos Cashea -->
-                <div id="lista-creditos-cashea" class="space-y-2 pt-2">
-                    <!-- Renderizado dinámico -->
-                </div>
+            <!-- Cuadre de Caja (Saldo Real) -->
+            <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-center space-y-1">
+                <span class="text-xs text-slate-400 uppercase tracking-wider block font-bold">Cuadre de Caja (Saldo Real)</span>
+                <span id="ctrlCuadreCaja" class="text-2xl font-black text-red-400">Bs. 0,00</span>
+                <p class="text-[11px] text-slate-400 mt-1">Banco menos (Saldos Clientes), menos (Neto Sistemas), menos (Remanente Neto) y menos (Gastos Comisión). Debe ser 0,00 Bs si todo cuadra.</p>
             </div>
-        </section>
 
-        <!-- VISTA: CUENTAS Y SALDOS -->
-        <section id="view-cuentas" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
-                <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-wallet mr-2"></i> Cuentas Oficiales y Saldos</h2>
-                
-                <!-- Pago Móvil -->
-                <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
-                    <p class="font-bold text-xs text-yellow-400 uppercase">Pago Móvil BDV:</p>
-                    <div id="lista-pago-movil" class="space-y-2 text-xs"></div>
-                    <div class="pt-2 border-t border-gray-800 space-y-2">
-                        <p class="text-[11px] text-gray-400 font-semibold">Agregar Nuevo Pago Móvil:</p>
-                        <input type="text" id="nuevo-pm-cedula" placeholder="Cédula (Ej: 18274410)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <input type="text" id="nuevo-pm-tel" placeholder="Teléfono (Ej: 04124489363)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <input type="text" id="nuevo-pm-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <button onclick="agregarPagoMovil()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Pago Móvil</button>
-                    </div>
-                </div>
-
-                <!-- Transferencia -->
-                <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
-                    <p class="font-bold text-xs text-yellow-400 uppercase">Cuentas Transferencia:</p>
-                    <div id="lista-transferencia" class="space-y-2 text-xs"></div>
-                    <div class="pt-2 border-t border-gray-800 space-y-2">
-                        <p class="text-[11px] text-gray-400 font-semibold">Agregar Nueva Cuenta Transferencia:</p>
-                        <input type="text" id="nuevo-tr-term" placeholder="Últimos 4 dígitos (Ej: 7201)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <input type="text" id="nuevo-tr-titular" placeholder="Titular (Ej: Harold Eliezer Galea Sanchez)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <input type="text" id="nuevo-tr-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
-                        <button onclick="agregarTransferencia()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Cuenta Destino</button>
-                    </div>
-                </div>
+            <!-- Botones de Ingreso / Retiro General -->
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="openTransactionModal('ingreso')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center shadow">
+                    <i class="fa-solid fa-plus mr-1.5"></i> Ingreso General
+                </button>
+                <button onclick="openTransactionModal('retiro')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center shadow">
+                    <i class="fa-solid fa-minus mr-1.5"></i> Retiro General
+                </button>
             </div>
-        </section>
+        </div>
 
     </main>
 
-    <!-- Barra de Navegación Inferior -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-2 flex justify-around shadow-lg z-50">
-        <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center text-yellow-400">
-            <i class="fa-solid fa-money-bill-transfer text-base"></i>
-            <span class="text-[9px] mt-1 font-semibold">Pagos</span>
+    <!-- Barra Navegación Inferior Móvil -->
+    <nav class="fixed bottom-0 left-0 right-0 card-dark border-t border-slate-800 py-2.5 px-6 flex justify-around items-center z-40 shadow-lg">
+        <button class="flex flex-col items-center text-amber-400">
+            <i class="fa-solid fa-server text-lg"></i>
+            <span class="text-[11px] mt-0.5 font-medium">Sistemas</span>
         </button>
-        <button onclick="cambiarVista('caja')" id="nav-caja" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-cash-register text-base"></i>
-            <span class="text-[9px] mt-1">Caja</span>
-        </button>
-        <button onclick="cambiarVista('sistemas')" id="nav-sistemas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-server text-base"></i>
-            <span class="text-[9px] mt-1">Sistemas</span>
-        </button>
-        <button onclick="cambiarVista('clientes')" id="nav-clientes" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-user-group text-base"></i>
-            <span class="text-[9px] mt-1">Clientes</span>
-        </button>
-        <button onclick="cambiarVista('cashea')" id="nav-cashea" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-credit-card text-base"></i>
-            <span class="text-[9px] mt-1">Cashea</span>
-        </button>
-        <button onclick="cambiarVista('cuentas')" id="nav-cuentas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-id-card text-base"></i>
-            <span class="text-[9px] mt-1">Cuentas</span>
+        <button onclick="alert('Sección Clientes / Cuentas')" class="flex flex-col items-center text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-users text-lg"></i>
+            <span class="text-[11px] mt-0.5 font-medium">Clientes</span>
         </button>
     </nav>
 
-    <!-- Script de Funcionalidad Integral -->
+    <!-- Modal Agregar Sistema -->
+    <div id="addSystemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="card-dark w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-700 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-amber-400 text-base">Agregar Nuevo Sistema</h3>
+                <button onclick="closeAddSystemModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-300 block mb-1 font-medium">Nombre del Sistema</label>
+                    <input type="text" id="newSysName" placeholder="Ej. Lotería Nueva (14%)" class="input-dark w-full px-3 py-2 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-300 block mb-1 font-medium">Tipo de Comisión</label>
+                    <select id="newSysType" onchange="toggleModalCommissionType()" class="input-dark w-full px-3 py-2 rounded-lg text-sm">
+                        <option value="porcentaje">Porcentaje (%)</option>
+                        <option value="manual">Comisión Manual</option>
+                        <option value="srq">Sistema SRQ (Polla)</option>
+                    </select>
+                </div>
+                <div id="modalPorcentajeDiv">
+                    <label class="text-xs text-slate-300 block mb-1 font-medium">Porcentaje de Comisión (%)</label>
+                    <input type="number" id="newSysPct" value="14" class="input-dark w-full px-3 py-2 rounded-lg text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeAddSystemModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition">Cancelar</button>
+                <button onclick="confirmAddSystem()" class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-4 py-2 rounded-lg text-sm font-bold transition">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de lógica de la aplicación -->
     <script>
-        let dbState = {};
-        let diaSeleccionado = 'Lunes';
+        // Día activo por defecto
+        let currentDay = 'Lunes';
 
-        async function cargarDatosRemotos() {
+        // Estructura inicial con los 9 sistemas pedidos por el usuario
+        let systems = [
+            { id: 1, name: 'Maxplay (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 2460, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 2, name: 'Matrix Comp (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 56720, premios: 61500, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 3, name: 'SRQ Polla (14%)', type: 'srq', commissionValue: 14, data: { Lunes: { ventas: 85200, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 4, name: 'Atenas (12%)', type: 'porcentaje', commissionValue: 12, data: { Lunes: { ventas: 2800, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 5, name: 'POZO (Comisión Manual)', type: 'manual', commissionValue: 0, data: { Lunes: { ventas: 23600, premios: 0, manualComm: 2830 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 6, name: 'WIN BIG (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 1700, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 7, name: 'PREMIER (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 17340, premios: 21000, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 8, name: 'FENIX (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 1500, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } },
+            { id: 9, name: 'MAX PLAY APP (14%)', type: 'porcentaje', commissionValue: 14, data: { Lunes: { ventas: 0, premios: 0, manualComm: 0 }, Martes: { ventas: 0, premios: 0, manualComm: 0 }, Miércoles: { ventas: 0, premios: 0, manualComm: 0 }, Jueves: { ventas: 0, premios: 0, manualComm: 0 }, Viernes: { ventas: 0, premios: 0, manualComm: 0 }, Sábado: { ventas: 0, premios: 0, manualComm: 0 }, Domingo: { ventas: 0, premios: 0, manualComm: 0 } } }
+        ];
+
+        // Cargar datos guardados en localStorage si existen
+        if (localStorage.getItem('harold_systems')) {
             try {
-                let response = await fetch('/api/data');
-                dbState = await response.json();
-            } catch (e) {
-                console.error("Error al conectar con el servidor", e);
-            }
-            if (dbState.ag_remanente_dom === undefined) {
-                dbState.ag_remanente_dom = 0;
-            }
-            renderizarCuentas();
-            renderizarClientes();
-            renderizarCashea();
-            actualizarSaldoTaquilla();
-            poblarSelectCuentas();
-            renderizarSistemas();
+                systems = JSON.parse(localStorage.getItem('harold_systems'));
+            } catch (e) { console.error(e); }
         }
 
-        async function guardarDatosRemotos() {
-            try {
-                await fetch('/api/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dbState)
-                });
-            } catch (e) {
-                console.error("Error al guardar en el servidor", e);
-            }
+        function saveData() {
+            localStorage.setItem('harold_systems', JSON.stringify(systems));
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            cargarDatosRemotos();
-        });
-
-        // Soporte global para Pegar imágenes (Ctrl+V)
-        window.addEventListener('paste', e => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            for (let item of items) {
-                if (item.type.indexOf('image') === 0) {
-                    const blob = item.getAsFile();
-                    procesarBlobImagen(blob);
-                    cambiarVista('pagos');
-                    break;
-                }
-            }
-        });
-
-        function cambiarVista(vistaId) {
-            ['pagos', 'caja', 'sistemas', 'clientes', 'cashea', 'cuentas'].forEach(v => {
-                document.getElementById('view-' + v).classList.add('hidden');
-                document.getElementById('nav-' + v).classList.remove('text-yellow-400');
-                document.getElementById('nav-' + v).classList.add('text-gray-400');
-            });
-            document.getElementById('view-' + vistaId).classList.remove('hidden');
-            document.getElementById('nav-' + vistaId).classList.remove('text-gray-400');
-            document.getElementById('nav-' + vistaId).classList.add('text-yellow-400');
-            
-            cargarDatosRemotos().then(() => {
-                if (vistaId === 'cuentas') renderizarCuentas();
-                if (vistaId === 'clientes') renderizarClientes();
-                if (vistaId === 'cashea') renderizarCashea();
-                if (vistaId === 'caja') actualizarSaldoTaquilla();
-                if (vistaId === 'pagos') poblarSelectCuentas();
-                if (vistaId === 'sistemas') renderizarSistemas();
-            });
-        }
-
-        // --- CÁLCULO DE TOTALES CASHEA Y NETO SISTEMAS ---
-        function calcularTotalCasheaCreditos() {
-            const creditos = dbState.ag_cashea_creditos || [];
-            let total = 0;
-            creditos.forEach(c => total += (parseFloat(c.monto) || 0));
-            return total;
-        }
-
-        function obtenerSaldoTotalTaquilla() {
-            const pmList = dbState.ag_pago_movil || [];
-            const trList = dbState.ag_transferencia || [];
-            let total = 0;
-            pmList.forEach(pm => total += (parseFloat(pm.saldo) || 0));
-            trList.forEach(tr => total += (parseFloat(tr.saldo) || 0));
-            return total;
-        }
-
-        function calcularNetoGlobalSistemas() {
-            const sistemas = dbState.ag_sistemas || [];
-            const datos = dbState.ag_sistemas_datos || {};
-            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-            let totalBrutoGlobal = 0;
-
-            sistemas.forEach(sys => {
-                let sysVentas = 0;
-                let sysPremios = 0;
-                let sysComision = 0;
-
-                dias.forEach(dia => {
-                    if (datos[dia] && datos[dia][sys.id]) {
-                        let v = datos[dia][sys.id].ventas || 0;
-                        let p = datos[dia][sys.id].premios || 0;
-                        let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (datos[dia][sys.id].comision || 0);
-                        sysVentas += v;
-                        sysPremios += p;
-                        sysComision += c;
-                    }
-                });
-                totalBrutoGlobal += (sysVentas - sysComision - sysPremios);
-            });
-
-            const totalCashea = calcularTotalCasheaCreditos();
-            return totalBrutoGlobal - totalCashea;
-        }
-
-        function calcularSumaTotalSaldosClientes() {
-            const clientes = dbState.ag_clientes || [];
-            let total = 0;
-            clientes.forEach(c => {
-                if (c.saldo !== undefined && c.saldoCashea === undefined) {
-                    c.saldoCashea = 0;
-                    c.saldoPremio = c.saldo;
-                    delete c.saldo;
-                }
-                let cashea = parseFloat(c.saldoCashea) || 0;
-                let premio = parseFloat(c.saldoPremio) || 0;
-                total += (cashea + premio);
-            });
-            return total;
-        }
-
-        function actualizarRemanenteDom(valor) {
-            let monto = parseFloat(valor.replace(',', '.')) || 0;
-            dbState.ag_remanente_dom = monto;
-            guardarDatosRemotos();
-            actualizarSaldoTaquilla();
-        }
-
-        function actualizarSaldoTaquilla() {
-            const totalBancos = obtenerSaldoTotalTaquilla();
-            const el = document.getElementById('display-saldo-taquilla');
-            if(el) el.innerText = `Bs. ${totalBancos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-
-            const totalCashea = calcularTotalCasheaCreditos();
-            const elCajaCashea = document.getElementById('display-caja-cashea');
-            if(elCajaCashea) elCajaCashea.innerText = `Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-
-            const totalClientes = calcularSumaTotalSaldosClientes();
-            const totalNetoSistemas = calcularNetoGlobalSistemas();
-            const remanenteDom = parseFloat(dbState.ag_remanente_dom) || 0;
-
-            const inputRem = document.getElementById('input-remanente-dom');
-            if (inputRem && document.activeElement !== inputRem) {
-                inputRem.value = remanenteDom > 0 ? remanenteDom.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
-            }
-
-            const cuadre = totalBancos - totalClientes - totalNetoSistemas - remanenteDom;
-            const elCuadre = document.getElementById('display-cuadre-caja');
-            if (elCuadre) {
-                elCuadre.innerText = `Bs. ${cuadre.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-                if (Math.abs(cuadre) < 0.01) {
-                    elCuadre.className = "text-2xl font-extrabold text-green-400";
+        function setDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                if (btn.innerText === day) {
+                    btn.className = "day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-amber-400 text-slate-950 shadow";
                 } else {
-                    elCuadre.className = "text-2xl font-extrabold text-red-400";
-                }
-            }
-        }
-
-        function ajusteCaja(tipo) {
-            let montoStr = prompt(tipo === 'ingreso' ? "Ingrese el monto de ingreso general a la taquilla (Bs):" : "Ingrese el monto de retiro general de la taquilla (Bs):");
-            if (!montoStr) return;
-            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) return;
-
-            let pmList = dbState.ag_pago_movil || [];
-            if (pmList.length > 0) {
-                if (tipo === 'ingreso') pmList[0].saldo += monto;
-                else pmList[0].saldo = Math.max(0, pmList[0].saldo - monto);
-                dbState.ag_pago_movil = pmList;
-                guardarDatosRemotos();
-                actualizarSaldoTaquilla();
-                renderizarCuentas();
-                alert(`Ajuste de caja (${tipo}) realizado con éxito.`);
-            } else {
-                alert("Debe tener al menos una cuenta registrada.");
-            }
-        }
-
-        // --- GESTIÓN DE CRÉDITOS CASHEA ---
-        function renderizarCashea() {
-            const creditos = dbState.ag_cashea_creditos || [];
-            let totalCashea = calcularTotalCasheaCreditos();
-
-            const elTotal = document.getElementById('display-total-cashea-view');
-            if(elTotal) elTotal.innerText = `Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-
-            let html = '';
-            if (creditos.length === 0) {
-                html = `<p class="text-xs text-gray-400 text-center py-4">No hay créditos Cashea registrados en esta semana.</p>`;
-            } else {
-                creditos.forEach((item, index) => {
-                    html += `
-                    <div class="bg-gray-900 p-2.5 rounded border border-gray-700 flex justify-between items-center text-xs">
-                        <div>
-                            <p class="font-bold text-yellow-400">${item.cliente}</p>
-                            <p class="text-[10px] text-gray-400">${item.fecha}</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <strong class="text-blue-400">Bs. ${(parseFloat(item.monto) || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong>
-                            <button onclick="eliminarCreditoCashea(${index})" class="text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>`;
-                });
-            }
-            const elLista = document.getElementById('lista-creditos-cashea');
-            if(elLista) elLista.innerHTML = html;
-        }
-
-        function agregarCreditoCasheaModal() {
-            let cliente = prompt("Ingrese el nombre del cliente para el crédito Cashea:");
-            if (!cliente) return;
-            let montoStr = prompt(`Ingrese el monto del crédito Cashea para ${cliente} (Bs):`);
-            if (!montoStr) return;
-            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) return alert("Monto inválido.");
-
-            if (!dbState.ag_cashea_creditos) dbState.ag_cashea_creditos = [];
-            dbState.ag_cashea_creditos.push({
-                cliente: cliente.trim(),
-                monto: monto,
-                fecha: new Date().toLocaleString()
-            });
-
-            if (!dbState.ag_clientes) dbState.ag_clientes = [];
-            let cli = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === cliente.trim().toUpperCase());
-            if (cli) {
-                if (cli.saldo !== undefined && cli.saldoCashea === undefined) {
-                    cli.saldoCashea = 0;
-                    cli.saldoPremio = cli.saldo;
-                    delete cli.saldo;
-                }
-                cli.saldoCashea = (cli.saldoCashea || 0) + monto;
-            } else {
-                dbState.ag_clientes.push({
-                    nombre: cliente.trim(),
-                    saldoCashea: monto,
-                    saldoPremio: 0
-                });
-            }
-
-            guardarDatosRemotos();
-            renderizarCashea();
-            renderizarClientes();
-            actualizarSaldoTaquilla();
-            alert(`Crédito Cashea de Bs. ${monto.toLocaleString('es-VE')} registrado para ${cliente}.`);
-        }
-
-        function eliminarCreditoCashea(index) {
-            if (!confirm("¿Está seguro de eliminar este registro de crédito Cashea?")) return;
-            dbState.ag_cashea_creditos.splice(index, 1);
-            guardarDatosRemotos();
-            renderizarCashea();
-            actualizarSaldoTaquilla();
-            renderizarResumenSistemas();
-        }
-
-        // --- GESTIÓN DE SISTEMAS Y LOTERÍAS ---
-        function cambiarDiaSistema(dia) {
-            diaSeleccionado = dia;
-            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(d => {
-                const btn = document.getElementById('btn-dia-' + d);
-                if (btn) {
-                    if (d === dia) {
-                        btn.className = "px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap";
-                    } else {
-                        btn.className = "px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap";
-                    }
+                    btn.className = "day-btn px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700";
                 }
             });
-            renderizarSistemas();
+            renderSystems();
         }
 
-        function agregarSistemaModal() {
-            let nombre = prompt("Ingrese el nombre del nuevo sistema (ej: Sistema Mixto):");
-            if (!nombre) return;
-            let porcStr = prompt("Ingrese el porcentaje fijo (o deje en 0 / vacío si la comisión es manual por productos variados):", "0");
-            let porcentaje = porcStr ? parseFloat(porcStr.replace(',', '.')) || 0 : 0;
+        function renderSystems() {
+            const container = document.getElementById('systemsList');
+            container.innerHTML = '';
 
-            if (!dbState.ag_sistemas) dbState.ag_sistemas = [];
-            let id = 'sys_' + Date.now();
-            dbState.ag_sistemas.push({ id, nombre: nombre.trim(), porcentaje });
+            systems.forEach(sys => {
+                const dayData = sys.data[currentDay] || { ventas: 0, premios: 0, manualComm: 0 };
+                const net = dayData.ventas - dayData.premios;
+                const netColor = net >= 0 ? 'text-green-400' : 'text-red-400';
 
-            if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
-            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => {
-                if (!dbState.ag_sistemas_datos[dia]) dbState.ag_sistemas_datos[dia] = {};
-                dbState.ag_sistemas_datos[dia][id] = { ventas: 0, premios: 0, comision: 0 };
-            });
-
-            guardarDatosRemotos();
-            renderizarSistemas();
-            alert("Sistema agregado correctamente.");
-        }
-
-        function eliminarSistema(id) {
-            if (!confirm("¿Está seguro de eliminar este sistema?")) return;
-            dbState.ag_sistemas = (dbState.ag_sistemas || []).filter(s => s.id !== id);
-            guardarDatosRemotos();
-            renderizarSistemas();
-        }
-
-        function reiniciarHistorialSemanal() {
-            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas, premios, créditos Cashea y saldos de los clientes.")) return;
-
-            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-            const sistemas = dbState.ag_sistemas || [];
-            const datos = {};
-            dias.forEach(dia => {
-                datos[dia] = {};
-                sistemas.forEach(sys => {
-                    datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
-                });
-            });
-            dbState.ag_sistemas_datos = datos;
-            dbState.ag_cashea_creditos = [];
-
-            if (dbState.ag_clientes) {
-                dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldoCashea: 0, saldoPremio: 0 }));
-            }
-
-            guardarDatosRemotos();
-            renderizarSistemas();
-            renderizarClientes();
-            renderizarCashea();
-            actualizarSaldoTaquilla();
-            alert("Historial semanal eliminado correctamente.");
-        }
-
-        function actualizarDatoSistema(sistemaId, campo, valor) {
-            if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
-            if (!dbState.ag_sistemas_datos[diaSeleccionado]) dbState.ag_sistemas_datos[diaSeleccionado] = {};
-            if (!dbState.ag_sistemas_datos[diaSeleccionado][sistemaId]) dbState.ag_sistemas_datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0, comision: 0 };
-
-            let val = parseFloat(valor.replace(',', '.')) || 0;
-            dbState.ag_sistemas_datos[diaSeleccionado][sistemaId][campo] = val;
-            guardarDatosRemotos();
-            renderizarResumenSistemas();
-            actualizarSaldoTaquilla();
-        }
-
-        function renderizarResumenDiario() {
-            const sistemas = dbState.ag_sistemas || [];
-            const datos = dbState.ag_sistemas_datos || {};
-            const datosDia = datos[diaSeleccionado] || {};
-
-            let ventasDia = 0;
-            let premiosDia = 0;
-            let comisionesDia = 0;
-
-            sistemas.forEach(sys => {
-                let d = datosDia[sys.id] || { ventas: 0, premios: 0, comision: 0 };
-                let v = d.ventas || 0;
-                let p = d.premios || 0;
-                let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (d.comision || 0);
-
-                ventasDia += v;
-                premiosDia += p;
-                comisionesDia += c;
-            });
-
-            let netoDia = ventasDia - comisionesDia - premiosDia;
-
-            document.getElementById('titulo-resumen-diario').innerHTML = `<i class="fa-solid fa-calendar-day mr-1"></i> RESUMEN DIARIO (${diaSeleccionado.toUpperCase()})`;
-            document.getElementById('dia-ventas').innerText = `Bs. ${ventasDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('dia-premios').innerText = `Bs. ${premiosDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('dia-comisiones').innerText = `Bs. ${comisionesDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('dia-neto').innerText = `${netoDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
-        }
-
-        function renderizarSistemas() {
-            const sistemas = dbState.ag_sistemas || [];
-            const datos = dbState.ag_sistemas_datos || {};
-            const datosDia = datos[diaSeleccionado] || {};
-
-            let html = '';
-            if (sistemas.length === 0) {
-                html = `<p class="text-xs text-gray-400 text-center py-4">No hay sistemas registrados.</p>`;
-            } else {
-                sistemas.forEach(sys => {
-                    if (!datosDia[sys.id]) datosDia[sys.id] = { ventas: 0, premios: 0, comision: 0 };
-                    let ventas = datosDia[sys.id].ventas || 0;
-                    let premios = datosDia[sys.id].premios || 0;
-                    let comisionCustom = datosDia[sys.id].comision || 0;
-                    
-                    let comision = sys.porcentaje > 0 ? ventas * (sys.porcentaje / 100) : comisionCustom;
-                    let neto = ventas - comision - premios;
-
-                    let tituloSistema = sys.porcentaje > 0 ? `${sys.nombre} (${sys.porcentaje}%)` : `${sys.nombre} (Comisión Manual)`;
-
-                    if (sys.porcentaje === 0) {
-                        html += `
-                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
-                                    <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1.5">
-                                <div>
-                                    <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
-                                    <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-yellow-400">Comisión Bs</label>
-                                    <input type="text" value="${comisionCustom || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'comision', this.value)" class="w-full bg-gray-800 border border-yellow-600 rounded p-1.5 text-xs text-yellow-300 outline-none focus:border-yellow-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
-                                    <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
-                                </div>
-                            </div>
-                        </div>`;
-                    } else {
-                        html += `
-                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
-                                    <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
-                                    <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
-                                    <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
-                                </div>
-                            </div>
-                        </div>`;
-                    }
-                });
-            }
-            document.getElementById('lista-sistemas-dia').innerHTML = html;
-            renderizarResumenDiario();
-            renderizarResumenSistemas();
-        }
-
-        function renderizarResumenSistemas() {
-            const sistemas = dbState.ag_sistemas || [];
-            const datos = dbState.ag_sistemas_datos || {};
-            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
-            let resumenHtml = '';
-            let totalVentasGlobal = 0;
-            let totalPremiosGlobal = 0;
-            let totalComisionesGlobal = 0;
-
-            sistemas.forEach(sys => {
-                let sysVentas = 0;
-                let sysPremios = 0;
-                let sysComision = 0;
-
-                dias.forEach(dia => {
-                    if (datos[dia] && datos[dia][sys.id]) {
-                        let v = datos[dia][sys.id].ventas || 0;
-                        let p = datos[dia][sys.id].premios || 0;
-                        let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (datos[dia][sys.id].comision || 0);
-                        sysVentas += v;
-                        sysPremios += p;
-                        sysComision += c;
-                    }
-                });
-
-                let sysNeto = sysVentas - sysComision - sysPremios;
-
-                totalVentasGlobal += sysVentas;
-                totalPremiosGlobal += sysPremios;
-                totalComisionesGlobal += sysComision;
-
-                resumenHtml += `
-                <div class="bg-gray-900 p-2.5 rounded border border-gray-700 flex justify-between items-center">
-                    <div>
-                        <p class="font-bold text-yellow-400">${sys.nombre}</p>
-                        <p class="text-[11px] text-gray-400">Ventas: ${sysVentas.toLocaleString('es-VE', {minimumFractionDigits: 2})} | Premios: ${sysPremios.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-green-400 font-bold">Neto: ${sysNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
-                        <p class="text-[10px] text-gray-400">Comisión: ${sysComision.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
-                    </div>
-                </div>`;
-            });
-
-            document.getElementById('resumen-todos-sistemas').innerHTML = resumenHtml || '<p class="text-xs text-gray-400 text-center">No hay datos de sistemas.</p>';
-
-            const totalCashea = calcularTotalCasheaCreditos();
-            const netoBrutoGlobal = totalVentasGlobal - totalComisionesGlobal - totalPremiosGlobal;
-            const netoGlobalFinal = netoBrutoGlobal - totalCashea;
-
-            document.getElementById('acum-ventas').innerText = `Bs. ${totalVentasGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-premios').innerText = `Bs. ${totalPremiosGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-comisiones').innerText = `Bs. ${totalComisionesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-cashea-desc').innerText = `- Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-neto').innerText = `${netoGlobalFinal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
-        }
-
-        // --- GESTIÓN DE CLIENTES Y CARTERA PREMIUM ---
-        function renderizarClientes() {
-            const clientes = dbState.ag_clientes || [];
-            generarHTMLClientes(clientes);
-        }
-
-        function filtrarClientes(query) {
-            const clientes = dbState.ag_clientes || [];
-            const q = query.toUpperCase();
-            const filtrados = clientes.filter(c => c.nombre.toUpperCase().includes(q));
-            generarHTMLClientes(filtrados, clientes);
-        }
-
-        function copiarResumenCliente(index, listaOriginal = null) {
-            const lista = listaOriginal || dbState.ag_clientes || [];
-            const c = lista[index];
-            if (!c) return;
-
-            let cashea = parseFloat(c.saldoCashea) || 0;
-            let premio = parseFloat(c.saldoPremio) || 0;
-            let total = cashea + premio;
-
-            let mensaje = `*Agencia Harold José - Seguridad y Confianza*\n`;
-            mensaje += `• Cliente: ${c.nombre}\n`;
-            mensaje += `• Saldo Cartera Premium (Premio): Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
-            
-            if (cashea > 0) {
-                mensaje += `• Crédito Cashea: Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
-            }
-            mensaje += `• *Saldo Total:* Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-
-            navigator.clipboard.writeText(mensaje).then(() => {
-                alert("¡Resumen del cliente copiado al portapapeles!");
-            }).catch(err => {
-                console.error("Error al copiar resumen", err);
-            });
-        }
-
-        function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
-            const original = listaOriginal || listaAMostrar;
-            const todosClientes = dbState.ag_clientes || [];
-
-            let sumaTotalSaldos = 0;
-            todosClientes.forEach(c => {
-                if (c.saldo !== undefined && c.saldoCashea === undefined) {
-                    c.saldoCashea = 0;
-                    c.saldoPremio = c.saldo;
-                    delete c.saldo;
-                }
-                let cashea = parseFloat(c.saldoCashea) || 0;
-                let premio = parseFloat(c.saldoPremio) || 0;
-                sumaTotalSaldos += (cashea + premio);
-            });
-
-            const elTotalSaldos = document.getElementById('display-total-saldos-clientes');
-            if (elTotalSaldos) {
-                elTotalSaldos.innerText = `Bs. ${sumaTotalSaldos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            }
-
-            let html = '';
-            if (listaAMostrar.length === 0) {
-                html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
-            } else {
-                listaAMostrar.forEach((c) => {
-                    if (c.saldo !== undefined && c.saldoCashea === undefined) {
-                        c.saldoCashea = 0;
-                        c.saldoPremio = c.saldo;
-                        delete c.saldo;
-                    }
-                    let cashea = parseFloat(c.saldoCashea) || 0;
-                    let premio = parseFloat(c.saldoPremio) || 0;
-                    let totalCliente = cashea + premio;
-
-                    let index = original.findIndex(orig => orig.nombre === c.nombre);
-                    html += `
-                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex flex-col space-y-2">
+                let html = `
+                    <div class="card-dark p-4 rounded-2xl shadow-md border border-slate-800 space-y-3">
                         <div class="flex justify-between items-center">
+                            <span class="font-bold text-amber-400 text-sm tracking-wide">${sys.name}</span>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-semibold ${netColor}">Neto: ${formatNumber(net)} Bs</span>
+                                <button onclick="deleteSystem(${sys.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-${sys.type === 'manual' ? '3' : '2'} gap-3">
                             <div>
-                                <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
-                                <div class="text-[11px] text-gray-300 space-x-2 mt-0.5">
-                                    <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
-                                    <span>Cartera Premium: <strong class="text-green-400">Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                                <label class="text-[11px] text-slate-400 block mb-1">Ventas (${currentDay})</label>
+                                <input type="number" value="${dayData.ventas}" oninput="updateSystemData(${sys.id}, 'ventas', this.value)" class="input-dark w-full px-3 py-1.5 rounded-lg text-sm font-semibold">
                             </div>
-                            <div class="flex items-center space-x-1">
-                                <button onclick="copiarResumenCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Copiar resumen del cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
-                                <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                `;
+
+                if (sys.type === 'manual') {
+                    html += `
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Comisión Bs</label>
+                                <input type="number" value="${dayData.manualComm}" oninput="updateSystemData(${sys.id}, 'manualComm', this.value)" class="input-dark w-full px-3 py-1.5 rounded-lg text-sm font-semibold text-amber-400">
                             </div>
-                        </div>
-                        <div class="grid grid-cols-4 gap-1.5 pt-1">
-                            <button onclick="modificarSaldoCliente(${index}, 'cashea')" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-credit-card mr-0.5"></i> +Cashea</button>
-                            <button onclick="modificarSaldoCliente(${index}, 'premio')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> +Premium</button>
-                            <button onclick="descontarJugadaCliente(${index})" class="bg-yellow-700 hover:bg-yellow-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
-                            <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-money-bill-wave mr-0.5"></i> Pagar</button>
-                        </div>
-                    </div>`;
-                });
-            }
-            document.getElementById('lista-clientes').innerHTML = html;
-        }
-
-        function agregarClienteManual() {
-            let nombre = prompt("Ingrese el nombre del nuevo cliente:");
-            if (!nombre) return;
-            let casheaStr = prompt("Ingrese saldo inicial Cashea (Crédito):", "0");
-            let saldoCashea = parseFloat((casheaStr || "0").replace(',', '.')) || 0;
-            let premioStr = prompt("Ingrese saldo inicial Cartera Premium (Premio retirable):", "0");
-            let saldoPremio = parseFloat((premioStr || "0").replace(',', '.')) || 0;
-            
-            if (!dbState.ag_clientes) dbState.ag_clientes = [];
-            dbState.ag_clientes.push({ nombre: nombre.trim(), saldoCashea, saldoPremio });
-            guardarDatosRemotos();
-            renderizarClientes();
-            actualizarSaldoTaquilla();
-            alert("Cliente agregado con éxito.");
-        }
-
-        function modificarSaldoCliente(index, tipo) {
-            let clientes = dbState.ag_clientes || [];
-            let c = clientes[index];
-            let mensaje = tipo === 'cashea' ? `Ingrese monto a sumar al crédito Cashea de ${c.nombre}:` : `Ingrese monto a sumar a la Cartera Premium de ${c.nombre}:`;
-            let montoStr = prompt(mensaje);
-            if (!montoStr) return;
-            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) return alert("Monto inválido.");
-
-            if (tipo === 'cashea') {
-                c.saldoCashea = (c.saldoCashea || 0) + monto;
-            } else {
-                c.saldoPremio = (c.saldoPremio || 0) + monto;
-            }
-
-            dbState.ag_clientes = clientes;
-            guardarDatosRemotos();
-            renderizarClientes();
-            actualizarSaldoTaquilla();
-            alert("Saldo actualizado con éxito.");
-        }
-
-        function descontarJugadaCliente(index) {
-            let clientes = dbState.ag_clientes || [];
-            let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto de la jugada realizada por ${c.nombre} (Se descuenta primero de Cashea y luego de Cartera Premium):`);
-            if (!montoStr) return;
-            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (monto <= 0) return alert("Monto inválido.");
-
-            let cashea = c.saldoCashea || 0;
-            let premio = c.saldoPremio || 0;
-            let totalDisponible = cashea + premio;
-
-            if (totalDisponible < monto) {
-                if (!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
-            }
-
-            if (cashea >= monto) {
-                c.saldoCashea -= monto;
-            } else if (cashea > 0) {
-                let resto = monto - cashea;
-                c.saldoCashea = 0;
-                c.saldoPremio = Math.max(0, premio - resto);
-            } else {
-                c.saldoPremio = Math.max(0, premio - monto);
-            }
-
-            dbState.ag_clientes = clientes;
-            guardarDatosRemotos();
-            renderizarClientes();
-            actualizarSaldoTaquilla();
-            alert(`Jugada descontada a ${c.nombre}.`);
-        }
-
-        function pagarPremioCliente(index) {
-            let clientes = dbState.ag_clientes || [];
-            let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto de la Cartera Premium a pagar / retirar a ${c.nombre} (Se descontará de su saldo de premio y de la taquilla):`, c.saldoPremio || 0);
-            if (!montoStr) return;
-            let premio = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (premio <= 0) return alert("Monto inválido.");
-
-            if ((c.saldoPremio || 0) < premio) {
-                if (!confirm("El cliente no tiene suficiente saldo en su Cartera Premium. ¿Desea continuar igual?")) return;
-            }
-
-            c.saldoPremio = Math.max(0, (c.saldoPremio || 0) - premio);
-
-            let pmList = dbState.ag_pago_movil || [];
-            let trList = dbState.ag_transferencia || [];
-            let descontado = false;
-
-            for (let pm of pmList) {
-                if (pm.saldo >= premio) {
-                    pm.saldo -= premio;
-                    descontado = true;
-                    break;
+                    `;
                 }
+
+                html += `
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Premios (${currentDay})</label>
+                                <input type="number" value="${dayData.premios}" oninput="updateSystemData(${sys.id}, 'premios', this.value)" class="input-dark w-full px-3 py-1.5 rounded-lg text-sm font-semibold text-red-400">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            calculateAll();
+        }
+
+        function updateSystemData(id, field, value) {
+            const sys = systems.find(s => s.id === id);
+            if (sys) {
+                if (!sys.data[currentDay]) sys.data[currentDay] = { ventas: 0, premios: 0, manualComm: 0 };
+                sys.data[currentDay][field] = parseFloat(value) || 0;
+                saveData();
+                calculateAll();
             }
-            if (!descontado) {
-                for (let tr of trList) {
-                    if (tr.saldo >= premio) {
-                        tr.saldo -= premio;
-                        descontado = true;
-                        break;
+        }
+
+        function calculateAll() {
+            let totalVentas = 0;
+            let totalPremios = 0;
+            let totalComisionesNormales = 0;
+            let totalComisionSRQ = 0;
+
+            // Recorrer todos los sistemas y sumar de TODOS los días (Acumulado general)
+            systems.forEach(sys => {
+                for (let day in sys.data) {
+                    const d = sys.data[day];
+                    totalVentas += d.ventas;
+                    totalPremios += d.premios;
+
+                    // Calcular comisiones según tipo
+                    if (sys.type === 'srq') {
+                        totalComisionSRQ += (d.ventas * (sys.commissionValue / 100));
+                    } else if (sys.type === 'manual') {
+                        totalComisionesNormales += d.manualComm;
+                    } else {
+                        // Porcentaje normal
+                        totalComisionesNormales += (d.ventas * (sys.commissionValue / 100));
                     }
                 }
-            }
-            if (!descontado && pmList.length > 0) {
-                pmList[0].saldo -= premio;
-            }
-
-            dbState.ag_clientes = clientes;
-            dbState.ag_pago_movil = pmList;
-            dbState.ag_transferencia = trList;
-
-            guardarDatosRemotos();
-            renderizarClientes();
-            renderizarCuentas();
-            actualizarSaldoTaquilla();
-            alert(`¡Pago de Cartera Premium por Bs. ${premio.toLocaleString('es-VE')} realizado a ${c.nombre}!`);
-        }
-
-        function eliminarCliente(index) {
-            if(!confirm("¿Está seguro de eliminar este cliente?")) return;
-            dbState.ag_clientes.splice(index, 1);
-            guardarDatosRemotos();
-            renderizarClientes();
-            actualizarSaldoTaquilla();
-        }
-
-        // --- GESTIÓN DE CUENTAS ---
-        function renderizarCuentas() {
-            const pmList = dbState.ag_pago_movil || [];
-            const trList = dbState.ag_transferencia || [];
-
-            let pmHtml = '';
-            pmList.forEach((item, index) => {
-                pmHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-                    <div>
-                        <p>Cédula: ${item.cedula} | Tel: ${item.telefono}</p>
-                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
-                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </div>
-                </div>`;
             });
-            document.getElementById('lista-pago-movil').innerHTML = pmHtml;
 
-            let trHtml = '';
-            trList.forEach((item, index) => {
-                trHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-                    <div>
-                        <p>Destino Term: <strong class="text-yellow-400">${item.terminacion}</strong></p>
-                        <p class="text-[10px] text-gray-400">${item.titular}</p>
-                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
-                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </div>
-                </div>`;
-            });
-            document.getElementById('lista-transferencia').innerHTML = trHtml;
-            actualizarSaldoTaquilla();
-            poblarSelectCuentas();
+            const cashea = parseFloat(document.getElementById('inputCashea').value) || 0;
+            const remanenteBase = parseFloat(document.getElementById('inputRemanenteBase').value) || 0;
+            const comisionGastada = parseFloat(document.getElementById('inputComisionGastada').value) || 0;
+
+            // Remanente neto restante
+            const remanenteNeto = remanenteBase - comisionGastada;
+            document.getElementById('lblRemanenteNeto').innerText = `Bs. ${formatNumber(remanenteNeto)}`;
+
+            // Saldo Neto Global = Ventas Totales - Premios Totales + Comisiones Totales + Comision SRQ - Cashea (o según fórmula de negocio)
+            // Según el resumen anterior: Saldo Neto Global = Comisiones Totales (u operativamente lo que queda neto global)
+            const saldoNetoGlobal = (totalVentas - totalPremios) + totalComisionesNormales + totalComisionSRQ - cashea;
+
+            // Actualizar vista Resumen General
+            document.getElementById('resVentas').innerText = `Bs. ${formatNumber(totalVentas)}`;
+            document.getElementById('resPremios').innerText = `Bs. ${formatNumber(totalPremios)}`;
+            document.getElementById('resComisiones').innerText = `Bs. ${formatNumber(totalComisionesNormales)}`;
+            document.getElementById('resComisionSRQ').innerText = `Bs. ${formatNumber(totalComisionSRQ)}`;
+            document.getElementById('resCashea').innerText = `- Bs. ${formatNumber(cashea)}`;
+            document.getElementById('resSaldoNeto').innerText = `${formatNumber(saldoNetoGlobal)} Bs`;
+
+            // Control saldo taquilla
+            document.getElementById('ctrlSaldoTaquilla').innerText = `Bs. ${formatNumber(saldoNetoGlobal)}`;
+
+            // Cuadre de caja (Saldo Real) considerando el remanente neto y lo gastado
+            // Cuadre = Saldo disponible menos remanente neto / gastos de comisión
+            const cuadreCaja = saldoNetoGlobal - remanenteNeto;
+            const elCuadre = document.getElementById('ctrlCuadreCaja');
+            elCuadre.innerText = `Bs. ${formatNumber(cuadreCaja)}`;
+            elCuadre.className = `text-2xl font-black ${cuadreCaja === 0 ? 'text-green-400' : 'text-red-400'}`;
         }
 
-        function copiarDatosPM(index) {
-            const item = (dbState.ag_pago_movil || [])[index];
-            if (!item) return;
-            const texto = `Banco de Venezuela | Tel: ${item.telefono} | C.I: ${item.cedula}`;
-            navigator.clipboard.writeText(texto).then(() => alert("¡Pago Móvil copiado!"));
+        function formatNumber(num) {
+            return num.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function copiarDatosTR(index) {
-            const item = (dbState.ag_transferencia || [])[index];
-            if (!item) return;
-            const texto = `Banco de Venezuela | Cuenta: ${item.terminacion} | Titular: ${item.titular}`;
-            navigator.clipboard.writeText(texto).then(() => alert("¡Datos de cuenta copiados!"));
+        // Modales
+        function openAddSystemModal() {
+            document.getElementById('addSystemModal').classList.remove('hidden');
+            document.getElementById('addSystemModal').classList.add('flex');
         }
-
-        function poblarSelectCuentas() {
-            const pmList = dbState.ag_pago_movil || [];
-            const trList = dbState.ag_transferencia || [];
-            let html = '';
-            pmList.forEach((pm, i) => html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`);
-            trList.forEach((tr, i) => html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`);
-            const sel = document.getElementById('select-cuenta-destino');
-            if(sel) sel.innerHTML = html;
+        function closeAddSystemModal() {
+            document.getElementById('addSystemModal').classList.remove('flex');
+            document.getElementById('addSystemModal').classList.add('hidden');
         }
-
-        function editarSaldoCuenta(tipo, index) {
-            let listKey = tipo === 'pm' ? 'ag_pago_movil' : 'ag_transferencia';
-            let list = dbState[listKey] || [];
-            let cuenta = list[index];
-            let nuevoSaldoStr = prompt("Ingrese el nuevo saldo:", cuenta.saldo || 0);
-            if (nuevoSaldoStr === null) return;
-            cuenta.saldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
-            dbState[listKey] = list;
-            guardarDatosRemotos();
-            renderizarCuentas();
+        function toggleModalCommissionType() {
+            const type = document.getElementById('newSysType').value;
+            const div = document.getElementById('modalPorcentajeDiv');
+            div.style.display = type === 'manual' ? 'none' : 'block';
         }
+        function confirmAddSystem() {
+            const name = document.getElementById('newSysName').value.trim();
+            const type = document.getElementById('newSysType').value;
+            const pct = parseFloat(document.getElementById('newSysPct').value) || 14;
 
-        function agregarPagoMovil() {
-            const cedula = document.getElementById('nuevo-pm-cedula').value.trim();
-            const telefono = document.getElementById('nuevo-pm-tel').value.trim();
-            const saldo = parseFloat((document.getElementById('nuevo-pm-saldo').value || "0").replace(',', '.')) || 0;
-            if (!cedula || !telefono) return alert("Ingresa cédula y teléfono.");
-            if (!dbState.ag_pago_movil) dbState.ag_pago_movil = [];
-            dbState.ag_pago_movil.push({ cedula, telefono, saldo });
-            guardarDatosRemotos();
-            document.getElementById('nuevo-pm-cedula').value = '';
-            document.getElementById('nuevo-pm-tel').value = '';
-            document.getElementById('nuevo-pm-saldo').value = '';
-            renderizarCuentas();
-        }
-
-        function agregarTransferencia() {
-            const terminacion = document.getElementById('nuevo-tr-term').value.trim();
-            const titular = document.getElementById('nuevo-tr-titular').value.trim();
-            const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
-            if (!terminacion || !titular) return alert("Ingresa terminación y titular.");
-            if (!dbState.ag_transferencia) dbState.ag_transferencia = [];
-            dbState.ag_transferencia.push({ terminacion, titular, saldo });
-            guardarDatosRemotos();
-            document.getElementById('nuevo-tr-term').value = '';
-            document.getElementById('nuevo-tr-titular').value = '';
-            document.getElementById('nuevo-tr-saldo').value = '';
-            renderizarCuentas();
-        }
-
-        function eliminarPM(index) {
-            dbState.ag_pago_movil.splice(index, 1);
-            guardarDatosRemotos();
-            renderizarCuentas();
-        }
-
-        function eliminarTR(index) {
-            dbState.ag_transferencia.splice(index, 1);
-            guardarDatosRemotos();
-            renderizarCuentas();
-        }
-
-        // --- PROCESAMIENTO OCR Y REGISTRO ---
-        function procesarComprobanteArchivo(event) {
-            const file = event.target.files[0];
-            if (file) procesarBlobImagen(file);
-        }
-
-        function procesarBlobImagen(blob) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgPreview = document.getElementById('img-preview');
-                imgPreview.src = e.target.result;
-                document.getElementById('resultado-container').classList.remove('hidden');
-                document.getElementById('loading-ocr').classList.remove('hidden');
-                
-                Tesseract.recognize(e.target.result, 'spa').then(({ data: { text } }) => {
-                    document.getElementById('loading-ocr').classList.add('hidden');
-                    analizarTextoYExtraer(text);
-                }).catch(err => {
-                    console.error(err);
-                    document.getElementById('loading-ocr').classList.add('hidden');
-                    alert("Error al procesar la imagen con OCR.");
-                });
-            }
-            reader.readAsDataURL(blob);
-        }
-
-        function analizarTextoYExtraer(textoOCR) {
-            const texto = textoOCR.toUpperCase();
-            const alerta = document.getElementById('alerta-antifraude');
-            const statusBadge = document.getElementById('status-badge');
-            
-            const pmList = dbState.ag_pago_movil || [];
-            const trList = dbState.ag_transferencia || [];
-            
-            const lineas = texto.split('\n');
-            let lineaOrigen = '';
-            let lineaDestino = '';
-            let lineaIdentificacion = '';
-
-            for (let l of lineas) {
-                if (l.includes('ORIGEN') || l.includes('DEBITADA')) lineaOrigen = l;
-                if (l.includes('DESTINO') || l.includes('BENEFICIARIO')) lineaDestino = l;
-                if (l.includes('IDENTIFICACION') || l.includes('IDENTIFICACIÓN') || l.includes('BENEFICIARIO')) lineaIdentificacion = l;
-            }
-
-            let origenContieneMisDatos = false;
-            for (let pm of pmList) {
-                if ((pm.cedula && lineaOrigen.includes(pm.cedula)) || (pm.telefono && lineaOrigen.includes(pm.telefono))) {
-                    origenContieneMisDatos = true;
-                }
-            }
-            for (let tr of trList) {
-                if (tr.terminacion && lineaOrigen.includes(tr.terminacion)) {
-                    origenContieneMisDatos = true;
-                }
-            }
-
-            if (origenContieneMisDatos) {
-                alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Este comprobante es un pago SALIENTE (Tú enviaste este dinero).`;
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado.`;
+            if (!name) {
+                alert('Por favor ingrese un nombre para el sistema.');
                 return;
             }
 
-            let esParaMisCuentas = false;
-            let tipoDetectado = "";
+            const newId = systems.length > 0 ? Math.max(...systems.map(s => s.id)) + 1 : 1;
+            const emptyDays = { Lunes: {ventas:0, premios:0, manualComm:0}, Martes: {ventas:0, premios:0, manualComm:0}, Miércoles: {ventas:0, premios:0, manualComm:0}, Jueves: {ventas:0, premios:0, manualComm:0}, Viernes: {ventas:0, premios:0, manualComm:0}, Sábado: {ventas:0, premios:0, manualComm:0}, Domingo: {ventas:0, premios:0, manualComm:0} };
 
-            for (let pm of pmList) {
-                if ((pm.cedula && (lineaIdentificacion.includes(pm.cedula) || lineaDestino.includes(pm.cedula) || texto.includes(pm.cedula))) ||
-                    (pm.telefono && (lineaDestino.includes(pm.telefono) || texto.includes(pm.telefono)))) {
-                    esParaMisCuentas = true;
-                    tipoDetectado = "Pago Móvil Válido";
-                    break;
-                }
-            }
+            systems.push({
+                id: newId,
+                name: name,
+                type: type,
+                commissionValue: pct,
+                data: emptyDays
+            });
 
-            if (!esParaMisCuentas) {
-                for (let tr of trList) {
-                    if (tr.terminacion && (lineaDestino.includes(tr.terminacion) || texto.includes(tr.terminacion))) {
-                        esParaMisCuentas = true;
-                        tipoDetectado = "Transferencia Válida";
-                        break;
-                    }
-                }
-            }
+            saveData();
+            closeAddSystemModal();
+            renderSystems();
+            document.getElementById('newSysName').value = '';
+        }
 
-            if (!esParaMisCuentas && (texto.includes("HAROLD") || texto.includes("BANCO DE VENEZUELA") || texto.includes("BNC"))) {
-                esParaMisCuentas = true;
-                tipoDetectado = "Comprobante Válido";
-            }
-
-            let refEncontrada = '';
-            let montoEncontrado = '';
-
-            for (let i = 0; i < lineas.length; i++) {
-                let linea = lineas[i];
-                if (linea.includes('REFERENCIA') || linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF')) {
-                    let nums = linea.match(/\d{6,}/);
-                    if (nums) {
-                        refEncontrada = nums[0];
-                    } else if (i + 1 < lineas.length) {
-                        let numsNext = lineas[i + 1].match(/\d{6,}/);
-                        if (numsNext) refEncontrada = numsNext[0];
-                    }
-                }
-                if (linea.includes('BS') || linea.includes(',00')) {
-                    let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
-                    if (matchMonto && matchMonto[1].length > 1) montoEncontrado = matchMonto[1];
-                }
-            }
-
-            if (!refEncontrada) {
-                let matches = texto.match(/\b\d{8,12}\b/g);
-                if (matches) {
-                    for (let m of matches) {
-                        let esCedulaOTel = false;
-                        for (let pm of pmList) {
-                            if (m === pm.cedula || m === pm.telefono) esCedulaOTel = true;
-                        }
-                        if (!esCedulaOTel) {
-                            refEncontrada = m;
-                            break;
-                        }
-                    }
-                    if (!refEncontrada && matches.length > 0) refEncontrada = matches[0];
-                }
-            }
-
-            if (!montoEncontrado) {
-                let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
-                if (matchesMonto) montoEncontrado = matchesMonto[0];
-            }
-
-            if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
-            if (montoEncontrado) document.getElementById('input-monto').value = montoEncontrado.replace(/\./g, '').replace(',', '.');
-
-            if (refEncontrada) {
-                const refsUsadas = dbState.ag_referencias_usadas || [];
-                const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
-                if (duplicada) {
-                    alerta.classList.remove('hidden');
-                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! Ya fue usada por "${duplicada.cliente}".`;
-                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Referencia ya registrada.`;
-                    return;
-                }
-            }
-
-            if (esParaMisCuentas || (refEncontrada && montoEncontrado)) {
-                alerta.classList.add('hidden');
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado || "Comprobante"} aprobado.`;
-            } else {
-                alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! No coincide con tus cuentas oficiales.`;
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado.`;
+        function deleteSystem(id) {
+            if (confirm('¿Estás seguro de eliminar este sistema?')) {
+                systems = systems.filter(s => s.id !== id);
+                saveData();
+                renderSystems();
             }
         }
 
-        function registrarPago() {
-            const referencia = document.getElementById('input-ref').value.trim();
-            const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
-            const monto = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
-            const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
-            const esCashea = document.getElementById('check-cashea').checked;
-            
-            if(!referencia || !monto) return alert("Rellena la referencia y el monto.");
-            
-            if (!dbState.ag_referencias_usadas) dbState.ag_referencias_usadas = [];
-            if (dbState.ag_referencias_usadas.some(r => r.referencia === referencia)) return alert("¡Referencia duplicada!");
-
-            if (cuentaDestinoSel) {
-                let partes = cuentaDestinoSel.split('_');
-                let tipo = partes[0];
-                let idx = parseInt(partes[1]);
-                if (tipo === 'pm' && dbState.ag_pago_movil[idx]) {
-                    dbState.ag_pago_movil[idx].saldo = (dbState.ag_pago_movil[idx].saldo || 0) + monto;
-                } else if (tipo === 'tr' && dbState.ag_transferencia[idx]) {
-                    dbState.ag_transferencia[idx].saldo = (dbState.ag_transferencia[idx].saldo || 0) + monto;
-                }
+        function resetData() {
+            if (confirm('¿Desea limpiar todos los datos ingresados?')) {
+                localStorage.removeItem('harold_systems');
+                location.reload();
             }
-
-            if (!dbState.ag_clientes) dbState.ag_clientes = [];
-            let clienteExistente = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
-            
-            if (clienteExistente) {
-                if (clienteExistente.saldo !== undefined && clienteExistente.saldoCashea === undefined) {
-                    clienteExistente.saldoCashea = 0;
-                    clienteExistente.saldoPremio = clienteExistente.saldo;
-                    delete clienteExistente.saldo;
-                }
-                if (esCashea) {
-                    clienteExistente.saldoCashea = (clienteExistente.saldoCashea || 0) + monto;
-                } else {
-                    clienteExistente.saldoPremio = (clienteExistente.saldoPremio || 0) + monto;
-                }
-            } else {
-                let nuevoCliente = {
-                    nombre: clienteNombre,
-                    saldoCashea: esCashea ? monto : 0,
-                    saldoPremio: esCashea ? 0 : monto
-                };
-                dbState.ag_clientes.push(nuevoCliente);
-            }
-            
-            dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, monto, fecha: new Date().toLocaleString() });
-            
-            guardarDatosRemotos();
-            alert(`¡Pago registrado con éxito! Bs. ${monto.toLocaleString('es-VE')} acreditados a ${clienteNombre}.`);
-            
-            document.getElementById('input-ref').value = '';
-            document.getElementById('input-cliente').value = '';
-            document.getElementById('input-monto').value = '';
-            document.getElementById('check-cashea').checked = false;
-            document.getElementById('resultado-container').classList.add('hidden');
-            document.getElementById('alerta-antifraude').classList.add('hidden');
-            renderizarClientes();
-            renderizarCuentas();
-            actualizarSaldoTaquilla();
         }
+
+        function openTransactionModal(type) {
+            const monto = prompt(`Ingrese el monto del ${type === 'ingreso' ? 'Ingreso General' : 'Retiro General'} en Bs:`);
+            if (monto && !isNaN(monto)) {
+                alert(`Transacción de ${formatNumber(parseFloat(monto))} Bs registrada correctamente.`);
+            }
+        }
+
+        // Inicializar al cargar
+        window.onload = () => {
+            renderSystems();
+        };
     </script>
 </body>
 </html>
