@@ -70,7 +70,7 @@
                     <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
                 </div>
                 <button onclick="registrarPago()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2.5 rounded-lg transition text-sm shadow">
-                    Registrar y Sincronizar
+                    Registrar y Acreditar Saldo
                 </button>
             </div>
         </section>
@@ -130,18 +130,29 @@
 
         <!-- VISTA: CLIENTES -->
         <section id="view-clientes" class="hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-users mr-2"></i> Clientes</h2>
-                <p class="text-xs text-gray-400">Base de datos de apostadores y pronosticadores frecuentes de Agencia Harold José.</p>
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos</h2>
+                    <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
+                </div>
+                <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pagos de premios para pronosticadores de Agencia Harold José.</p>
+                
+                <!-- Buscador rápido -->
+                <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
+
+                <!-- Lista de Clientes -->
+                <div id="lista-clientes" class="space-y-3 pt-2">
+                    <!-- Renderizado dinámico -->
+                </div>
             </div>
         </section>
 
-        <!-- VISTA: CUENTAS (Gestión Dinámica) -->
+        <!-- VISTA: CUENTAS -->
         <section id="view-cuentas" class="hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
                 <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-wallet mr-2"></i> Cuentas Oficiales y Respaldos</h2>
                 
-                <!-- Lista y Formulario Pago Móvil -->
+                <!-- Pago Móvil -->
                 <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
                     <p class="font-bold text-xs text-yellow-400 uppercase">Pago Móvil BDV:</p>
                     <div id="lista-pago-movil" class="space-y-1 text-xs"></div>
@@ -153,7 +164,7 @@
                     </div>
                 </div>
 
-                <!-- Lista y Formulario Transferencia -->
+                <!-- Transferencia -->
                 <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
                     <p class="font-bold text-xs text-yellow-400 uppercase">Cuentas Transferencia:</p>
                     <div id="lista-transferencia" class="space-y-1 text-xs"></div>
@@ -193,9 +204,9 @@
         </button>
     </nav>
 
-    <!-- Script de Lógica, OCR y Almacenamiento Local -->
+    <!-- Script de Lógica, OCR y Clientes -->
     <script>
-        // Inicializar almacenamiento local si no existe
+        // Inicializar localStorage
         if (!localStorage.getItem('ag_pago_movil')) {
             localStorage.setItem('ag_pago_movil', JSON.stringify([
                 { cedula: "18274410", telefono: "04124489363" }
@@ -207,9 +218,15 @@
                 { terminacion: "0163", titular: "Harold Eliezer Galea Sanchez" }
             ]));
         }
+        if (!localStorage.getItem('ag_clientes')) {
+            localStorage.setItem('ag_clientes', JSON.stringify([
+                { nombre: "Cliente General", saldo: 0 }
+            ]));
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             renderizarCuentas();
+            renderizarClientes();
         });
 
         // Soporte global para Pegar imágenes (Ctrl+V)
@@ -234,9 +251,93 @@
             document.getElementById('view-' + vistaId).classList.remove('hidden');
             document.getElementById('nav-' + vistaId).classList.remove('text-gray-400');
             document.getElementById('nav-' + vistaId).classList.add('text-yellow-400');
+            
             if (vistaId === 'cuentas') renderizarCuentas();
+            if (vistaId === 'clientes') renderizarClientes();
         }
 
+        // --- GESTIÓN DE CLIENTES Y SALDOS ---
+        function renderizarClientes() {
+            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            generarHTMLClientes(clientes);
+        }
+
+        function filtrarClientes(query) {
+            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            const q = query.toUpperCase();
+            const filtrados = clientes.filter(c => c.nombre.toUpperCase().includes(q));
+            generarHTMLClientes(filtrados, clientes);
+        }
+
+        function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
+            const original = listaOriginal || listaAMostrar;
+            let html = '';
+            if (listaAMostrar.length === 0) {
+                html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
+            } else {
+                listaAMostrar.forEach((c) => {
+                    let index = original.findIndex(orig => orig.nombre === c.nombre);
+                    html += `
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex flex-col space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
+                                <p class="text-xs text-gray-300">Saldo: <strong class="text-green-400">Bs. ${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                            </div>
+                            <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="modificarSaldoCliente(${index}, 'agregar')" class="bg-green-700 hover:bg-green-600 text-white text-xs py-1.5 rounded font-semibold"><i class="fa-solid fa-plus mr-1"></i> Agregar Saldo</button>
+                            <button onclick="modificarSaldoCliente(${index}, 'descontar')" class="bg-red-700 hover:bg-red-600 text-white text-xs py-1.5 rounded font-semibold"><i class="fa-solid fa-minus mr-1"></i> Descontar / Premio</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('lista-clientes').innerHTML = html;
+        }
+
+        function agregarClienteManual() {
+            let nombre = prompt("Ingrese el nombre del nuevo cliente:");
+            if (!nombre) return;
+            let saldoStr = prompt("Ingrese el saldo inicial (Bs):", "0");
+            let saldo = parseFloat((saldoStr || "0").replace(',', '.')) || 0;
+            
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            clientes.push({ nombre: nombre.trim(), saldo: saldo });
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+            alert("Cliente agregado con éxito.");
+        }
+
+        function modificarSaldoCliente(index, tipo) {
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let c = clientes[index];
+            let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar / pagar premio a ${c.nombre}:`;
+            let montoStr = prompt(mensaje);
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) {
+                alert("Monto inválido.");
+                return;
+            }
+            if (tipo === 'agregar') {
+                c.saldo += monto;
+            } else {
+                c.saldo -= monto;
+            }
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+        }
+
+        function eliminarCliente(index) {
+            if(!confirm("¿Está seguro de eliminar este cliente?")) return;
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            clientes.splice(index, 1);
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+        }
+
+        // --- GESTIÓN DE CUENTAS ---
         function renderizarCuentas() {
             const pmList = JSON.parse(localStorage.getItem('ag_pago_movil'));
             const trList = JSON.parse(localStorage.getItem('ag_transferencia'));
@@ -306,6 +407,7 @@
             renderizarCuentas();
         }
 
+        // --- PROCESAMIENTO OCR Y REGISTRO ---
         function procesarComprobanteArchivo(event) {
             const file = event.target.files[0];
             if (file) procesarBlobImagen(file);
@@ -319,7 +421,6 @@
                 document.getElementById('resultado-container').classList.remove('hidden');
                 document.getElementById('loading-ocr').classList.remove('hidden');
                 
-                // Ejecutar Tesseract OCR
                 Tesseract.recognize(
                     e.target.result,
                     'spa',
@@ -341,14 +442,12 @@
             const alerta = document.getElementById('alerta-antifraude');
             const statusBadge = document.getElementById('status-badge');
             
-            // Cuentas cargadas desde localStorage
             const pmList = JSON.parse(localStorage.getItem('ag_pago_movil'));
             const trList = JSON.parse(localStorage.getItem('ag_transferencia'));
             
             let valido = false;
             let tipoDetectado = "";
 
-            // 1. Validar Pago Móvil
             for (let pm of pmList) {
                 const tieneCedula = texto.includes(pm.cedula);
                 const tieneTel = texto.includes(pm.telefono);
@@ -361,7 +460,6 @@
                 }
             }
 
-            // 2. Validar Transferencias
             if (!valido) {
                 for (let tr of trList) {
                     const tieneTerminacion = texto.includes(tr.terminacion);
@@ -374,14 +472,12 @@
                 }
             }
 
-            // 3. Extracción Automática de Referencia y Monto
             const lineas = texto.split('\n');
             let refEncontrada = '';
             let montoEncontrado = '';
 
             for (let i = 0; i < lineas.length; i++) {
                 let linea = lineas[i];
-                // Buscar Referencia u Operación
                 if (linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('REFERENCIA')) {
                     let nums = linea.match(/\d{6,}/);
                     if (nums) refEncontrada = nums[0];
@@ -390,8 +486,7 @@
                         if (numsNext) refEncontrada = numsNext[0];
                     }
                 }
-                // Buscar Monto
-                if (linea.includes('BS') || linea.includes('BOLÍVARES') || linea.includes(',00')) {
+                if (linea.includes('BS') || linea.includes('BOLíVARES') || linea.includes(',00')) {
                     let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
                     if (matchMonto && matchMonto[1].length > 1) {
                         montoEncontrado = matchMonto[1];
@@ -399,7 +494,6 @@
                 }
             }
 
-            // Fallbacks de extracción si el formato varía
             if (!refEncontrada) {
                 let matchRef = texto.match(/\b\d{8,15}\b/);
                 if (matchRef) refEncontrada = matchRef[0];
@@ -409,15 +503,12 @@
                 if (matchesMonto) montoEncontrado = matchesMonto[0];
             }
 
-            // Rellenar automáticamente los inputs de la transacción
             if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
             if (montoEncontrado) {
-                // Formatear monto limpio para el input
                 let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
                 document.getElementById('input-monto').value = montoLimpio;
             }
 
-            // Mostrar Estado y Alerta Antifraude
             if (valido) {
                 alerta.classList.add('hidden');
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
@@ -431,16 +522,28 @@
         }
 
         function registrarPago() {
-            const referencia = document.getElementById('input-ref').value;
-            const cliente = document.getElementById('input-cliente').value;
-            const monto = document.getElementById('input-monto').value;
+            const referencia = document.getElementById('input-ref').value.trim();
+            const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
+            const montoStr = document.getElementById('input-monto').value.trim();
+            const monto = parseFloat(montoStr.replace(',', '.')) || 0;
             
             if(!referencia || !monto) {
                 alert("Por favor asegúrate de que la referencia y el monto estén rellenados.");
                 return;
             }
             
-            alert(`¡Pago registrado exitosamente para ${cliente || 'Cliente'} por Bs. ${monto} (Ref: ${referencia})! Sincronizado correctamente.`);
+            // Acreditar saldo al cliente
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
+            
+            if (clienteExistente) {
+                clienteExistente.saldo += monto;
+            } else {
+                clientes.push({ nombre: clienteNombre, saldo: monto });
+            }
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            
+            alert(`¡Pago registrado y acreditado exitosamente a ${clienteNombre} por Bs. ${monto.toLocaleString('es-VE')}! (Ref: ${referencia})`);
             
             // Limpiar campos
             document.getElementById('input-ref').value = '';
@@ -448,6 +551,7 @@
             document.getElementById('input-monto').value = '';
             document.getElementById('resultado-container').classList.add('hidden');
             document.getElementById('alerta-antifraude').classList.add('hidden');
+            renderizarClientes();
         }
     </script>
 </body>
