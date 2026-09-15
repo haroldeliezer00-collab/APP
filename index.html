@@ -239,57 +239,39 @@
         </button>
     </nav>
 
-    <!-- Script de Lógica, Saldos, Clientes y Sistemas -->
+    <!-- Script con Sincronización Remota (Render Backend) -->
     <script>
-        // Inicializar localStorage
-        if (!localStorage.getItem('ag_pago_movil')) {
-            localStorage.setItem('ag_pago_movil', JSON.stringify([
-                { cedula: "18274410", telefono: "04124489363", saldo: 0 }
-            ]));
-        }
-        if (!localStorage.getItem('ag_transferencia')) {
-            localStorage.setItem('ag_transferencia', JSON.stringify([
-                { terminacion: "7201", titular: "Harold Eliezer Galea Sanchez", saldo: 0 },
-                { terminacion: "0163", titular: "Harold Eliezer Galea Sanchez", saldo: 0 }
-            ]));
-        }
-        if (!localStorage.getItem('ag_clientes')) {
-            localStorage.setItem('ag_clientes', JSON.stringify([
-                { nombre: "Cliente General", saldo: 0 }
-            ]));
-        }
-        if (!localStorage.getItem('ag_referencias_usadas')) {
-            localStorage.setItem('ag_referencias_usadas', JSON.stringify([]));
-        }
-        if (!localStorage.getItem('ag_sistemas')) {
-            localStorage.setItem('ag_sistemas', JSON.stringify([
-                { id: 'maxplay', nombre: 'Maxplay', porcentaje: 14 },
-                { id: 'matrix', nombre: 'Matrix Comp', porcentaje: 14 },
-                { id: 'srq', nombre: 'SRQ Polla', porcentaje: 14 },
-                { id: 'atenas', nombre: 'Atenas', porcentaje: 12 }
-            ]));
-        }
-        if (!localStorage.getItem('ag_sistemas_datos')) {
-            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-            const sistemasIniciales = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
-            const datos = {};
-            dias.forEach(dia => {
-                datos[dia] = {};
-                sistemasIniciales.forEach(sys => {
-                    datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
-                });
-            });
-            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
-        }
-
+        let dbState = {};
         let diaSeleccionado = 'Lunes';
 
-        document.addEventListener("DOMContentLoaded", () => {
+        async function cargarDatosRemotos() {
+            try {
+                let response = await fetch('/api/data');
+                dbState = await response.json();
+            } catch (e) {
+                console.error("Error al conectar con el servidor", e);
+            }
             renderizarCuentas();
             renderizarClientes();
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
             renderizarSistemas();
+        }
+
+        async function guardarDatosRemotos() {
+            try {
+                await fetch('/api/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dbState)
+                });
+            } catch (e) {
+                console.error("Error al guardar en el servidor", e);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarDatosRemotos();
         });
 
         // Soporte global para Pegar imágenes (Ctrl+V)
@@ -315,17 +297,19 @@
             document.getElementById('nav-' + vistaId).classList.remove('text-gray-400');
             document.getElementById('nav-' + vistaId).classList.add('text-yellow-400');
             
-            if (vistaId === 'cuentas') renderizarCuentas();
-            if (vistaId === 'clientes') renderizarClientes();
-            if (vistaId === 'caja') actualizarSaldoTaquilla();
-            if (vistaId === 'pagos') poblarSelectCuentas();
-            if (vistaId === 'sistemas') renderizarSistemas();
+            cargarDatosRemotos().then(() => {
+                if (vistaId === 'cuentas') renderizarCuentas();
+                if (vistaId === 'clientes') renderizarClientes();
+                if (vistaId === 'caja') actualizarSaldoTaquilla();
+                if (vistaId === 'pagos') poblarSelectCuentas();
+                if (vistaId === 'sistemas') renderizarSistemas();
+            });
         }
 
         // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
         function obtenerSaldoTotalTaquilla() {
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const pmList = dbState.ag_pago_movil || [];
+            const trList = dbState.ag_transferencia || [];
             let total = 0;
             pmList.forEach(pm => total += (parseFloat(pm.saldo) || 0));
             trList.forEach(tr => total += (parseFloat(tr.saldo) || 0));
@@ -334,7 +318,8 @@
 
         function actualizarSaldoTaquilla() {
             const total = obtenerSaldoTotalTaquilla();
-            document.getElementById('display-saldo-taquilla').innerText = `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            const el = document.getElementById('display-saldo-taquilla');
+            if(el) el.innerText = `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
         }
 
         function ajusteCaja(tipo) {
@@ -343,11 +328,12 @@
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
             if (monto <= 0) return;
 
-            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            let pmList = dbState.ag_pago_movil || [];
             if (pmList.length > 0) {
                 if (tipo === 'ingreso') pmList[0].saldo += monto;
                 else pmList[0].saldo = Math.max(0, pmList[0].saldo - monto);
-                localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+                dbState.ag_pago_movil = pmList;
+                guardarDatosRemotos();
                 actualizarSaldoTaquilla();
                 renderizarCuentas();
                 alert(`Ajuste de caja (${tipo}) realizado con éxito.`);
@@ -378,36 +364,33 @@
             let porcStr = prompt("Ingrese el porcentaje fijo (o deje en 0 / vacío si la comisión es manual por productos variados):", "0");
             let porcentaje = porcStr ? parseFloat(porcStr.replace(',', '.')) || 0 : 0;
 
-            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            if (!dbState.ag_sistemas) dbState.ag_sistemas = [];
             let id = 'sys_' + Date.now();
-            sistemas.push({ id, nombre: nombre.trim(), porcentaje });
-            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+            dbState.ag_sistemas.push({ id, nombre: nombre.trim(), porcentaje });
 
-            let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
             ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => {
-                if (!datos[dia]) datos[dia] = {};
-                datos[dia][id] = { ventas: 0, premios: 0, comision: 0 };
+                if (!dbState.ag_sistemas_datos[dia]) dbState.ag_sistemas_datos[dia] = {};
+                dbState.ag_sistemas_datos[dia][id] = { ventas: 0, premios: 0, comision: 0 };
             });
-            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
 
+            guardarDatosRemotos();
             renderizarSistemas();
             alert("Sistema agregado correctamente.");
         }
 
         function eliminarSistema(id) {
             if (!confirm("¿Está seguro de eliminar este sistema?")) return;
-            let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
-            sistemas = sistemas.filter(s => s.id !== id);
-            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
+            dbState.ag_sistemas = (dbState.ag_sistemas || []).filter(s => s.id !== id);
+            guardarDatosRemotos();
             renderizarSistemas();
         }
 
-        // --- REINICIAR / ELIMINAR HISTORIAL SEMANAL ---
         function reiniciarHistorialSemanal() {
-            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas para toda la semana, y también pondrá en 0 el saldo de los clientes. Las cuentas y la caja no se tocarán.")) return;
+            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas para toda la semana, y también pondrá en 0 el saldo de los clientes.")) return;
 
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
+            const sistemas = dbState.ag_sistemas || [];
             const datos = {};
             dias.forEach(dia => {
                 datos[dia] = {};
@@ -415,31 +398,32 @@
                     datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
                 });
             });
-            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+            dbState.ag_sistemas_datos = datos;
 
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
-            clientes = clientes.map(c => ({ ...c, saldo: 0 }));
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            if (dbState.ag_clientes) {
+                dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldo: 0 }));
+            }
 
+            guardarDatosRemotos();
             renderizarSistemas();
             renderizarClientes();
-            alert("Historial semanal eliminado correctamente. ¡Todo listo para empezar de nuevo el lunes!");
+            alert("Historial semanal eliminado correctamente.");
         }
 
         function actualizarDatoSistema(sistemaId, campo, valor) {
-            let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
-            if (!datos[diaSeleccionado]) datos[diaSeleccionado] = {};
-            if (!datos[diaSeleccionado][sistemaId]) datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0, comision: 0 };
+            if (!dbState.ag_sistemas_datos) dbState.ag_sistemas_datos = {};
+            if (!dbState.ag_sistemas_datos[diaSeleccionado]) dbState.ag_sistemas_datos[diaSeleccionado] = {};
+            if (!dbState.ag_sistemas_datos[diaSeleccionado][sistemaId]) dbState.ag_sistemas_datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0, comision: 0 };
 
             let val = parseFloat(valor.replace(',', '.')) || 0;
-            datos[diaSeleccionado][sistemaId][campo] = val;
-            localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
+            dbState.ag_sistemas_datos[diaSeleccionado][sistemaId][campo] = val;
+            guardarDatosRemotos();
             renderizarResumenSistemas();
         }
 
         function renderizarSistemas() {
-            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
-            const datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            const sistemas = dbState.ag_sistemas || [];
+            const datos = dbState.ag_sistemas_datos || {};
             const datosDia = datos[diaSeleccionado] || {};
 
             let html = '';
@@ -511,8 +495,8 @@
         }
 
         function renderizarResumenSistemas() {
-            const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
-            const datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
+            const sistemas = dbState.ag_sistemas || [];
+            const datos = dbState.ag_sistemas_datos || {};
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
             let resumenHtml = '';
@@ -567,12 +551,12 @@
 
         // --- GESTIÓN DE CLIENTES Y ACCIONES ---
         function renderizarClientes() {
-            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            const clientes = dbState.ag_clientes || [];
             generarHTMLClientes(clientes);
         }
 
         function filtrarClientes(query) {
-            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            const clientes = dbState.ag_clientes || [];
             const q = query.toUpperCase();
             const filtrados = clientes.filter(c => c.nombre.toUpperCase().includes(q));
             generarHTMLClientes(filtrados, clientes);
@@ -612,15 +596,15 @@
             let saldoStr = prompt("Ingrese el saldo inicial (Bs):", "0");
             let saldo = parseFloat((saldoStr || "0").replace(',', '.')) || 0;
             
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
-            clientes.push({ nombre: nombre.trim(), saldo: saldo });
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            if (!dbState.ag_clientes) dbState.ag_clientes = [];
+            dbState.ag_clientes.push({ nombre: nombre.trim(), saldo: saldo });
+            guardarDatosRemotos();
             renderizarClientes();
             alert("Cliente agregado con éxito.");
         }
 
         function modificarSaldoCliente(index, tipo) {
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
             let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar (jugada/gasto) a ${c.nombre}:`;
             let montoStr = prompt(mensaje);
@@ -638,12 +622,13 @@
                 }
                 c.saldo -= monto;
             }
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            dbState.ag_clientes = clientes;
+            guardarDatosRemotos();
             renderizarClientes();
         }
 
         function pagarPremioCliente(index) {
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
             let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre} (Se descontará de su saldo y de las cuentas de la taquilla):`);
             if (!montoStr) return;
@@ -655,8 +640,8 @@
 
             c.saldo -= premio;
 
-            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            let pmList = dbState.ag_pago_movil || [];
+            let trList = dbState.ag_transferencia || [];
             
             let descontado = false;
             for (let pm of pmList) {
@@ -679,27 +664,27 @@
                 pmList[0].saldo -= premio;
             }
 
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
-            localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
-            localStorage.setItem('ag_transferencia', JSON.stringify(trList));
+            dbState.ag_clientes = clientes;
+            dbState.ag_pago_movil = pmList;
+            dbState.ag_transferencia = trList;
 
+            guardarDatosRemotos();
             renderizarClientes();
             actualizarSaldoTaquilla();
-            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}! Descontado del saldo del cliente y de la taquilla.`);
+            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}!`);
         }
 
         function eliminarCliente(index) {
             if(!confirm("¿Está seguro de eliminar este cliente?")) return;
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
-            clientes.splice(index, 1);
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            dbState.ag_clientes.splice(index, 1);
+            guardarDatosRemotos();
             renderizarClientes();
         }
 
         // --- GESTIÓN DE CUENTAS ---
         function renderizarCuentas() {
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const pmList = dbState.ag_pago_movil || [];
+            const trList = dbState.ag_transferencia || [];
 
             let pmHtml = '';
             pmList.forEach((item, index) => {
@@ -709,9 +694,9 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
-                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
+                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>`;
             });
@@ -726,9 +711,9 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
-                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
-                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
+                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>`;
             });
@@ -737,68 +722,39 @@
             poblarSelectCuentas();
         }
 
-        // --- COPIAR DATOS PARA CLIENTE ---
         function copiarDatosPM(index) {
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            const item = pmList[index];
+            const item = (dbState.ag_pago_movil || [])[index];
             if (!item) return;
-
-            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n` +
-                          `• *Banco:* Banco de Venezuela (0102)\n` +
-                          `• *Teléfono:* ${item.telefono}\n` +
-                          `• *Cédula:* ${item.cedula}\n` +
-                          `📌 *Agencia Harold José*`;
-
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Datos de Pago Móvil copiados al portapapeles! Ya puedes pegárselos al cliente.");
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
-            });
+            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Teléfono:* ${item.telefono}\n• *Cédula:* ${item.cedula}\n📌 *Agencia Harold José*`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Datos copiados!"));
         }
 
         function copiarDatosTR(index) {
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-            const item = trList[index];
+            const item = (dbState.ag_transferencia || [])[index];
             if (!item) return;
-
-            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n` +
-                          `• *Banco:* Banco de Venezuela (0102)\n` +
-                          `• *Nro. de Cuenta (Terminación):* ${item.terminacion}\n` +
-                          `• *Titular:* ${item.titular}\n` +
-                          `📌 *Agencia Harold José*`;
-
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Datos de Transferencia copiados al portapapeles! Ya puedes pegárselos al cliente.");
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
-            });
+            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Cuenta:* ${item.terminacion}\n• *Titular:* ${item.titular}\n📌 *Agencia Harold José*`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Datos copiados!"));
         }
 
         function poblarSelectCuentas() {
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const pmList = dbState.ag_pago_movil || [];
+            const trList = dbState.ag_transferencia || [];
             let html = '';
-            pmList.forEach((pm, i) => {
-                html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`;
-            });
-            trList.forEach((tr, i) => {
-                html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`;
-            });
+            pmList.forEach((pm, i) => html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`);
+            trList.forEach((tr, i) => html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`);
             const sel = document.getElementById('select-cuenta-destino');
             if(sel) sel.innerHTML = html;
         }
 
         function editarSaldoCuenta(tipo, index) {
             let listKey = tipo === 'pm' ? 'ag_pago_movil' : 'ag_transferencia';
-            let list = JSON.parse(localStorage.getItem(listKey)) || [];
+            let list = dbState[listKey] || [];
             let cuenta = list[index];
-            let nuevoSaldoStr = prompt(`Ingrese el nuevo saldo para la cuenta (${tipo === 'pm' ? cuenta.telefono : cuenta.terminacion}):`, cuenta.saldo || 0);
+            let nuevoSaldoStr = prompt("Ingrese el nuevo saldo:", cuenta.saldo || 0);
             if (nuevoSaldoStr === null) return;
-            let nuevoSaldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
-            cuenta.saldo = nuevoSaldo;
-            localStorage.setItem(listKey, JSON.stringify(list));
+            cuenta.saldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
+            dbState[listKey] = list;
+            guardarDatosRemotos();
             renderizarCuentas();
         }
 
@@ -806,49 +762,39 @@
             const cedula = document.getElementById('nuevo-pm-cedula').value.trim();
             const telefono = document.getElementById('nuevo-pm-tel').value.trim();
             const saldo = parseFloat((document.getElementById('nuevo-pm-saldo').value || "0").replace(',', '.')) || 0;
-            if (!cedula || !telefono) {
-                alert("Por favor ingresa la cédula y el teléfono.");
-                return;
-            }
-            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            list.push({ cedula, telefono, saldo });
-            localStorage.setItem('ag_pago_movil', JSON.stringify(list));
+            if (!cedula || !telefono) return alert("Ingresa cédula y teléfono.");
+            if (!dbState.ag_pago_movil) dbState.ag_pago_movil = [];
+            dbState.ag_pago_movil.push({ cedula, telefono, saldo });
+            guardarDatosRemotos();
             document.getElementById('nuevo-pm-cedula').value = '';
             document.getElementById('nuevo-pm-tel').value = '';
             document.getElementById('nuevo-pm-saldo').value = '';
             renderizarCuentas();
-            alert("Pago móvil agregado correctamente.");
         }
 
         function agregarTransferencia() {
             const terminacion = document.getElementById('nuevo-tr-term').value.trim();
             const titular = document.getElementById('nuevo-tr-titular').value.trim();
             const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
-            if (!terminacion || !titular) {
-                alert("Por favor ingresa la terminación de cuenta y el titular.");
-                return;
-            }
-            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-            list.push({ terminacion, titular, saldo });
-            localStorage.setItem('ag_transferencia', JSON.stringify(list));
+            if (!terminacion || !titular) return alert("Ingresa terminación y titular.");
+            if (!dbState.ag_transferencia) dbState.ag_transferencia = [];
+            dbState.ag_transferencia.push({ terminacion, titular, saldo });
+            guardarDatosRemotos();
             document.getElementById('nuevo-tr-term').value = '';
             document.getElementById('nuevo-tr-titular').value = '';
             document.getElementById('nuevo-tr-saldo').value = '';
             renderizarCuentas();
-            alert("Cuenta de transferencia agregada correctamente.");
         }
 
         function eliminarPM(index) {
-            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            list.splice(index, 1);
-            localStorage.setItem('ag_pago_movil', JSON.stringify(list));
+            dbState.ag_pago_movil.splice(index, 1);
+            guardarDatosRemotos();
             renderizarCuentas();
         }
 
         function eliminarTR(index) {
-            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-            list.splice(index, 1);
-            localStorage.setItem('ag_transferencia', JSON.stringify(list));
+            dbState.ag_transferencia.splice(index, 1);
+            guardarDatosRemotos();
             renderizarCuentas();
         }
 
@@ -866,11 +812,7 @@
                 document.getElementById('resultado-container').classList.remove('hidden');
                 document.getElementById('loading-ocr').classList.remove('hidden');
                 
-                Tesseract.recognize(
-                    e.target.result,
-                    'spa',
-                    { logger: m => console.log(m) }
-                ).then(({ data: { text } }) => {
+                Tesseract.recognize(e.target.result, 'spa').then(({ data: { text } }) => {
                     document.getElementById('loading-ocr').classList.add('hidden');
                     analizarTextoYExtraer(text);
                 }).catch(err => {
@@ -887,8 +829,8 @@
             const alerta = document.getElementById('alerta-antifraude');
             const statusBadge = document.getElementById('status-badge');
             
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const pmList = dbState.ag_pago_movil || [];
+            const trList = dbState.ag_transferencia || [];
             
             let valido = false;
             let tipoDetectado = "";
@@ -896,50 +838,39 @@
             const lineas = texto.split('\n');
             let textoOrigen = '';
             for (let i = 0; i < lineas.length; i++) {
-                let linea = lineas[i];
-                if (linea.includes('ORIGEN')) {
-                    textoOrigen = linea;
+                if (lineas[i].includes('ORIGEN')) {
+                    textoOrigen = lineas[i];
                     if (i + 1 < lineas.length) textoOrigen += ' ' + lineas[i+1];
                 }
             }
 
             let origenContieneMisDatos = false;
             for (let pm of pmList) {
-                if ((pm.cedula && textoOrigen.includes(pm.cedula)) || (pm.telefono && textoOrigen.includes(pm.telefono))) {
-                    origenContieneMisDatos = true;
-                }
+                if ((pm.cedula && textoOrigen.includes(pm.cedula)) || (pm.telefono && textoOrigen.includes(pm.telefono))) origenContieneMisDatos = true;
             }
             for (let tr of trList) {
-                if (tr.terminacion && textoOrigen.includes(tr.terminacion)) {
-                    origenContieneMisDatos = true;
-                }
+                if (tr.terminacion && textoOrigen.includes(tr.terminacion)) origenContieneMisDatos = true;
             }
 
             if (origenContieneMisDatos) {
                 alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Este comprobante corresponde a un pago SALIENTE (enviado desde tu cuenta en el Origen), no a un pago recibido.`;
+                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Este comprobante es un pago SALIENTE.`;
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado: Es un pago enviado por ti, no un ingreso.`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado.`;
                 return;
             }
 
             for (let pm of pmList) {
-                const tieneCedula = pm.cedula && texto.includes(pm.cedula);
-                const tieneTel = pm.telefono && texto.includes(pm.telefono);
-                if (tieneCedula || tieneTel || texto.includes("PAGOMOVIL") || texto.includes("PAGO MOVIL")) {
-                    if (tieneCedula || tieneTel) {
-                        valido = true;
-                        tipoDetectado = "Pago Móvil Válido";
-                        break;
-                    }
+                if ((pm.cedula && texto.includes(pm.cedula)) || (pm.telefono && texto.includes(pm.telefono)) || texto.includes("PAGOMOVIL")) {
+                    valido = true;
+                    tipoDetectado = "Pago Móvil Válido";
+                    break;
                 }
             }
 
             if (!valido) {
                 for (let tr of trList) {
-                    const tieneTerminacion = tr.terminacion && texto.includes(tr.terminacion);
-                    const tieneNombre = (texto.includes("HAROLD") && texto.includes("GALEA")) || (tr.titular && texto.includes(tr.titular.toUpperCase().split(' ')[0]));
-                    if (tieneTerminacion || (texto.includes("DESTINO") && tieneNombre)) {
+                    if ((tr.terminacion && texto.includes(tr.terminacion)) || texto.includes("HAROLD")) {
                         valido = true;
                         tipoDetectado = "Transferencia Válida";
                         break;
@@ -947,25 +878,18 @@
                 }
             }
 
-            const refLineas = texto.split('\n');
             let refEncontrada = '';
             let montoEncontrado = '';
 
-            for (let i = 0; i < refLineas.length; i++) {
-                let linea = refLineas[i];
-                if (linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('REFERENCIA')) {
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i];
+                if (linea.includes('OPERACIÓN') || linea.includes('REF')) {
                     let nums = linea.match(/\d{6,}/);
                     if (nums) refEncontrada = nums[0];
-                    else if (i + 1 < refLineas.length) {
-                        let numsNext = refLineas[i+1].match(/\d{6,}/);
-                        if (numsNext) refEncontrada = numsNext[0];
-                    }
                 }
-                if (linea.includes('BS') || linea.includes('BOLÍVARES') || linea.includes(',00')) {
+                if (linea.includes('BS') || linea.includes(',00')) {
                     let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
-                    if (matchMonto && matchMonto[1].length > 1) {
-                        montoEncontrado = matchMonto[1];
-                    }
+                    if (matchMonto && matchMonto[1].length > 1) montoEncontrado = matchMonto[1];
                 }
             }
 
@@ -979,20 +903,16 @@
             }
 
             if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
-            if (montoEncontrado) {
-                let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
-                document.getElementById('input-monto').value = montoLimpio;
-            }
+            if (montoEncontrado) document.getElementById('input-monto').value = montoEncontrado.replace(/\./g, '').replace(',', '.');
 
             if (refEncontrada) {
-                const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
+                const refsUsadas = dbState.ag_referencias_usadas || [];
                 const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
-                
                 if (duplicada) {
                     alerta.classList.remove('hidden');
-                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! La referencia ${refEncontrada} ya fue utilizada por el cliente "${duplicada.cliente}" (Monto: Bs. ${duplicada.monto.toLocaleString('es-VE')}).`;
+                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! Ya fue usada por "${duplicada.cliente}".`;
                     statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante ya registrado previamente. No se puede reutilizar.`;
+                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Referencia ya registrada.`;
                     return;
                 }
             }
@@ -1000,71 +920,49 @@
             if (valido) {
                 alerta.classList.add('hidden');
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado} aprobada con éxito. Datos extraídos automáticamente.`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado} aprobada.`;
             } else {
                 alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! El comprobante NO coincide con tus cuentas configuradas.`;
+                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! No coincide con tus cuentas.`;
                 statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado por seguridad.`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado.`;
             }
         }
 
         function registrarPago() {
             const referencia = document.getElementById('input-ref').value.trim();
             const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
-            const montoStr = document.getElementById('input-monto').value.trim();
-            const monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            const monto = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
             const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
             
-            if(!referencia || !monto) {
-                alert("Por favor asegúrate de que la referencia y el monto estén rellenados.");
-                return;
-            }
+            if(!referencia || !monto) return alert("Rellena la referencia y el monto.");
             
-            let refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
-            if (refsUsadas.some(r => r.referencia === referencia)) {
-                alert(`¡Error! La referencia ${referencia} ya se encuentra registrada en el sistema.`);
-                return;
-            }
+            if (!dbState.ag_referencias_usadas) dbState.ag_referencias_usadas = [];
+            if (dbState.ag_referencias_usadas.some(r => r.referencia === referencia)) return alert("¡Referencia duplicada!");
 
             if (cuentaDestinoSel) {
                 let partes = cuentaDestinoSel.split('_');
                 let tipo = partes[0];
                 let idx = parseInt(partes[1]);
-                if (tipo === 'pm') {
-                    let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
-                    if (pmList[idx]) {
-                        pmList[idx].saldo = (pmList[idx].saldo || 0) + monto;
-                        localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
-                    }
-                } else if (tipo === 'tr') {
-                    let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
-                    if (trList[idx]) {
-                        trList[idx].saldo = (trList[idx].saldo || 0) + monto;
-                        localStorage.setItem('ag_transferencia', JSON.stringify(trList));
-                    }
+                if (tipo === 'pm' && dbState.ag_pago_movil[idx]) {
+                    dbState.ag_pago_movil[idx].saldo = (dbState.ag_pago_movil[idx].saldo || 0) + monto;
+                } else if (tipo === 'tr' && dbState.ag_transferencia[idx]) {
+                    dbState.ag_transferencia[idx].saldo = (dbState.ag_transferencia[idx].saldo || 0) + monto;
                 }
             }
 
-            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
-            let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
-            
+            if (!dbState.ag_clientes) dbState.ag_clientes = [];
+            let clienteExistente = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
             if (clienteExistente) {
                 clienteExistente.saldo += monto;
             } else {
-                clientes.push({ nombre: clienteNombre, saldo: monto });
+                dbState.ag_clientes.push({ nombre: clienteNombre, saldo: monto });
             }
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             
-            refsUsadas.push({
-                referencia: referencia,
-                cliente: clienteNombre,
-                monto: monto,
-                fecha: new Date().toLocaleString()
-            });
-            localStorage.setItem('ag_referencias_usadas', JSON.stringify(refsUsadas));
+            dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, monto, fecha: new Date().toLocaleString() });
             
-            alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
+            guardarDatosRemotos();
+            alert(`¡Pago registrado con éxito! Bs. ${monto.toLocaleString('es-VE')} acreditados a ${clienteNombre}.`);
             
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente').value = '';
