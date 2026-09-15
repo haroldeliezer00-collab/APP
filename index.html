@@ -86,13 +86,22 @@
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
                 <h2 class="text-lg font-bold text-yellow-400 mb-2"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla y Cuadre</h2>
                 
-                <!-- Saldo Total en Bancos -->
+                <!-- 1. Saldo Total Disponible en Taquilla (Cuentas) -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
                     <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
                     <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
-                <!-- Total Créditos Cashea (Semanal) -->
+                <!-- 2. Saldo Neto Global de Sistemas -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
+                    <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
+                        <i class="fa-solid fa-server mr-1"></i> Saldo Neto Global de Sistemas
+                    </p>
+                    <p id="display-caja-neto-sistemas" class="text-xl font-extrabold text-green-300">Bs. 0,00</p>
+                    <p class="text-[10px] text-gray-400">Ventas menos premios y comisiones de todos los sistemas.</p>
+                </div>
+
+                <!-- 3. Total Créditos Cashea (Semanal) -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-blue-500/50 text-center space-y-1">
                     <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">
                         <i class="fa-solid fa-credit-card mr-1"></i> Total Créditos Cashea (Semanal)
@@ -101,7 +110,33 @@
                     <p class="text-[10px] text-gray-400">Créditos cubiertos por los sistemas (Descontados del neto).</p>
                 </div>
 
-                <!-- Remanente / Comisión Arrastrada (Domingo a Lunes) -->
+                <!-- 4. Comisión SRQ -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
+                    <p class="text-xs text-yellow-300 font-semibold uppercase tracking-wider">
+                        <i class="fa-solid fa-percent mr-1"></i> Comisión SRQ
+                    </p>
+                    <p id="display-caja-comision-srq" class="text-xl font-extrabold text-yellow-400">Bs. 0,00</p>
+                    <p class="text-[10px] text-gray-400">Comisión automática generada por SRQ Polla.</p>
+                </div>
+
+                <!-- 5. Comisiones Totales (con Botones Agregar / Gasto) -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
+                                <i class="fa-solid fa-wallet mr-1"></i> Comisiones Totales (Mis Comisiones)
+                            </p>
+                            <p id="display-caja-comisiones-totales" class="text-xl font-extrabold text-yellow-300 mt-0.5">Bs. 0,00</p>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="modificarExtraComision('agregar')" class="bg-green-600 hover:bg-green-500 text-white px-2.5 py-1 rounded text-xs font-bold" title="Agregar propina o ingreso extra"><i class="fa-solid fa-plus mr-0.5"></i> Agregar</button>
+                            <button onclick="modificarExtraComision('gasto')" class="bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded text-xs font-bold" title="Gasto o retiro de comisión"><i class="fa-solid fa-minus mr-0.5"></i> Gasto</button>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400">Incluye comisiones de sistemas, SRQ, remanente y propinas/gastos.</p>
+                </div>
+
+                <!-- 6. Remanente / Comisión Arrastrada (Domingo a Lunes) -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
                     <p class="text-xs text-gray-400 uppercase font-semibold">
                         <i class="fa-solid fa-piggy-bank mr-1 text-yellow-400"></i> Remanente / Comisión Arrastrada (Dom-Lun)
@@ -110,7 +145,7 @@
                     <p class="text-[10px] text-gray-500">Saldo inicial arrastrado que se encuentra en taquilla/banco.</p>
                 </div>
 
-                <!-- Comisión Gastada / Retirada -->
+                <!-- 7. Comisión Gastada / Retirada -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-1">
                     <p class="text-xs text-gray-400 uppercase font-semibold">
                         <i class="fa-solid fa-wallet mr-1 text-red-400"></i> Comisión Gastada / Retirada
@@ -119,7 +154,16 @@
                     <p class="text-[10px] text-gray-500">Dinero gastado o retirado de la comisión.</p>
                 </div>
 
-                <!-- Casilla de Cuadre de Caja -->
+                <!-- 8. Saldos Positivos de los Clientes -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
+                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                        <i class="fa-solid fa-users mr-1 text-green-400"></i> Saldos Positivos de Clientes
+                    </p>
+                    <p id="display-caja-saldos-clientes" class="text-xl font-extrabold text-green-400">Bs. 0,00</p>
+                    <p class="text-[10px] text-gray-400">Suma total de saldos de clientes (Cashea + Cartera Premium).</p>
+                </div>
+
+                <!-- 9. Casilla de Cuadre de Caja -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-yellow-500/50 text-center space-y-1">
                     <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
                         <i class="fa-solid fa-scale-balanced mr-1"></i> Cuadre de Caja (Saldo Real)
@@ -367,7 +411,6 @@
                 dbState.ag_sistemas = [];
             }
 
-            // Fusión inteligente: Asegura que los sistemas oficiales estén, pero respeta tus sistemas personalizados y no los borra
             sistemasDefault.forEach(defSys => {
                 const existe = dbState.ag_sistemas.some(s => s.nombre.trim().toLowerCase() === defSys.nombre.trim().toLowerCase() || s.id === defSys.id);
                 if (!existe) {
@@ -388,6 +431,7 @@
 
             if (dbState.ag_remanente_dom === undefined) dbState.ag_remanente_dom = 0;
             if (dbState.ag_comision_gastada === undefined) dbState.ag_comision_gastada = 0;
+            if (dbState.ag_extra_comision === undefined) dbState.ag_extra_comision = 0;
         }
 
         async function cargarDatosRemotos() {
@@ -531,19 +575,75 @@
             actualizarSaldoTaquilla();
         }
 
+        function modificarExtraComision(tipo) {
+            let mensaje = tipo === 'agregar' ? "Ingrese monto a agregar a las comisiones (propina / ingreso extra):" : "Ingrese monto de gasto / retiro de las comisiones:";
+            let montoStr = prompt(mensaje);
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) return alert("Monto inválido.");
+
+            if (dbState.ag_extra_comision === undefined) dbState.ag_extra_comision = 0;
+            if (tipo === 'agregar') {
+                dbState.ag_extra_comision += monto;
+            } else {
+                dbState.ag_extra_comision -= monto;
+            }
+            guardarDatosRemotos();
+            actualizarSaldoTaquilla();
+            alert("Comisiones actualizadas con éxito.");
+        }
+
         function actualizarSaldoTaquilla() {
             const totalBancos = obtenerSaldoTotalTaquilla();
-            const el = document.getElementById('display-saldo-taquilla');
-            if(el) el.innerText = `Bs. ${totalBancos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            const elBancos = document.getElementById('display-saldo-taquilla');
+            if(elBancos) elBancos.innerText = `Bs. ${totalBancos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
             const totalCashea = calcularTotalCasheaCreditos();
             const elCajaCashea = document.getElementById('display-caja-cashea');
             if(elCajaCashea) elCajaCashea.innerText = `Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
             const totalClientes = calcularSumaTotalSaldosClientes();
+            const elClientes = document.getElementById('display-caja-saldos-clientes');
+            if(elClientes) elClientes.innerText = `Bs. ${totalClientes.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
             const totalNetoSistemas = calcularNetoGlobalSistemas();
+            const elNetoSistemas = document.getElementById('display-caja-neto-sistemas');
+            if(elNetoSistemas) elNetoSistemas.innerText = `Bs. ${totalNetoSistemas.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            // Calcular comisiones SRQ y comisiones totales de sistemas
+            const sistemas = dbState.ag_sistemas || [];
+            const datos = dbState.ag_sistemas_datos || {};
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            
+            let comisionSRQ = 0;
+            let comisionesSistemas = 0;
+
+            sistemas.forEach(sys => {
+                let sysComision = 0;
+                dias.forEach(dia => {
+                    if (datos[dia] && datos[dia][sys.id]) {
+                        let v = datos[dia][sys.id].ventas || 0;
+                        let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (datos[dia][sys.id].comision || 0);
+                        sysComision += c;
+                    }
+                });
+                if (sys.nombre.toLowerCase().includes('srq')) {
+                    comisionSRQ += sysComision;
+                } else {
+                    comisionesSistemas += sysComision;
+                }
+            });
+
+            const elComisionSRQ = document.getElementById('display-caja-comision-srq');
+            if(elComisionSRQ) elComisionSRQ.innerText = `Bs. ${comisionSRQ.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
             const remanenteDom = parseFloat(dbState.ag_remanente_dom) || 0;
+            const extraComision = parseFloat(dbState.ag_extra_comision) || 0;
             const comisionGastada = parseFloat(dbState.ag_comision_gastada) || 0;
+
+            const comisionesTotales = comisionesSistemas + comisionSRQ + remanenteDom + extraComision - comisionGastada;
+            const elComisionesTotales = document.getElementById('display-caja-comisiones-totales');
+            if(elComisionesTotales) elComisionesTotales.innerText = `Bs. ${comisionesTotales.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
             const inputRem = document.getElementById('input-remanente-dom');
             if (inputRem && document.activeElement !== inputRem) {
@@ -724,6 +824,7 @@
             dbState.ag_sistemas_datos = datos;
             dbState.ag_cashea_creditos = [];
             dbState.ag_comision_gastada = 0;
+            dbState.ag_extra_comision = 0;
 
             if (dbState.ag_clientes) {
                 dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldoCashea: 0, saldoPremio: 0 }));
@@ -884,7 +985,6 @@
                 totalVentasGlobal += sysVentas;
                 totalPremiosGlobal += sysPremios;
 
-                // Separar comisión SRQ Polla
                 if (sys.nombre.toLowerCase().includes('srq')) {
                     totalComisionSRQ += sysComision;
                 } else {
