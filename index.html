@@ -65,6 +65,12 @@
                     <label class="text-xs text-gray-400">Monto (Bs)</label>
                     <input type="text" id="input-monto" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="0.00">
                 </div>
+                <div>
+                    <label class="text-xs text-gray-400">Cuenta de Destino (Acreditar Saldo)</label>
+                    <select id="select-cuenta-destino" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none">
+                        <!-- Relleno dinámico -->
+                    </select>
+                </div>
                 <div class="flex items-center space-x-2 pt-1">
                     <input type="checkbox" id="check-cashea" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0">
                     <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
@@ -75,17 +81,17 @@
             </div>
         </section>
 
-        <!-- VISTA: CAJA -->
+        <!-- VISTA: CAJA (CONTROL SALDO TAQUILLA) -->
         <section id="view-caja" class="hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
-                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Pronosticador</h2>
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-4">
-                    <p class="text-xs text-gray-400">Saldo Disponible en Caja</p>
-                    <p class="text-2xl font-extrabold text-green-400">Bs. 14.500,00</p>
+                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla</h2>
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-4 text-center">
+                    <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
+                    <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <button class="bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-plus mr-1"></i> Ingreso</button>
-                    <button class="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-minus mr-1"></i> Retiro</button>
+                    <button onclick="ajusteCaja('ingreso')" class="bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-plus mr-1"></i> Ingreso General</button>
+                    <button onclick="ajusteCaja('retiro')" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-minus mr-1"></i> Retiro General</button>
                 </div>
             </div>
         </section>
@@ -135,7 +141,7 @@
                     <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos</h2>
                     <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
                 </div>
-                <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pagos de premios para pronosticadores de Agencia Harold José.</p>
+                <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pago de premios para pronosticadores.</p>
                 
                 <!-- Buscador rápido -->
                 <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
@@ -147,19 +153,20 @@
             </div>
         </section>
 
-        <!-- VISTA: CUENTAS -->
+        <!-- VISTA: CUENTAS Y SALDOS -->
         <section id="view-cuentas" class="hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
-                <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-wallet mr-2"></i> Cuentas Oficiales y Respaldos</h2>
+                <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-wallet mr-2"></i> Cuentas Oficiales y Saldos</h2>
                 
                 <!-- Pago Móvil -->
                 <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
                     <p class="font-bold text-xs text-yellow-400 uppercase">Pago Móvil BDV:</p>
-                    <div id="lista-pago-movil" class="space-y-1 text-xs"></div>
+                    <div id="lista-pago-movil" class="space-y-2 text-xs"></div>
                     <div class="pt-2 border-t border-gray-800 space-y-2">
                         <p class="text-[11px] text-gray-400 font-semibold">Agregar Nuevo Pago Móvil:</p>
                         <input type="text" id="nuevo-pm-cedula" placeholder="Cédula (Ej: 18274410)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
                         <input type="text" id="nuevo-pm-tel" placeholder="Teléfono (Ej: 04124489363)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-pm-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
                         <button onclick="agregarPagoMovil()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Pago Móvil</button>
                     </div>
                 </div>
@@ -167,11 +174,12 @@
                 <!-- Transferencia -->
                 <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
                     <p class="font-bold text-xs text-yellow-400 uppercase">Cuentas Transferencia:</p>
-                    <div id="lista-transferencia" class="space-y-1 text-xs"></div>
+                    <div id="lista-transferencia" class="space-y-2 text-xs"></div>
                     <div class="pt-2 border-t border-gray-800 space-y-2">
                         <p class="text-[11px] text-gray-400 font-semibold">Agregar Nueva Cuenta Transferencia:</p>
                         <input type="text" id="nuevo-tr-term" placeholder="Últimos 4 dígitos (Ej: 7201)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
                         <input type="text" id="nuevo-tr-titular" placeholder="Titular (Ej: Harold Eliezer Galea Sanchez)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-tr-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
                         <button onclick="agregarTransferencia()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Cuenta Destino</button>
                     </div>
                 </div>
@@ -204,18 +212,18 @@
         </button>
     </nav>
 
-    <!-- Script de Lógica, OCR y Clientes -->
+    <!-- Script de Lógica, Saldos y Clientes -->
     <script>
-        // Inicializar localStorage
+        // Inicializar localStorage con saldos iniciales por cuenta
         if (!localStorage.getItem('ag_pago_movil')) {
             localStorage.setItem('ag_pago_movil', JSON.stringify([
-                { cedula: "18274410", telefono: "04124489363" }
+                { cedula: "18274410", telefono: "04124489363", saldo: 0 }
             ]));
         }
         if (!localStorage.getItem('ag_transferencia')) {
             localStorage.setItem('ag_transferencia', JSON.stringify([
-                { terminacion: "7201", titular: "Harold Eliezer Galea Sanchez" },
-                { terminacion: "0163", titular: "Harold Eliezer Galea Sanchez" }
+                { terminacion: "7201", titular: "Harold Eliezer Galea Sanchez", saldo: 0 },
+                { terminacion: "0163", titular: "Harold Eliezer Galea Sanchez", saldo: 0 }
             ]));
         }
         if (!localStorage.getItem('ag_clientes')) {
@@ -227,6 +235,8 @@
         document.addEventListener("DOMContentLoaded", () => {
             renderizarCuentas();
             renderizarClientes();
+            actualizarSaldoTaquilla();
+            poblarSelectCuentas();
         });
 
         // Soporte global para Pegar imágenes (Ctrl+V)
@@ -254,9 +264,46 @@
             
             if (vistaId === 'cuentas') renderizarCuentas();
             if (vistaId === 'clientes') renderizarClientes();
+            if (vistaId === 'caja') actualizarSaldoTaquilla();
+            if (vistaId === 'pagos') poblarSelectCuentas();
         }
 
-        // --- GESTIÓN DE CLIENTES Y SALDOS ---
+        // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
+        function obtenerSaldoTotalTaquilla() {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            let total = 0;
+            pmList.forEach(pm => total += (parseFloat(pm.saldo) || 0));
+            trList.forEach(tr => total += (parseFloat(tr.saldo) || 0));
+            return total;
+        }
+
+        function actualizarSaldoTaquilla() {
+            const total = obtenerSaldoTotalTaquilla();
+            document.getElementById('display-saldo-taquilla').innerText = `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+        }
+
+        function ajusteCaja(tipo) {
+            let montoStr = prompt(tipo === 'ingreso' ? "Ingrese el monto de ingreso general a la taquilla (Bs):" : "Ingrese el monto de retiro general de la taquilla (Bs):");
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) return;
+
+            // Se aplica a la primera cuenta disponible por defecto
+            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            if (pmList.length > 0) {
+                if (tipo === 'ingreso') pmList[0].saldo += monto;
+                else pmList[0].saldo = Math.max(0, pmList[0].saldo - monto);
+                localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+                actualizarSaldoTaquilla();
+                renderizarCuentas();
+                alert(`Ajuste de caja (${tipo}) realizado con éxito.`);
+            } else {
+                alert("Debe tener al menos una cuenta registrada.");
+            }
+        }
+
+        // --- GESTIÓN DE CLIENTES Y ACCIONES ---
         function renderizarClientes() {
             const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             generarHTMLClientes(clientes);
@@ -282,13 +329,14 @@
                         <div class="flex justify-between items-center">
                             <div>
                                 <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
-                                <p class="text-xs text-gray-300">Saldo: <strong class="text-green-400">Bs. ${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                                <p class="text-xs text-gray-300">Saldo Positivo: <strong class="text-green-400">Bs. ${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
                             <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="modificarSaldoCliente(${index}, 'agregar')" class="bg-green-700 hover:bg-green-600 text-white text-xs py-1.5 rounded font-semibold"><i class="fa-solid fa-plus mr-1"></i> Agregar Saldo</button>
-                            <button onclick="modificarSaldoCliente(${index}, 'descontar')" class="bg-red-700 hover:bg-red-600 text-white text-xs py-1.5 rounded font-semibold"><i class="fa-solid fa-minus mr-1"></i> Descontar / Premio</button>
+                        <div class="grid grid-cols-3 gap-1.5 pt-1">
+                            <button onclick="modificarSaldoCliente(${index}, 'agregar')" class="bg-green-700 hover:bg-green-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-plus mr-0.5"></i> Agregar</button>
+                            <button onclick="modificarSaldoCliente(${index}, 'descontar')" class="bg-blue-700 hover:bg-blue-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
+                            <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> Premio</button>
                         </div>
                     </div>`;
                 });
@@ -312,7 +360,7 @@
         function modificarSaldoCliente(index, tipo) {
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             let c = clientes[index];
-            let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar / pagar premio a ${c.nombre}:`;
+            let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar (jugada/gasto) a ${c.nombre}:`;
             let montoStr = prompt(mensaje);
             if (!montoStr) return;
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
@@ -323,10 +371,61 @@
             if (tipo === 'agregar') {
                 c.saldo += monto;
             } else {
+                if (c.saldo < monto) {
+                    if(!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
+                }
                 c.saldo -= monto;
             }
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             renderizarClientes();
+        }
+
+        function pagarPremioCliente(index) {
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let c = clientes[index];
+            let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre} (Se descontará de su saldo y de las cuentas de la taquilla):`);
+            if (!montoStr) return;
+            let premio = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (premio <= 0) {
+                alert("Monto inválido.");
+                return;
+            }
+
+            // Descontar saldo del cliente
+            c.saldo -= premio;
+
+            // Descontar de la cuenta principal/taquilla (primera cuenta con saldo disponible)
+            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            
+            let descontado = false;
+            for (let pm of pmList) {
+                if (pm.saldo >= premio) {
+                    pm.saldo -= premio;
+                    descontado = true;
+                    break;
+                }
+            }
+            if (!descontado) {
+                for (let tr of trList) {
+                    if (tr.saldo >= premio) {
+                        tr.saldo -= premio;
+                        descontado = true;
+                        break;
+                    }
+                }
+            }
+            if (!descontado && pmList.length > 0) {
+                pmList[0].saldo -= premio; // Permitir negativo o ajuste directo
+            }
+
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+            localStorage.setItem('ag_transferencia', JSON.stringify(trList));
+
+            renderizarClientes();
+            actualizarSaldoTaquilla();
+            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}! Descontado del saldo del cliente y de la taquilla.`);
         }
 
         function eliminarCliente(index) {
@@ -339,14 +438,20 @@
 
         // --- GESTIÓN DE CUENTAS ---
         function renderizarCuentas() {
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil'));
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia'));
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
 
             let pmHtml = '';
             pmList.forEach((item, index) => {
                 pmHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-                    <div><p>Cédula: ${item.cedula}</p><p>Tel: ${item.telefono}</p></div>
-                    ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    <div>
+                        <p>Cédula: ${item.cedula} | Tel: ${item.telefono}</p>
+                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
+                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
                 </div>`;
             });
             document.getElementById('lista-pago-movil').innerHTML = pmHtml;
@@ -354,25 +459,62 @@
             let trHtml = '';
             trList.forEach((item, index) => {
                 trHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-                    <div><p>Destino Term: <strong class="text-yellow-400">${item.terminacion}</strong></p><p class="text-[10px] text-gray-400">${item.titular}</p></div>
-                    ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    <div>
+                        <p>Destino Term: <strong class="text-yellow-400">${item.terminacion}</strong></p>
+                        <p class="text-[10px] text-gray-400">${item.titular}</p>
+                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
+                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
                 </div>`;
             });
             document.getElementById('lista-transferencia').innerHTML = trHtml;
+            actualizarSaldoTaquilla();
+            poblarSelectCuentas();
+        }
+
+        function poblarSelectCuentas() {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            let html = '';
+            pmList.forEach((pm, i) => {
+                html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`;
+            });
+            trList.forEach((tr, i) => {
+                html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`;
+            });
+            const sel = document.getElementById('select-cuenta-destino');
+            if(sel) sel.innerHTML = html;
+        }
+
+        function editarSaldoCuenta(tipo, index) {
+            let listKey = tipo === 'pm' ? 'ag_pago_movil' : 'ag_transferencia';
+            let list = JSON.parse(localStorage.getItem(listKey)) || [];
+            let cuenta = list[index];
+            let nuevoSaldoStr = prompt(`Ingrese el nuevo saldo para la cuenta (${tipo === 'pm' ? cuenta.telefono : cuenta.terminacion}):`, cuenta.saldo || 0);
+            if (nuevoSaldoStr === null) return;
+            let nuevoSaldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
+            cuenta.saldo = nuevoSaldo;
+            localStorage.setItem(listKey, JSON.stringify(list));
+            renderizarCuentas();
         }
 
         function agregarPagoMovil() {
             const cedula = document.getElementById('nuevo-pm-cedula').value.trim();
             const telefono = document.getElementById('nuevo-pm-tel').value.trim();
+            const saldo = parseFloat((document.getElementById('nuevo-pm-saldo').value || "0").replace(',', '.')) || 0;
             if (!cedula || !telefono) {
                 alert("Por favor ingresa la cédula y el teléfono.");
                 return;
             }
-            let list = JSON.parse(localStorage.getItem('ag_pago_movil'));
-            list.push({ cedula, telefono });
+            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            list.push({ cedula, telefono, saldo });
             localStorage.setItem('ag_pago_movil', JSON.stringify(list));
             document.getElementById('nuevo-pm-cedula').value = '';
             document.getElementById('nuevo-pm-tel').value = '';
+            document.getElementById('nuevo-pm-saldo').value = '';
             renderizarCuentas();
             alert("Pago móvil agregado correctamente.");
         }
@@ -380,28 +522,30 @@
         function agregarTransferencia() {
             const terminacion = document.getElementById('nuevo-tr-term').value.trim();
             const titular = document.getElementById('nuevo-tr-titular').value.trim();
+            const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
             if (!terminacion || !titular) {
                 alert("Por favor ingresa la terminación de cuenta y el titular.");
                 return;
             }
-            let list = JSON.parse(localStorage.getItem('ag_transferencia'));
-            list.push({ terminacion, titular });
+            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            list.push({ terminacion, titular, saldo });
             localStorage.setItem('ag_transferencia', JSON.stringify(list));
             document.getElementById('nuevo-tr-term').value = '';
             document.getElementById('nuevo-tr-titular').value = '';
+            document.getElementById('nuevo-tr-saldo').value = '';
             renderizarCuentas();
             alert("Cuenta de transferencia agregada correctamente.");
         }
 
         function eliminarPM(index) {
-            let list = JSON.parse(localStorage.getItem('ag_pago_movil'));
+            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
             list.splice(index, 1);
             localStorage.setItem('ag_pago_movil', JSON.stringify(list));
             renderizarCuentas();
         }
 
         function eliminarTR(index) {
-            let list = JSON.parse(localStorage.getItem('ag_transferencia'));
+            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             list.splice(index, 1);
             localStorage.setItem('ag_transferencia', JSON.stringify(list));
             renderizarCuentas();
@@ -442,8 +586,8 @@
             const alerta = document.getElementById('alerta-antifraude');
             const statusBadge = document.getElementById('status-badge');
             
-            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil'));
-            const trList = JSON.parse(localStorage.getItem('ag_transferencia'));
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
             
             let valido = false;
             let tipoDetectado = "";
@@ -486,7 +630,7 @@
                         if (numsNext) refEncontrada = numsNext[0];
                     }
                 }
-                if (linea.includes('BS') || linea.includes('BOLíVARES') || linea.includes(',00')) {
+                if (linea.includes('BS') || linea.includes('BOLÍVARES') || linea.includes(',00')) {
                     let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
                     if (matchMonto && matchMonto[1].length > 1) {
                         montoEncontrado = matchMonto[1];
@@ -526,13 +670,34 @@
             const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
             const montoStr = document.getElementById('input-monto').value.trim();
             const monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
             
             if(!referencia || !monto) {
                 alert("Por favor asegúrate de que la referencia y el monto estén rellenados.");
                 return;
             }
             
-            // Acreditar saldo al cliente
+            // 1. Acreditar saldo a la cuenta seleccionada
+            if (cuentaDestinoSel) {
+                let partes = cuentaDestinoSel.split('_');
+                let tipo = partes[0];
+                let idx = parseInt(partes[1]);
+                if (tipo === 'pm') {
+                    let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+                    if (pmList[idx]) {
+                        pmList[idx].saldo = (pmList[idx].saldo || 0) + monto;
+                        localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+                    }
+                } else if (tipo === 'tr') {
+                    let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+                    if (trList[idx]) {
+                        trList[idx].saldo = (trList[idx].saldo || 0) + monto;
+                        localStorage.setItem('ag_transferencia', JSON.stringify(trList));
+                    }
+                }
+            }
+
+            // 2. Acreditar saldo al cliente
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
             
@@ -543,7 +708,7 @@
             }
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             
-            alert(`¡Pago registrado y acreditado exitosamente a ${clienteNombre} por Bs. ${monto.toLocaleString('es-VE')}! (Ref: ${referencia})`);
+            alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
             
             // Limpiar campos
             document.getElementById('input-ref').value = '';
@@ -552,6 +717,7 @@
             document.getElementById('resultado-container').classList.add('hidden');
             document.getElementById('alerta-antifraude').classList.add('hidden');
             renderizarClientes();
+            renderizarCuentas();
         }
     </script>
 </body>
