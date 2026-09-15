@@ -1,769 +1,795 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AG Harold José - Sistema de Taquilla</title>
+    <title>Agencia Harold José - Taquilla</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tesseract.js para OCR -->
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-24">
+<body class="bg-gray-900 text-gray-100 font-sans pb-20">
 
-    <!-- Header Principal -->
-    <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30 text-amber-400">
-                    <i class="fa-solid fa-coins text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-amber-400 tracking-wide">AG Harold José</h1>
-                    <p class="text-xs text-gray-400">Control de Taquilla y Sistemas</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="limpiarSemanaSistema()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer" title="Borrar datos de sistemas para nueva semana">
-                    <i class="fa-solid fa-broom"></i>
-                    <span class="hidden sm:inline">Limpiar Semana</span>
-                </button>
-                <button onclick="abrirModalSistema()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Sistema</span>
-                </button>
-            </div>
-        </div>
-    </header>
+    <!-- Alerta Anti-Fraude Dinámica -->
+    <div id="alerta-antifraude" class="hidden bg-red-600 text-white p-3 text-sm font-semibold text-center shadow-md transition-all duration-300">
+        <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="texto-alerta">¡ALERTA ANTI-FRAUDE! El comprobante NO contiene tus datos oficiales.</span>
+    </div>
 
-    <!-- Contenido Principal (Vistas) -->
-    <main class="max-w-7xl mx-auto p-4 w-full flex-grow">
+    <!-- Contenedor Principal -->
+    <main class="p-4 max-w-md mx-auto">
         
-        <!-- VISTA: SISTEMAS -->
-        <section id="vista-sistemas" class="view-section">
-            <div class="mb-6">
-                <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin">
-                    <button onclick="cambiarDia('lunes')" id="btn-lunes" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Lunes</button>
-                    <button onclick="cambiarDia('martes')" id="btn-martes" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Martes</button>
-                    <button onclick="cambiarDia('miercoles')" id="btn-miercoles" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Miércoles</button>
-                    <button onclick="cambiarDia('jueves')" id="btn-jueves" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Jueves</button>
-                    <button onclick="cambiarDia('viernes')" id="btn-viernes" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Viernes</button>
-                    <button onclick="cambiarDia('sabado')" id="btn-sabado" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700">Sábado</button>
-                    <button onclick="cambiarDia('domingo')" id="btn-domingo" class="dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20">Domingo</button>
-                </div>
-            </div>
-
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden mb-6">
-                <div class="p-4 bg-gray-850 border-b border-gray-800 flex justify-between items-center">
-                    <h2 class="text-sm font-bold text-amber-400 flex items-center space-x-2">
-                        <i class="fa-solid fa-table-cells"></i>
-                        <span id="titulo-dia-activo">Gestión de Sistemas - Domingo</span>
-                    </h2>
-                    <span class="text-xs text-gray-400">Valores en Bolívares (Bs)</span>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
-                                <th class="p-3.5 font-semibold">Sistema</th>
-                                <th class="p-3.5 font-semibold">Ventas</th>
-                                <th class="p-3.5 font-semibold">Premios</th>
-                                <th class="p-3.5 font-semibold">Comisión</th>
-                                <th class="p-3.5 font-semibold">Neto</th>
-                                <th class="p-3.5 font-semibold text-center">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-sistemas-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
-                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
-                    <i class="fa-solid fa-chart-pie"></i>
-                    <span>Resumen General de Todos los Sistemas</span>
-                </h3>
-                <div id="resumen-general-contenedor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-            </div>
-        </section>
-
         <!-- VISTA: PAGOS -->
-        <section id="vista-pagos" class="view-section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-receipt mr-2"></i>Control de Pagos</h2>
-                    <p class="text-xs text-gray-400">Registro y validación de pagos de clientes y taquilla.</p>
+        <section id="view-pagos" class="space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
+                <h2 class="text-lg font-bold text-yellow-400 mb-3 flex items-center">
+                    <i class="fa-solid fa-receipt mr-2"></i> Validador de Comprobantes (BDV)
+                </h2>
+                
+                <!-- Subir / Capturar / Pegar Comprobante -->
+                <div id="drop-zone" class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-yellow-400 transition focus:outline-none" tabindex="0" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-yellow-400 mb-2"></i>
+                    <p class="text-sm text-gray-300">Toca aquí o <span class="text-yellow-400 font-bold">pega (Ctrl+V)</span> la captura</p>
+                    <span class="text-xs text-gray-500">Pago Móvil o Transferencia</span>
+                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="procesarComprobanteArchivo(event)">
                 </div>
-                <button onclick="abrirModalPago()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Nuevo Pago</span>
-                </button>
+
+                <!-- Preview de Imagen y Estado -->
+                <div id="loading-ocr" class="hidden text-center py-4">
+                    <i class="fa-solid fa-spinner fa-spin text-yellow-400 text-2xl mb-2"></i>
+                    <p class="text-xs text-gray-300">Leyendo datos del comprobante (OCR)...</p>
+                </div>
+
+                <div id="resultado-container" class="mt-4 hidden space-y-3">
+                    <div class="relative">
+                        <img id="img-preview" class="w-full h-40 object-contain rounded bg-black/40 border border-gray-700" alt="Preview">
+                    </div>
+                    <div id="status-badge" class="p-2 rounded text-xs font-bold text-center"></div>
+                </div>
             </div>
 
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
-                                <th class="p-3.5 font-semibold">Cliente</th>
-                                <th class="p-3.5 font-semibold">Referencia / Banco</th>
-                                <th class="p-3.5 font-semibold">Monto</th>
-                                <th class="p-3.5 font-semibold">Estado</th>
-                                <th class="p-3.5 font-semibold text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-pagos-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
-                    </table>
+            <!-- Formulario de Registro -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider">Datos de la Transacción</h3>
+                <div>
+                    <label class="text-xs text-gray-400">Referencia (Operación)</label>
+                    <input type="text" id="input-ref" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Autocompletado por OCR">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">Cliente / Pronosticador</label>
+                    <input type="text" id="input-cliente" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Nombre del cliente">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">Monto (Bs)</label>
+                    <input type="text" id="input-monto" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">Cuenta de Destino (Acreditar Saldo)</label>
+                    <select id="select-cuenta-destino" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none">
+                        <!-- Relleno dinámico -->
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2 pt-1">
+                    <input type="checkbox" id="check-cashea" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0">
+                    <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
+                </div>
+                <button onclick="registrarPago()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2.5 rounded-lg transition text-sm shadow">
+                    Registrar y Acreditar Saldo
+                </button>
+            </div>
+        </section>
+
+        <!-- VISTA: CAJA (CONTROL SALDO TAQUILLA) -->
+        <section id="view-caja" class="hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
+                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla</h2>
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-4 text-center">
+                    <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
+                    <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="ajusteCaja('ingreso')" class="bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-plus mr-1"></i> Ingreso General</button>
+                    <button onclick="ajusteCaja('retiro')" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-xs"><i class="fa-solid fa-minus mr-1"></i> Retiro General</button>
                 </div>
             </div>
         </section>
 
-        <!-- VISTA: CAJA -->
-        <section id="vista-caja" class="view-section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-cash-register mr-2"></i>Control de Caja</h2>
-                    <p class="text-xs text-gray-400">Arqueo y flujo de efectivo diario.</p>
+        <!-- VISTA: SISTEMAS -->
+        <section id="view-sistemas" class="hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
+                <h2 class="text-lg font-bold text-yellow-400 mb-3"><i class="fa-solid fa-laptop-code mr-2"></i> Gestión de Sistemas</h2>
+                
+                <!-- Días de la semana -->
+                <div class="flex overflow-x-auto space-x-2 pb-2 mb-3">
+                    <button class="px-3 py-1 bg-yellow-500 text-gray-950 rounded text-xs font-bold whitespace-nowrap">Lunes</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Martes</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Miércoles</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Jueves</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Viernes</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Sábado</button>
+                    <button class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs whitespace-nowrap">Domingo</button>
                 </div>
-                <button onclick="abrirModalCaja()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Movimiento Caja</span>
-                </button>
-            </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
-                    <div class="text-xs text-gray-400 mb-1">Total Ingresos Caja</div>
-                    <div id="caja-ingresos" class="text-lg font-bold text-emerald-400">0,00 Bs</div>
-                </div>
-                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
-                    <div class="text-xs text-gray-400 mb-1">Total Egresos Caja</div>
-                    <div id="caja-egresos" class="text-lg font-bold text-red-400">0,00 Bs</div>
-                </div>
-                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
-                    <div class="text-xs text-gray-400 mb-1">Balance Actual Caja</div>
-                    <div id="caja-balance" class="text-lg font-bold text-amber-400">0,00 Bs</div>
-                </div>
-            </div>
-
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-4 bg-gray-850 border-b border-gray-800 font-bold text-xs text-amber-400">Historial de Movimientos de Caja</div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
-                                <th class="p-3.5 font-semibold">Tipo</th>
-                                <th class="p-3.5 font-semibold">Descripción</th>
-                                <th class="p-3.5 font-semibold">Monto</th>
-                                <th class="p-3.5 font-semibold text-center">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-caja-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
-                    </table>
+                <!-- Tarjetas de Sistemas -->
+                <div class="space-y-2">
+                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
+                        <div><p class="font-bold text-sm">Maxplay</p><span class="text-xs text-green-400">Activo</span></div>
+                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
+                        <div><p class="font-bold text-sm">Matrix Comp</p><span class="text-xs text-green-400">Activo</span></div>
+                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
+                        <div><p class="font-bold text-sm">SRQ Polla</p><span class="text-xs text-yellow-400">Pendiente</span></div>
+                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
+                        <div><p class="font-bold text-sm">Atenas</p><span class="text-xs text-green-400">Activo</span></div>
+                        <button class="text-xs bg-gray-700 px-2.5 py-1 rounded hover:bg-gray-600">Config</button>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- VISTA: CLIENTES -->
-        <section id="vista-clientes" class="view-section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-users mr-2"></i>Gestión de Clientes</h2>
-                    <p class="text-xs text-gray-400">Listado de clientes y saldos pendientes.</p>
+        <section id="view-clientes" class="hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos</h2>
+                    <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
                 </div>
-                <button onclick="abrirModalCliente()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Nuevo Cliente</span>
-                </button>
-            </div>
+                <p class="text-xs text-gray-400">Control de saldos positivos, jugadas y pago de premios para pronosticadores.</p>
+                
+                <!-- Buscador rápido -->
+                <input type="text" id="buscar-cliente" oninput="filtrarClientes(this.value)" placeholder="Buscar cliente..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
 
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-950/60 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
-                                <th class="p-3.5 font-semibold">Nombre del Cliente</th>
-                                <th class="p-3.5 font-semibold">Teléfono</th>
-                                <th class="p-3.5 font-semibold">Saldo / Deuda</th>
-                                <th class="p-3.5 font-semibold text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-clientes-cuerpo" class="divide-y divide-gray-800 text-sm"></tbody>
-                    </table>
+                <!-- Lista de Clientes -->
+                <div id="lista-clientes" class="space-y-3 pt-2">
+                    <!-- Renderizado dinámico -->
                 </div>
             </div>
         </section>
 
-        <!-- VISTA: CUENTAS -->
-        <section id="vista-cuentas" class="view-section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-base font-bold text-amber-400"><i class="fa-solid fa-wallet mr-2"></i>Cuentas Bancarias y Digitales</h2>
-                    <p class="text-xs text-gray-400">Control de saldos en bancos y plataformas (Binance, Banesco, etc.).</p>
+        <!-- VISTA: CUENTAS Y SALDOS -->
+        <section id="view-cuentas" class="hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
+                <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-wallet mr-2"></i> Cuentas Oficiales y Saldos</h2>
+                
+                <!-- Pago Móvil -->
+                <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
+                    <p class="font-bold text-xs text-yellow-400 uppercase">Pago Móvil BDV:</p>
+                    <div id="lista-pago-movil" class="space-y-2 text-xs"></div>
+                    <div class="pt-2 border-t border-gray-800 space-y-2">
+                        <p class="text-[11px] text-gray-400 font-semibold">Agregar Nuevo Pago Móvil:</p>
+                        <input type="text" id="nuevo-pm-cedula" placeholder="Cédula (Ej: 18274410)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-pm-tel" placeholder="Teléfono (Ej: 04124489363)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-pm-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <button onclick="agregarPagoMovil()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Pago Móvil</button>
+                    </div>
                 </div>
-                <button onclick="abrirModalCuenta()" class="bg-amber-500 hover:bg-amber-400 text-gray-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Nueva Cuenta</span>
-                </button>
-            </div>
 
-            <div id="grid-cuentas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                <!-- Transferencia -->
+                <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
+                    <p class="font-bold text-xs text-yellow-400 uppercase">Cuentas Transferencia:</p>
+                    <div id="lista-transferencia" class="space-y-2 text-xs"></div>
+                    <div class="pt-2 border-t border-gray-800 space-y-2">
+                        <p class="text-[11px] text-gray-400 font-semibold">Agregar Nueva Cuenta Transferencia:</p>
+                        <input type="text" id="nuevo-tr-term" placeholder="Últimos 4 dígitos (Ej: 7201)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-tr-titular" placeholder="Titular (Ej: Harold Eliezer Galea Sanchez)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <input type="text" id="nuevo-tr-saldo" placeholder="Saldo Inicial Bs (Ej: 0.00)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none">
+                        <button onclick="agregarTransferencia()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-1.5 rounded text-xs">Agregar Cuenta Destino</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
 
-    <!-- Navegación Inferior Fija -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2.5 px-4 z-50">
-        <div class="max-w-md mx-auto flex justify-around text-gray-400 text-xs font-medium">
-            <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center hover:text-amber-400 transition cursor-pointer">
-                <i class="fa-solid fa-receipt text-base mb-1"></i><span>Pagos</span>
-            </button>
-            <button onclick="cambiarVista('caja')" id="nav-caja" class="nav-btn flex flex-col items-center hover:text-amber-400 transition cursor-pointer">
-                <i class="fa-solid fa-cash-register text-base mb-1"></i><span>Caja</span>
-            </button>
-            <button onclick="cambiarVista('sistemas')" id="nav-sistemas" class="nav-btn flex flex-col items-center text-amber-400 cursor-pointer">
-                <i class="fa-solid fa-layer-group text-base mb-1"></i><span>Sistemas</span>
-            </button>
-            <button onclick="cambiarVista('clientes')" id="nav-clientes" class="nav-btn flex flex-col items-center hover:text-amber-400 transition cursor-pointer">
-                <i class="fa-solid fa-users text-base mb-1"></i><span>Clientes</span>
-            </button>
-            <button onclick="cambiarVista('cuentas')" id="nav-cuentas" class="nav-btn flex flex-col items-center hover:text-amber-400 transition cursor-pointer">
-                <i class="fa-solid fa-wallet text-base mb-1"></i><span>Cuentas</span>
-            </button>
-        </div>
+    <!-- Barra de Navegación Inferior -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-4 flex justify-around shadow-lg z-50">
+        <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center text-yellow-400">
+            <i class="fa-solid fa-money-bill-transfer text-lg"></i>
+            <span class="text-[10px] mt-1 font-semibold">Pagos</span>
+        </button>
+        <button onclick="cambiarVista('caja')" id="nav-caja" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
+            <i class="fa-solid fa-cash-register text-lg"></i>
+            <span class="text-[10px] mt-1">Caja</span>
+        </button>
+        <button onclick="cambiarVista('sistemas')" id="nav-sistemas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
+            <i class="fa-solid fa-server text-lg"></i>
+            <span class="text-[10px] mt-1">Sistemas</span>
+        </button>
+        <button onclick="cambiarVista('clientes')" id="nav-clientes" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
+            <i class="fa-solid fa-user-group text-lg"></i>
+            <span class="text-[10px] mt-1">Clientes</span>
+        </button>
+        <button onclick="cambiarVista('cuentas')" id="nav-cuentas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
+            <i class="fa-solid fa-id-card text-lg"></i>
+            <span class="text-[10px] mt-1">Cuentas</span>
+        </button>
     </nav>
 
-    <!-- MODALES -->
-    <!-- Modal Sistema -->
-    <div id="modal-sistema" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-amber-400 mb-4 flex items-center space-x-2">
-                <i class="fa-solid fa-plus-circle"></i>
-                <span>Agregar Nuevo Sistema</span>
-            </h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Nombre del Sistema</label>
-                    <input type="text" id="nuevo-nombre-sistema" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. Lotoactivo">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Porcentaje de Comisión (%)</label>
-                    <input type="number" id="nuevo-comision-sistema" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. 14">
-                </div>
-            </div>
-            <div class="flex space-x-2 mt-5">
-                <button onclick="cerrarModalSistema()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
-                <button onclick="guardarNuevoSistema()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Pago -->
-    <div id="modal-pago" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-receipt mr-2"></i>Registrar Nuevo Pago</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Cliente</label>
-                    <input type="text" id="pago-cliente" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nombre del cliente">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Referencia / Banco</label>
-                    <input type="text" id="pago-ref" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. Ref 1234 - Banesco">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Monto (Bs)</label>
-                    <input type="number" id="pago-monto" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
-                </div>
-            </div>
-            <div class="flex space-x-2 mt-5">
-                <button onclick="cerrarModalPago()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
-                <button onclick="guardarPago()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Registrar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Caja -->
-    <div id="modal-caja" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-cash-register mr-2"></i>Movimiento de Caja</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Tipo</label>
-                    <select id="caja-tipo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                        <option value="ingreso">Ingreso</option>
-                        <option value="egreso">Egreso</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Descripción</label>
-                    <input type="text" id="caja-desc" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Motivo del movimiento">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Monto (Bs)</label>
-                    <input type="number" id="caja-monto" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
-                </div>
-            </div>
-            <div class="flex space-x-2 mt-5">
-                <button onclick="cerrarModalCaja()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
-                <button onclick="guardarCaja()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cliente -->
-    <div id="modal-cliente" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-users mr-2"></i>Nuevo Cliente</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Nombre</label>
-                    <input type="text" id="cliente-nombre" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nombre y apellido">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Teléfono</label>
-                    <input type="text" id="cliente-telefono" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0414-0000000">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Saldo / Deuda Inicial (Bs)</label>
-                    <input type="number" id="cliente-saldo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
-                </div>
-            </div>
-            <div class="flex space-x-2 mt-5">
-                <button onclick="cerrarModalCliente()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
-                <button onclick="guardarCliente()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cuenta -->
-    <div id="modal-cuenta" class="fixed inset-0 bg-black/70 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-amber-400 mb-4"><i class="fa-solid fa-wallet mr-2"></i>Nueva Cuenta o Plataforma</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Nombre / Banco</label>
-                    <input type="text" id="cuenta-nombre" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Ej. Banesco / Binance">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Número / Identificador</label>
-                    <input type="text" id="cuenta-numero" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="Nro de cuenta o correo">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Saldo Inicial</label>
-                    <input type="number" id="cuenta-saldo" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500" placeholder="0.00">
-                </div>
-            </div>
-            <div class="flex space-x-2 mt-5">
-                <button onclick="cerrarModalCuenta()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Cancelar</button>
-                <button onclick="guardarCuenta()" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-gray-950 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script General y de Gestión -->
+    <!-- Script de Lógica, Saldos y Clientes -->
     <script>
-        let diaActual = 'domingo';
-        
-        // Datos iniciales persistentes
-        let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [
-            { id: 'maxplay', name: 'Maxplay', commissionRate: 14 },
-            { id: 'matrix', name: 'Matrix Comp', commissionRate: 14 },
-            { id: 'srq', name: 'SRQ Polla', commissionRate: 14 },
-            { id: 'atenas', name: 'Atenas', commissionRate: 12 },
-            { id: 'winbig', name: 'Winbig', commissionRate: 15 }
-        ];
+        // Inicializar localStorage
+        if (!localStorage.getItem('ag_pago_movil')) {
+            localStorage.setItem('ag_pago_movil', JSON.stringify([
+                { cedula: "18274410", telefono: "04124489363", saldo: 0 }
+            ]));
+        }
+        if (!localStorage.getItem('ag_transferencia')) {
+            localStorage.setItem('ag_transferencia', JSON.stringify([
+                { terminacion: "7201", titular: "Harold Eliezer Galea Sanchez", saldo: 0 },
+                { terminacion: "0163", titular: "Harold Eliezer Galea Sanchez", saldo: 0 }
+            ]));
+        }
+        if (!localStorage.getItem('ag_clientes')) {
+            localStorage.setItem('ag_clientes', JSON.stringify([
+                { nombre: "Cliente General", saldo: 0 }
+            ]));
+        }
+        if (!localStorage.getItem('ag_referencias_usadas')) {
+            localStorage.setItem('ag_referencias_usadas', JSON.stringify([]));
+        }
 
-        let registrosVentas = JSON.parse(localStorage.getItem('ag_registrosVentas')) || {};
-        let pagos = JSON.parse(localStorage.getItem('ag_pagos')) || [];
-        let movimientosCaja = JSON.parse(localStorage.getItem('ag_caja')) || [];
-        let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
-        let cuentas = JSON.parse(localStorage.getItem('ag_cuentas')) || [
-            { id: 'banesco', name: 'Banesco', number: 'Pago Móvil / Corriente', saldo: 0 },
-            { id: 'binance', name: 'Binance', number: 'USDT Wallet', saldo: 0 }
-        ];
+        document.addEventListener("DOMContentLoaded", () => {
+            renderizarCuentas();
+            renderizarClientes();
+            actualizarSaldoTaquilla();
+            poblarSelectCuentas();
+        });
 
-        // Navegación entre Vistas
+        // Soporte global para Pegar imágenes (Ctrl+V)
+        window.addEventListener('paste', e => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const blob = item.getAsFile();
+                    procesarBlobImagen(blob);
+                    cambiarVista('pagos');
+                    break;
+                }
+            }
+        });
+
         function cambiarVista(vistaId) {
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(`vista-${vistaId}`).classList.remove('hidden');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = "nav-btn flex flex-col items-center text-gray-400 hover:text-amber-400 transition cursor-pointer";
+            ['pagos', 'caja', 'sistemas', 'clientes', 'cuentas'].forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+                document.getElementById('nav-' + v).classList.remove('text-yellow-400');
+                document.getElementById('nav-' + v).classList.add('text-gray-400');
             });
-            document.getElementById(`nav-${vistaId}`).className = "nav-btn flex flex-col items-center text-amber-400 cursor-pointer";
-
-            if(vistaId === 'pagos') renderizarPagos();
-            if(vistaId === 'caja') renderizarCaja();
-            if(vistaId === 'clientes') renderizarClientes();
-            if(vistaId === 'cuentas') renderizarCuentas();
+            document.getElementById('view-' + vistaId).classList.remove('hidden');
+            document.getElementById('nav-' + vistaId).classList.remove('text-gray-400');
+            document.getElementById('nav-' + vistaId).classList.add('text-yellow-400');
+            
+            if (vistaId === 'cuentas') renderizarCuentas();
+            if (vistaId === 'clientes') renderizarClientes();
+            if (vistaId === 'caja') actualizarSaldoTaquilla();
+            if (vistaId === 'pagos') poblarSelectCuentas();
         }
 
-        // --- SISTEMAS ---
-        function cambiarDia(dia) {
-            diaActual = dia;
-            document.querySelectorAll('.dia-btn').forEach(btn => {
-                btn.className = "dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-gray-800 text-gray-300 hover:bg-gray-700";
-            });
-            const activoBtn = document.getElementById(`btn-${dia}`);
-            if(activoBtn) {
-                activoBtn.className = "dia-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20";
-            }
-            document.getElementById('titulo-dia-activo').innerText = `Gestión de Sistemas - ${dia.charAt(0).toUpperCase() + dia.slice(1)}`;
-            inicializarTablaSistemas();
+        // --- CÁLCULO DE SALDO TOTAL TAQUILLA ---
+        function obtenerSaldoTotalTaquilla() {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            let total = 0;
+            pmList.forEach(pm => total += (parseFloat(pm.saldo) || 0));
+            trList.forEach(tr => total += (parseFloat(tr.saldo) || 0));
+            return total;
         }
 
-        function obtenerClaveDato(sistemaId, dia, tipo) {
-            return `${dia}_${sistemaId}_${tipo}`;
+        function actualizarSaldoTaquilla() {
+            const total = obtenerSaldoTotalTaquilla();
+            document.getElementById('display-saldo-taquilla').innerText = `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
         }
 
-        function actualizarDatoSistema(sistemaId, tipo, valor) {
-            const clave = obtenerClaveDato(sistemaId, diaActual, tipo);
-            registrosVentas[clave] = parseFloat(valor) || 0;
-            localStorage.setItem('ag_registrosVentas', JSON.stringify(registrosVentas));
-            actualizarCalculosFilaSistema(sistemaId);
-            renderizarResumenGeneral();
-        }
+        function ajusteCaja(tipo) {
+            let montoStr = prompt(tipo === 'ingreso' ? "Ingrese el monto de ingreso general a la taquilla (Bs):" : "Ingrese el monto de retiro general de la taquilla (Bs):");
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) return;
 
-        function actualizarCalculosFilaSistema(sistemaId) {
-            const sis = sistemas.find(s => s.id === sistemaId);
-            if (!sis) return;
-
-            const ventas = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'ventas')] || 0;
-            const premios = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'premios')] || 0;
-
-            const comision = ventas * (sis.commissionRate / 100);
-            const neto = ventas - premios - comision;
-
-            const elComision = document.getElementById(`comision-${sis.id}`);
-            const elNeto = document.getElementById(`neto-${sis.id}`);
-
-            if (elComision) elComision.innerText = comision.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
-            if (elNeto) {
-                elNeto.innerText = neto.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
-                elNeto.className = `p-3.5 font-bold text-xs ${neto >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            if (pmList.length > 0) {
+                if (tipo === 'ingreso') pmList[0].saldo += monto;
+                else pmList[0].saldo = Math.max(0, pmList[0].saldo - monto);
+                localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+                actualizarSaldoTaquilla();
+                renderizarCuentas();
+                alert(`Ajuste de caja (${tipo}) realizado con éxito.`);
+            } else {
+                alert("Debe tener al menos una cuenta registrada.");
             }
         }
 
-        function inicializarTablaSistemas() {
-            const tbody = document.getElementById('tabla-sistemas-cuerpo');
-            tbody.innerHTML = '';
-
-            if (sistemas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-gray-500 text-xs">No hay sistemas registrados. Agrega uno con el botón superior.</td></tr>`;
-                renderizarResumenGeneral();
-                return;
-            }
-
-            sistemas.forEach(sis => {
-                const ventas = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'ventas')] || 0;
-                const premios = registrosVentas[obtenerClaveDato(sis.id, diaActual, 'premios')] || 0;
-
-                const comision = ventas * (sis.commissionRate / 100);
-                const neto = ventas - premios - comision;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3.5 font-medium text-gray-200">
-                        <div class="font-bold text-amber-400">${sis.name}</div>
-                        <div class="text-[10px] text-gray-400">Comisión: ${sis.commissionRate}%</div>
-                    </td>
-                    <td class="p-3.5">
-                        <input type="number" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sis.id}', 'ventas', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
-                    </td>
-                    <td class="p-3.5">
-                        <input type="number" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sis.id}', 'premios', this.value)" class="w-28 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
-                    </td>
-                    <td id="comision-${sis.id}" class="p-3.5 text-amber-400/90 font-semibold text-xs">
-                        ${comision.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs
-                    </td>
-                    <td id="neto-${sis.id}" class="p-3.5 font-bold text-xs ${neto >= 0 ? 'text-emerald-400' : 'text-red-400'}">
-                        ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs
-                    </td>
-                    <td class="p-3.5 text-center">
-                        <button onclick="eliminarSistema('${sis.id}')" class="text-gray-500 hover:text-red-400 p-1.5 rounded-lg transition cursor-pointer" title="Eliminar sistema">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            renderizarResumenGeneral();
-        }
-
-        function renderizarResumenGeneral() {
-            const contenedor = document.getElementById('resumen-general-contenedor');
-            if(!contenedor) return;
-            contenedor.innerHTML = '';
-
-            const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-
-            sistemas.forEach(sis => {
-                let totalVentasSis = 0;
-                let totalPremiosSis = 0;
-                let totalComisionSis = 0;
-
-                dias.forEach(d => {
-                    const v = registrosVentas[obtenerClaveDato(sis.id, d, 'ventas')] || 0;
-                    const p = registrosVentas[obtenerClaveDato(sis.id, d, 'premios')] || 0;
-                    totalVentasSis += v;
-                    totalPremiosSis += p;
-                    totalComisionSis += v * (sis.commissionRate / 100);
-                });
-
-                const netoSis = totalVentasSis - totalPremiosSis - totalComisionSis;
-
-                const card = document.createElement('div');
-                card.className = "bg-gray-950/60 border border-gray-800/80 rounded-xl p-3";
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1.5">
-                        <span class="font-bold text-amber-400 text-xs">${sis.name} <span class="text-[10px] text-gray-400">(${sis.commissionRate}%)</span></span>
-                        <span class="text-[10px] ${netoSis >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">Neto: ${netoSis.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
-                    </div>
-                    <div class="text-[11px] text-gray-400 space-y-0.5">
-                        <div>Ventas Semanales: <span class="text-gray-200">${totalVentasSis.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span></div>
-                        <div>Premios Semanales: <span class="text-gray-200">${totalPremiosSis.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span></div>
-                        <div>Comisión Total: <span class="text-amber-400">${totalComisionSis.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span></div>
-                    </div>
-                `;
-                contenedor.appendChild(card);
-            });
-        }
-
-        function abrirModalSistema() { document.getElementById('modal-sistema').classList.remove('hidden'); }
-        function cerrarModalSistema() { 
-            document.getElementById('modal-sistema').classList.add('hidden');
-            document.getElementById('nuevo-nombre-sistema').value = '';
-            document.getElementById('nuevo-comision-sistema').value = '';
-        }
-        function guardarNuevoSistema() {
-            const nombre = document.getElementById('nuevo-nombre-sistema').value.trim();
-            const comision = parseFloat(document.getElementById('nuevo-comision-sistema').value);
-            if (!nombre || isNaN(comision)) { alert('Ingresa nombre y comisión válidos.'); return; }
-            const id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            sistemas.push({ id, name: nombre, commissionRate: comision });
-            localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
-            cerrarModalSistema();
-            inicializarTablaSistemas();
-        }
-        function eliminarSistema(id) {
-            if (confirm('¿Eliminar este sistema?')) {
-                sistemas = sistemas.filter(s => s.id !== id);
-                localStorage.setItem('ag_sistemas', JSON.stringify(sistemas));
-                inicializarTablaSistemas();
-            }
-        }
-        function limpiarSemanaSistema() {
-            if (confirm('¿Limpiar todas las ventas y premios de la semana actual?')) {
-                registrosVentas = {};
-                localStorage.removeItem('ag_registrosVentas');
-                inicializarTablaSistemas();
-                alert('Semana limpiada con éxito.');
-            }
-        }
-
-        // --- PAGOS ---
-        function abrirModalPago() { document.getElementById('modal-pago').classList.remove('hidden'); }
-        function cerrarModalPago() { 
-            document.getElementById('modal-pago').classList.add('hidden');
-            document.getElementById('pago-cliente').value = '';
-            document.getElementById('pago-ref').value = '';
-            document.getElementById('pago-monto').value = '';
-        }
-        function guardarPago() {
-            const cliente = document.getElementById('pago-cliente').value.trim();
-            const ref = document.getElementById('pago-ref').value.trim();
-            const monto = parseFloat(document.getElementById('pago-monto').value);
-            if(!cliente || !ref || isNaN(monto)) { alert('Completa todos los campos.'); return; }
-            pagos.push({ id: Date.now(), cliente, ref, monto, estado: 'Aprobado' });
-            localStorage.setItem('ag_pagos', JSON.stringify(pagos));
-            cerrarModalPago();
-            renderizarPagos();
-        }
-        function eliminarPago(id) {
-            pagos = pagos.filter(p => p.id !== id);
-            localStorage.setItem('ag_pagos', JSON.stringify(pagos));
-            renderizarPagos();
-        }
-        function renderizarPagos() {
-            const tbody = document.getElementById('tabla-pagos-cuerpo');
-            tbody.innerHTML = '';
-            if(pagos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-gray-500 text-xs">No hay pagos registrados.</td></tr>`;
-                return;
-            }
-            pagos.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3.5 font-bold text-amber-400">${p.cliente}</td>
-                    <td class="p-3.5 text-gray-300">${p.ref}</td>
-                    <td class="p-3.5 text-emerald-400 font-semibold">${p.monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
-                    <td class="p-3.5"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[10px] font-bold">${p.estado}</span></td>
-                    <td class="p-3.5 text-center"><button onclick="eliminarPago(${p.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- CAJA ---
-        function abrirModalCaja() { document.getElementById('modal-caja').classList.remove('hidden'); }
-        function cerrarModalCaja() { 
-            document.getElementById('modal-caja').classList.add('hidden');
-            document.getElementById('caja-desc').value = '';
-            document.getElementById('caja-monto').value = '';
-        }
-        function guardarCaja() {
-            const tipo = document.getElementById('caja-tipo').value;
-            const desc = document.getElementById('caja-desc').value.trim();
-            const monto = parseFloat(document.getElementById('caja-monto').value);
-            if(!desc || isNaN(monto)) { alert('Completa los campos.'); return; }
-            movimientosCaja.push({ id: Date.now(), tipo, desc, monto });
-            localStorage.setItem('ag_caja', JSON.stringify(movimientosCaja));
-            cerrarModalCaja();
-            renderizarCaja();
-        }
-        function eliminarCaja(id) {
-            movimientosCaja = movimientosCaja.filter(m => m.id !== id);
-            localStorage.setItem('ag_caja', JSON.stringify(movimientosCaja));
-            renderizarCaja();
-        }
-        function renderizarCaja() {
-            const tbody = document.getElementById('tabla-caja-cuerpo');
-            tbody.innerHTML = '';
-            let totalIngresos = 0;
-            let totalEgresos = 0;
-
-            if(movimientosCaja.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-gray-500 text-xs">No hay movimientos en caja.</td></tr>`;
-            }
-
-            movimientosCaja.forEach(m => {
-                if(m.tipo === 'ingreso') totalIngresos += m.monto;
-                else totalEgresos += m.monto;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3.5 font-bold ${m.tipo === 'ingreso' ? 'text-emerald-400' : 'text-red-400'} uppercase text-xs">${m.tipo}</td>
-                    <td class="p-3.5 text-gray-200">${m.desc}</td>
-                    <td class="p-3.5 font-semibold text-gray-200">${m.monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
-                    <td class="p-3.5 text-center"><button onclick="eliminarCaja(${m.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            const balance = totalIngresos - totalEgresos;
-            document.getElementById('caja-ingresos').innerText = totalIngresos.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
-            document.getElementById('caja-egresos').innerText = totalEgresos.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
-            const elBal = document.getElementById('caja-balance');
-            elBal.innerText = balance.toLocaleString('es-VE', {minimumFractionDigits: 2}) + ' Bs';
-            elBal.className = `text-lg font-bold ${balance >= 0 ? 'text-amber-400' : 'text-red-400'}`;
-        }
-
-        // --- CLIENTES ---
-        function abrirModalCliente() { document.getElementById('modal-cliente').classList.remove('hidden'); }
-        function cerrarModalCliente() { 
-            document.getElementById('modal-cliente').classList.add('hidden');
-            document.getElementById('cliente-nombre').value = '';
-            document.getElementById('cliente-telefono').value = '';
-            document.getElementById('cliente-saldo').value = '';
-        }
-        function guardarCliente() {
-            const nombre = document.getElementById('cliente-nombre').value.trim();
-            const telefono = document.getElementById('cliente-telefono').value.trim();
-            const saldo = parseFloat(document.getElementById('cliente-saldo').value) || 0;
-            if(!nombre) { alert('Ingresa el nombre del cliente.'); return; }
-            clientes.push({ id: Date.now(), nombre, telefono, saldo });
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
-            cerrarModalCliente();
-            renderizarClientes();
-        }
-        function eliminarCliente(id) {
-            clientes = clientes.filter(c => c.id !== id);
-            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
-            renderizarClientes();
-        }
+        // --- GESTIÓN DE CLIENTES Y ACCIONES ---
         function renderizarClientes() {
-            const tbody = document.getElementById('tabla-clientes-cuerpo');
-            tbody.innerHTML = '';
-            if(clientes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-gray-500 text-xs">No hay clientes registrados.</td></tr>`;
-                return;
-            }
-            clientes.forEach(c => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3.5 font-bold text-amber-400">${c.nombre}</td>
-                    <td class="p-3.5 text-gray-300">${c.telefono || 'Sin teléfono'}</td>
-                    <td class="p-3.5 font-semibold ${c.saldo >= 0 ? 'text-emerald-400' : 'text-red-400'}">${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</td>
-                    <td class="p-3.5 text-center"><button onclick="eliminarCliente(${c.id})" class="text-gray-500 hover:text-red-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
+            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            generarHTMLClientes(clientes);
         }
 
-        // --- CUENTAS ---
-        function abrirModalCuenta() { document.getElementById('modal-cuenta').classList.remove('hidden'); }
-        function cerrarModalCuenta() { 
-            document.getElementById('modal-cuenta').classList.add('hidden');
-            document.getElementById('cuenta-nombre').value = '';
-            document.getElementById('cuenta-numero').value = '';
-            document.getElementById('cuenta-saldo').value = '';
+        function filtrarClientes(query) {
+            const clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            const q = query.toUpperCase();
+            const filtrados = clientes.filter(c => c.nombre.toUpperCase().includes(q));
+            generarHTMLClientes(filtrados, clientes);
         }
-        function guardarCuenta() {
-            const name = document.getElementById('cuenta-nombre').value.trim();
-            const number = document.getElementById('cuenta-numero').value.trim();
-            const saldo = parseFloat(document.getElementById('cuenta-saldo').value) || 0;
-            if(!name) { alert('Ingresa el nombre de la cuenta.'); return; }
-            cuentas.push({ id: Date.now(), name, number, saldo });
-            localStorage.setItem('ag_cuentas', JSON.stringify(cuentas));
-            cerrarModalCuenta();
-            renderizarCuentas();
-        }
-        function eliminarCuenta(id) {
-            cuentas = cuentas.filter(c => c.id !== id);
-            localStorage.setItem('ag_cuentas', JSON.stringify(cuentas));
-            renderizarCuentas();
-        }
-        function renderizarCuentas() {
-            const grid = document.getElementById('grid-cuentas');
-            grid.innerHTML = '';
-            if(cuentas.length === 0) {
-                grid.innerHTML = `<div class="col-span-3 text-center p-6 text-gray-500 text-xs">No hay cuentas registradas.</div>`;
-                return;
-            }
-            cuentas.forEach(c => {
-                const card = document.createElement('div');
-                card.className = "bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl relative";
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="font-bold text-amber-400 text-sm">${c.name}</h3>
-                            <p class="text-[11px] text-gray-400">${c.number || ''}</p>
+
+        function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
+            const original = listaOriginal || listaAMostrar;
+            let html = '';
+            if (listaAMostrar.length === 0) {
+                html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
+            } else {
+                listaAMostrar.forEach((c) => {
+                    let index = original.findIndex(orig => orig.nombre === c.nombre);
+                    html += `
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex flex-col space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
+                                <p class="text-xs text-gray-300">Saldo Positivo: <strong class="text-green-400">Bs. ${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                            </div>
+                            <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <button onclick="eliminarCuenta(${c.id})" class="text-gray-500 hover:text-red-400 cursor-pointer p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        <div class="grid grid-cols-3 gap-1.5 pt-1">
+                            <button onclick="modificarSaldoCliente(${index}, 'agregar')" class="bg-green-700 hover:bg-green-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-plus mr-0.5"></i> Agregar</button>
+                            <button onclick="modificarSaldoCliente(${index}, 'descontar')" class="bg-blue-700 hover:bg-blue-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
+                            <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[11px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> Premio</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('lista-clientes').innerHTML = html;
+        }
+
+        function agregarClienteManual() {
+            let nombre = prompt("Ingrese el nombre del nuevo cliente:");
+            if (!nombre) return;
+            let saldoStr = prompt("Ingrese el saldo inicial (Bs):", "0");
+            let saldo = parseFloat((saldoStr || "0").replace(',', '.')) || 0;
+            
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            clientes.push({ nombre: nombre.trim(), saldo: saldo });
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+            alert("Cliente agregado con éxito.");
+        }
+
+        function modificarSaldoCliente(index, tipo) {
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let c = clientes[index];
+            let mensaje = tipo === 'agregar' ? `Ingrese el monto a sumar al saldo de ${c.nombre}:` : `Ingrese el monto a descontar (jugada/gasto) a ${c.nombre}:`;
+            let montoStr = prompt(mensaje);
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) {
+                alert("Monto inválido.");
+                return;
+            }
+            if (tipo === 'agregar') {
+                c.saldo += monto;
+            } else {
+                if (c.saldo < monto) {
+                    if(!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
+                }
+                c.saldo -= monto;
+            }
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+        }
+
+        function pagarPremioCliente(index) {
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let c = clientes[index];
+            let montoStr = prompt(`Ingrese el monto del premio a pagar a ${c.nombre} (Se descontará de su saldo y de las cuentas de la taquilla):`);
+            if (!montoStr) return;
+            let premio = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (premio <= 0) {
+                alert("Monto inválido.");
+                return;
+            }
+
+            c.saldo -= premio;
+
+            let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            
+            let descontado = false;
+            for (let pm of pmList) {
+                if (pm.saldo >= premio) {
+                    pm.saldo -= premio;
+                    descontado = true;
+                    break;
+                }
+            }
+            if (!descontado) {
+                for (let tr of trList) {
+                    if (tr.saldo >= premio) {
+                        tr.saldo -= premio;
+                        descontado = true;
+                        break;
+                    }
+                }
+            }
+            if (!descontado && pmList.length > 0) {
+                pmList[0].saldo -= premio;
+            }
+
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+            localStorage.setItem('ag_transferencia', JSON.stringify(trList));
+
+            renderizarClientes();
+            actualizarSaldoTaquilla();
+            alert(`¡Premio de Bs. ${premio.toLocaleString('es-VE')} pagado a ${c.nombre}! Descontado del saldo del cliente y de la taquilla.`);
+        }
+
+        function eliminarCliente(index) {
+            if(!confirm("¿Está seguro de eliminar este cliente?")) return;
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            clientes.splice(index, 1);
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            renderizarClientes();
+        }
+
+        // --- GESTIÓN DE CUENTAS ---
+        function renderizarCuentas() {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+
+            let pmHtml = '';
+            pmList.forEach((item, index) => {
+                pmHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+                    <div>
+                        <p>Cédula: ${item.cedula} | Tel: ${item.telefono}</p>
+                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center">
-                        <span class="text-xs text-gray-400">Saldo Disponible</span>
-                        <span class="font-bold text-emerald-400 text-sm">${c.saldo.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
+                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
-                `;
-                grid.appendChild(card);
+                </div>`;
+            });
+            document.getElementById('lista-pago-movil').innerHTML = pmHtml;
+
+            let trHtml = '';
+            trList.forEach((item, index) => {
+                trHtml += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+                    <div>
+                        <p>Destino Term: <strong class="text-yellow-400">${item.terminacion}</strong></p>
+                        <p class="text-[10px] text-gray-400">${item.titular}</p>
+                        <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
+                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                </div>`;
+            });
+            document.getElementById('lista-transferencia').innerHTML = trHtml;
+            actualizarSaldoTaquilla();
+            poblarSelectCuentas();
+        }
+
+        // --- COPIAR DATOS PARA CLIENTE ---
+        function copiarDatosPM(index) {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const item = pmList[index];
+            if (!item) return;
+
+            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n` +
+                          `• *Banco:* Banco de Venezuela (0102)\n` +
+                          `• *Teléfono:* ${item.telefono}\n` +
+                          `• *Cédula:* ${item.cedula}\n` +
+                          `📌 *Agencia Harold José*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("¡Datos de Pago Móvil copiados al portapapeles! Ya puedes pegárselos al cliente.");
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
             });
         }
 
-        // Inicialización al cargar
-        window.onload = function() {
-            inicializarTablaSistemas();
-        };
+        function copiarDatosTR(index) {
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const item = trList[index];
+            if (!item) return;
+
+            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n` +
+                          `• *Banco:* Banco de Venezuela (0102)\n` +
+                          `• *Nro. de Cuenta (Terminación):* ${item.terminacion}\n` +
+                          `• *Titular:* ${item.titular}\n` +
+                          `📌 *Agencia Harold José*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("¡Datos de Transferencia copiados al portapapeles! Ya puedes pegárselos al cliente.");
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
+            });
+        }
+
+        function poblarSelectCuentas() {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            let html = '';
+            pmList.forEach((pm, i) => {
+                html += `<option value="pm_${i}">Pago Móvil (${pm.telefono})</option>`;
+            });
+            trList.forEach((tr, i) => {
+                html += `<option value="tr_${i}">Transferencia (*${tr.terminacion})</option>`;
+            });
+            const sel = document.getElementById('select-cuenta-destino');
+            if(sel) sel.innerHTML = html;
+        }
+
+        function editarSaldoCuenta(tipo, index) {
+            let listKey = tipo === 'pm' ? 'ag_pago_movil' : 'ag_transferencia';
+            let list = JSON.parse(localStorage.getItem(listKey)) || [];
+            let cuenta = list[index];
+            let nuevoSaldoStr = prompt(`Ingrese el nuevo saldo para la cuenta (${tipo === 'pm' ? cuenta.telefono : cuenta.terminacion}):`, cuenta.saldo || 0);
+            if (nuevoSaldoStr === null) return;
+            let nuevoSaldo = parseFloat(nuevoSaldoStr.replace(',', '.')) || 0;
+            cuenta.saldo = nuevoSaldo;
+            localStorage.setItem(listKey, JSON.stringify(list));
+            renderizarCuentas();
+        }
+
+        function agregarPagoMovil() {
+            const cedula = document.getElementById('nuevo-pm-cedula').value.trim();
+            const telefono = document.getElementById('nuevo-pm-tel').value.trim();
+            const saldo = parseFloat((document.getElementById('nuevo-pm-saldo').value || "0").replace(',', '.')) || 0;
+            if (!cedula || !telefono) {
+                alert("Por favor ingresa la cédula y el teléfono.");
+                return;
+            }
+            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            list.push({ cedula, telefono, saldo });
+            localStorage.setItem('ag_pago_movil', JSON.stringify(list));
+            document.getElementById('nuevo-pm-cedula').value = '';
+            document.getElementById('nuevo-pm-tel').value = '';
+            document.getElementById('nuevo-pm-saldo').value = '';
+            renderizarCuentas();
+            alert("Pago móvil agregado correctamente.");
+        }
+
+        function agregarTransferencia() {
+            const terminacion = document.getElementById('nuevo-tr-term').value.trim();
+            const titular = document.getElementById('nuevo-tr-titular').value.trim();
+            const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
+            if (!terminacion || !titular) {
+                alert("Por favor ingresa la terminación de cuenta y el titular.");
+                return;
+            }
+            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            list.push({ terminacion, titular, saldo });
+            localStorage.setItem('ag_transferencia', JSON.stringify(list));
+            document.getElementById('nuevo-tr-term').value = '';
+            document.getElementById('nuevo-tr-titular').value = '';
+            document.getElementById('nuevo-tr-saldo').value = '';
+            renderizarCuentas();
+            alert("Cuenta de transferencia agregada correctamente.");
+        }
+
+        function eliminarPM(index) {
+            let list = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            list.splice(index, 1);
+            localStorage.setItem('ag_pago_movil', JSON.stringify(list));
+            renderizarCuentas();
+        }
+
+        function eliminarTR(index) {
+            let list = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            list.splice(index, 1);
+            localStorage.setItem('ag_transferencia', JSON.stringify(list));
+            renderizarCuentas();
+        }
+
+        // --- PROCESAMIENTO OCR Y REGISTRO ---
+        function procesarComprobanteArchivo(event) {
+            const file = event.target.files[0];
+            if (file) procesarBlobImagen(file);
+        }
+
+        function procesarBlobImagen(blob) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('img-preview');
+                imgPreview.src = e.target.result;
+                document.getElementById('resultado-container').classList.remove('hidden');
+                document.getElementById('loading-ocr').classList.remove('hidden');
+                
+                Tesseract.recognize(
+                    e.target.result,
+                    'spa',
+                    { logger: m => console.log(m) }
+                ).then(({ data: { text } }) => {
+                    document.getElementById('loading-ocr').classList.add('hidden');
+                    analizarTextoYExtraer(text);
+                }).catch(err => {
+                    console.error(err);
+                    document.getElementById('loading-ocr').classList.add('hidden');
+                    alert("Error al procesar la imagen con OCR.");
+                });
+            }
+            reader.readAsDataURL(blob);
+        }
+
+        function analizarTextoYExtraer(textoOCR) {
+            const texto = textoOCR.toUpperCase();
+            const alerta = document.getElementById('alerta-antifraude');
+            const statusBadge = document.getElementById('status-badge');
+            
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            
+            let valido = false;
+            let tipoDetectado = "";
+
+            for (let pm of pmList) {
+                const tieneCedula = texto.includes(pm.cedula);
+                const tieneTel = texto.includes(pm.telefono);
+                if (tieneCedula || tieneTel || texto.includes("PAGOMOVIL") || texto.includes("PAGO MOVIL")) {
+                    if (tieneCedula || tieneTel) {
+                        valido = true;
+                        tipoDetectado = "Pago Móvil Válido";
+                        break;
+                    }
+                }
+            }
+
+            if (!valido) {
+                for (let tr of trList) {
+                    const tieneTerminacion = texto.includes(tr.terminacion);
+                    const tieneNombre = (texto.includes("HAROLD") && texto.includes("GALEA")) || texto.includes(tr.titular.toUpperCase().split(' ')[0]);
+                    if (tieneTerminacion || (texto.includes("DESTINO") && tieneNombre)) {
+                        valido = true;
+                        tipoDetectado = "Transferencia Válida";
+                        break;
+                    }
+                }
+            }
+
+            const lineas = texto.split('\n');
+            let refEncontrada = '';
+            let montoEncontrado = '';
+
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i];
+                if (linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('REFERENCIA')) {
+                    let nums = linea.match(/\d{6,}/);
+                    if (nums) refEncontrada = nums[0];
+                    else if (i + 1 < lineas.length) {
+                        let numsNext = lineas[i+1].match(/\d{6,}/);
+                        if (numsNext) refEncontrada = numsNext[0];
+                    }
+                }
+                if (linea.includes('BS') || linea.includes('BOLÍVARES') || linea.includes(',00')) {
+                    let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
+                    if (matchMonto && matchMonto[1].length > 1) {
+                        montoEncontrado = matchMonto[1];
+                    }
+                }
+            }
+
+            if (!refEncontrada) {
+                let matchRef = texto.match(/\b\d{8,15}\b/);
+                if (matchRef) refEncontrada = matchRef[0];
+            }
+            if (!montoEncontrado) {
+                let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
+                if (matchesMonto) montoEncontrado = matchesMonto[0];
+            }
+
+            if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
+            if (montoEncontrado) {
+                let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
+                document.getElementById('input-monto').value = montoLimpio;
+            }
+
+            // Validación de Referencia Duplicada
+            if (refEncontrada) {
+                const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
+                const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
+                
+                if (duplicada) {
+                    alerta.classList.remove('hidden');
+                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! La referencia ${refEncontrada} ya fue utilizada por el cliente "${duplicada.cliente}" (Monto: Bs. ${duplicada.monto.toLocaleString('es-VE')}).`;
+                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
+                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante ya registrado previamente. No se puede reutilizar.`;
+                    return;
+                }
+            }
+
+            if (valido) {
+                alerta.classList.add('hidden');
+                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
+                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado} aprobada con éxito. Datos extraídos automáticamente.`;
+            } else {
+                alerta.classList.remove('hidden');
+                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! El comprobante NO coincide con tus cuentas configuradas.`;
+                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
+                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado por seguridad.`;
+            }
+        }
+
+        function registrarPago() {
+            const referencia = document.getElementById('input-ref').value.trim();
+            const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
+            const montoStr = document.getElementById('input-monto').value.trim();
+            const monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
+            
+            if(!referencia || !monto) {
+                alert("Por favor asegúrate de que la referencia y el monto estén rellenados.");
+                return;
+            }
+            
+            // Validar duplicado antes de registrar
+            let refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
+            if (refsUsadas.some(r => r.referencia === referencia)) {
+                alert(`¡Error! La referencia ${referencia} ya se encuentra registrada en el sistema.`);
+                return;
+            }
+
+            // 1. Acreditar saldo a la cuenta seleccionada
+            if (cuentaDestinoSel) {
+                let partes = cuentaDestinoSel.split('_');
+                let tipo = partes[0];
+                let idx = parseInt(partes[1]);
+                if (tipo === 'pm') {
+                    let pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+                    if (pmList[idx]) {
+                        pmList[idx].saldo = (pmList[idx].saldo || 0) + monto;
+                        localStorage.setItem('ag_pago_movil', JSON.stringify(pmList));
+                    }
+                } else if (tipo === 'tr') {
+                    let trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+                    if (trList[idx]) {
+                        trList[idx].saldo = (trList[idx].saldo || 0) + monto;
+                        localStorage.setItem('ag_transferencia', JSON.stringify(trList));
+                    }
+                }
+            }
+
+            // 2. Acreditar saldo al cliente
+            let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
+            let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
+            
+            if (clienteExistente) {
+                clienteExistente.saldo += monto;
+            } else {
+                clientes.push({ nombre: clienteNombre, saldo: monto });
+            }
+            localStorage.setItem('ag_clientes', JSON.stringify(clientes));
+            
+            // 3. Guardar la referencia como utilizada
+            refsUsadas.push({
+                referencia: referencia,
+                cliente: clienteNombre,
+                monto: monto,
+                fecha: new Date().toLocaleString()
+            });
+            localStorage.setItem('ag_referencias_usadas', JSON.stringify(refsUsadas));
+            
+            alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
+            
+            // Limpiar campos
+            document.getElementById('input-ref').value = '';
+            document.getElementById('input-cliente').value = '';
+            document.getElementById('input-monto').value = '';
+            document.getElementById('resultado-container').classList.add('hidden');
+            document.getElementById('alerta-antifraude').classList.add('hidden');
+            renderizarClientes();
+            renderizarCuentas();
+        }
     </script>
 </body>
 </html>
