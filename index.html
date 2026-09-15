@@ -92,6 +92,15 @@
                     <p id="display-saldo-taquilla" class="text-2xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
+                <!-- Total Créditos Cashea (Semanal) -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-blue-500/50 text-center space-y-1">
+                    <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">
+                        <i class="fa-solid fa-credit-card mr-1"></i> Total Créditos Cashea (Semanal)
+                    </p>
+                    <p id="display-caja-cashea" class="text-xl font-extrabold text-blue-300">Bs. 0,00</p>
+                    <p class="text-[10px] text-gray-400">Créditos cubiertos por los sistemas (Descontados del neto).</p>
+                </div>
+
                 <!-- Casilla de Cuadre de Caja -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-yellow-500/50 text-center space-y-1">
                     <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">
@@ -112,7 +121,7 @@
         <section id="view-sistemas" class="hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-laptop-code mr-2"></i> Sistemas y Loterías</h2>
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-server mr-2"></i> Sistemas y Loterías</h2>
                     <div class="flex space-x-2">
                         <button onclick="agregarSistemaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-plus mr-1"></i> Sistema</button>
                         <button onclick="reiniciarHistorialSemanal()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-2.5 py-1.5 rounded text-xs flex items-center"><i class="fa-solid fa-trash-can mr-1"></i> Eliminar</button>
@@ -190,6 +199,10 @@
                         <span class="text-gray-400">Comisiones Totales:</span>
                         <strong id="acum-comisiones" class="text-yellow-400">Bs. 0,00</strong>
                     </div>
+                    <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Total Créditos Cashea (Descuento):</span>
+                        <strong id="acum-cashea-desc" class="text-blue-400">- Bs. 0,00</strong>
+                    </div>
                     <div class="flex justify-between bg-gray-900 p-2 rounded border border-gray-800 text-sm font-bold mt-2">
                         <span class="text-gray-200">Saldo Neto Global:</span>
                         <strong id="acum-neto" class="text-green-400">0,00 Bs</strong>
@@ -218,6 +231,30 @@
 
                 <!-- Lista de Clientes -->
                 <div id="lista-clientes" class="space-y-3 pt-2">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA: CASHEA (NUEVO MÓDULO DE CRÉDITOS CASHEA) -->
+        <section id="view-cashea" class="hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-credit-card mr-2"></i> Créditos Cashea</h2>
+                    <button onclick="agregarCreditoCasheaModal()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center">
+                        <i class="fa-solid fa-plus mr-1"></i> Otorgar Crédito
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400">Registro de créditos Cashea otorgados. Este monto se descuenta automáticamente del saldo neto global de los sistemas.</p>
+                
+                <!-- Total Cashea Otorgado -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-blue-500/50 text-center">
+                    <p class="text-xs text-gray-400">Total Créditos Cashea Otorgados (Semanal)</p>
+                    <p id="display-total-cashea-view" class="text-2xl font-extrabold text-blue-400 mt-1">Bs. 0,00</p>
+                </div>
+
+                <!-- Lista de Créditos Cashea -->
+                <div id="lista-creditos-cashea" class="space-y-2 pt-2">
                     <!-- Renderizado dinámico -->
                 </div>
             </div>
@@ -258,31 +295,35 @@
 
     </main>
 
-    <!-- Barra de Navegación Inferior -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-4 flex justify-around shadow-lg z-50">
+    <!-- Barra de Navegación Inferior (Con Cashea añadido) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-2 flex justify-around shadow-lg z-50">
         <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center text-yellow-400">
-            <i class="fa-solid fa-money-bill-transfer text-lg"></i>
-            <span class="text-[10px] mt-1 font-semibold">Pagos</span>
+            <i class="fa-solid fa-money-bill-transfer text-base"></i>
+            <span class="text-[9px] mt-1 font-semibold">Pagos</span>
         </button>
         <button onclick="cambiarVista('caja')" id="nav-caja" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-cash-register text-lg"></i>
-            <span class="text-[10px] mt-1">Caja</span>
+            <i class="fa-solid fa-cash-register text-base"></i>
+            <span class="text-[9px] mt-1">Caja</span>
         </button>
         <button onclick="cambiarVista('sistemas')" id="nav-sistemas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-server text-lg"></i>
-            <span class="text-[10px] mt-1">Sistemas</span>
+            <i class="fa-solid fa-server text-base"></i>
+            <span class="text-[9px] mt-1">Sistemas</span>
         </button>
         <button onclick="cambiarVista('clientes')" id="nav-clientes" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-user-group text-lg"></i>
-            <span class="text-[10px] mt-1">Clientes</span>
+            <i class="fa-solid fa-user-group text-base"></i>
+            <span class="text-[9px] mt-1">Clientes</span>
+        </button>
+        <button onclick="cambiarVista('cashea')" id="nav-cashea" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
+            <i class="fa-solid fa-credit-card text-base"></i>
+            <span class="text-[9px] mt-1">Cashea</span>
         </button>
         <button onclick="cambiarVista('cuentas')" id="nav-cuentas" class="nav-btn flex flex-col items-center text-gray-400 hover:text-yellow-400">
-            <i class="fa-solid fa-id-card text-lg"></i>
-            <span class="text-[10px] mt-1">Cuentas</span>
+            <i class="fa-solid fa-id-card text-base"></i>
+            <span class="text-[9px] mt-1">Cuentas</span>
         </button>
     </nav>
 
-    <!-- Script con Sincronización Remota y OCR Multi-Banco Robusto -->
+    <!-- Script con Sincronización Remota y Módulo Cashea Integrado -->
     <script>
         let dbState = {};
         let diaSeleccionado = 'Lunes';
@@ -296,6 +337,7 @@
             }
             renderizarCuentas();
             renderizarClientes();
+            renderizarCashea();
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
             renderizarSistemas();
@@ -331,7 +373,7 @@
         });
 
         function cambiarVista(vistaId) {
-            ['pagos', 'caja', 'sistemas', 'clientes', 'cuentas'].forEach(v => {
+            ['pagos', 'caja', 'sistemas', 'clientes', 'cashea', 'cuentas'].forEach(v => {
                 document.getElementById('view-' + v).classList.add('hidden');
                 document.getElementById('nav-' + v).classList.remove('text-yellow-400');
                 document.getElementById('nav-' + v).classList.add('text-gray-400');
@@ -343,13 +385,21 @@
             cargarDatosRemotos().then(() => {
                 if (vistaId === 'cuentas') renderizarCuentas();
                 if (vistaId === 'clientes') renderizarClientes();
+                if (vistaId === 'cashea') renderizarCashea();
                 if (vistaId === 'caja') actualizarSaldoTaquilla();
                 if (vistaId === 'pagos') poblarSelectCuentas();
                 if (vistaId === 'sistemas') renderizarSistemas();
             });
         }
 
-        // --- CÁLCULO DE SALDO TOTAL TAQUILLA Y CUADRE ---
+        // --- CÁLCULO DE TOTALES CASHEA Y NETO SISTEMAS ---
+        function calcularTotalCasheaCreditos() {
+            const creditos = dbState.ag_cashea_creditos || [];
+            let total = 0;
+            creditos.forEach(c => total += (parseFloat(c.monto) || 0));
+            return total;
+        }
+
         function obtenerSaldoTotalTaquilla() {
             const pmList = dbState.ag_pago_movil || [];
             const trList = dbState.ag_transferencia || [];
@@ -363,7 +413,7 @@
             const sistemas = dbState.ag_sistemas || [];
             const datos = dbState.ag_sistemas_datos || {};
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-            let totalNetoGlobal = 0;
+            let totalBrutoGlobal = 0;
 
             sistemas.forEach(sys => {
                 let sysVentas = 0;
@@ -380,9 +430,12 @@
                         sysComision += c;
                     }
                 });
-                totalNetoGlobal += (sysVentas - sysComision - sysPremios);
+                totalBrutoGlobal += (sysVentas - sysComision - sysPremios);
             });
-            return totalNetoGlobal;
+
+            // Se restan los créditos Cashea cubiertos por los sistemas
+            const totalCashea = calcularTotalCasheaCreditos();
+            return totalBrutoGlobal - totalCashea;
         }
 
         function calcularSumaTotalSaldosClientes() {
@@ -405,6 +458,10 @@
             const totalBancos = obtenerSaldoTotalTaquilla();
             const el = document.getElementById('display-saldo-taquilla');
             if(el) el.innerText = `Bs. ${totalBancos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            const totalCashea = calcularTotalCasheaCreditos();
+            const elCajaCashea = document.getElementById('display-caja-cashea');
+            if(elCajaCashea) elCajaCashea.innerText = `Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
             const totalClientes = calcularSumaTotalSaldosClientes();
             const totalNetoSistemas = calcularNetoGlobalSistemas();
@@ -440,6 +497,85 @@
             } else {
                 alert("Debe tener al menos una cuenta registrada.");
             }
+        }
+
+        // --- GESTIÓN DE CRÉDITOS CASHEA (NUEVO) ---
+        function renderizarCashea() {
+            const creditos = dbState.ag_cashea_creditos || [];
+            let totalCashea = calcularTotalCasheaCreditos();
+
+            const elTotal = document.getElementById('display-total-cashea-view');
+            if(elTotal) elTotal.innerText = `Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            let html = '';
+            if (creditos.length === 0) {
+                html = `<p class="text-xs text-gray-400 text-center py-4">No hay créditos Cashea registrados en esta semana.</p>`;
+            } else {
+                creditos.forEach((item, index) => {
+                    html += `
+                    <div class="bg-gray-900 p-2.5 rounded border border-gray-700 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-yellow-400">${item.cliente}</p>
+                            <p class="text-[10px] text-gray-400">${item.fecha}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <strong class="text-blue-400">Bs. ${(parseFloat(item.monto) || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong>
+                            <button onclick="eliminarCreditoCashea(${index})" class="text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                });
+            }
+            const elLista = document.getElementById('lista-creditos-cashea');
+            if(elLista) elLista.innerHTML = html;
+        }
+
+        function agregarCreditoCasheaModal() {
+            let cliente = prompt("Ingrese el nombre del cliente para el crédito Cashea:");
+            if (!cliente) return;
+            let montoStr = prompt(`Ingrese el monto del crédito Cashea para ${cliente} (Bs):`);
+            if (!montoStr) return;
+            let monto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (monto <= 0) return alert("Monto inválido.");
+
+            if (!dbState.ag_cashea_creditos) dbState.ag_cashea_creditos = [];
+            dbState.ag_cashea_creditos.push({
+                cliente: cliente.trim(),
+                monto: monto,
+                fecha: new Date().toLocaleString()
+            });
+
+            // Opcional y útil: También podemos sumarlo al saldo Cashea del cliente si existe
+            if (!dbState.ag_clientes) dbState.ag_clientes = [];
+            let cli = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === cliente.trim().toUpperCase());
+            if (cli) {
+                if (cli.saldo !== undefined && cli.saldoCashea === undefined) {
+                    cli.saldoCashea = 0;
+                    cli.saldoPremio = cli.saldo;
+                    delete cli.saldo;
+                }
+                cli.saldoCashea = (cli.saldoCashea || 0) + monto;
+            } else {
+                dbState.ag_clientes.push({
+                    nombre: cliente.trim(),
+                    saldoCashea: monto,
+                    saldoPremio: 0
+                });
+            }
+
+            guardarDatosRemotos();
+            renderizarCashea();
+            renderizarClientes();
+            actualizarSaldoTaquilla();
+            alert(`Crédito Cashea de Bs. ${monto.toLocaleString('es-VE')} registrado para ${cliente}.`);
+        }
+
+        function eliminarCreditoCashea(index) {
+            if (!confirm("¿Está seguro de eliminar este registro de crédito Cashea?")) return;
+            dbState.ag_cashea_creditos.splice(index, 1);
+            guardarDatosRemotos();
+            renderizarCashea();
+            actualizarSaldoTaquilla();
+            renderizarResumenSistemas();
         }
 
         // --- GESTIÓN DE SISTEMAS Y LOTERÍAS ---
@@ -487,7 +623,7 @@
         }
 
         function reiniciarHistorialSemanal() {
-            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas y los saldos de los clientes.")) return;
+            if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas, premios, créditos Cashea y saldos de los clientes.")) return;
 
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
             const sistemas = dbState.ag_sistemas || [];
@@ -499,6 +635,7 @@
                 });
             });
             dbState.ag_sistemas_datos = datos;
+            dbState.ag_cashea_creditos = []; // Limpia también los créditos Cashea de la semana
 
             if (dbState.ag_clientes) {
                 dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldoCashea: 0, saldoPremio: 0 }));
@@ -507,6 +644,7 @@
             guardarDatosRemotos();
             renderizarSistemas();
             renderizarClientes();
+            renderizarCashea();
             actualizarSaldoTaquilla();
             alert("Historial semanal eliminado correctamente.");
         }
@@ -635,7 +773,6 @@
             let totalVentasGlobal = 0;
             let totalPremiosGlobal = 0;
             let totalComisionesGlobal = 0;
-            let totalNetoGlobal = 0;
 
             sistemas.forEach(sys => {
                 let sysVentas = 0;
@@ -658,7 +795,6 @@
                 totalVentasGlobal += sysVentas;
                 totalPremiosGlobal += sysPremios;
                 totalComisionesGlobal += sysComision;
-                totalNetoGlobal += sysNeto;
 
                 resumenHtml += `
                 <div class="bg-gray-900 p-2.5 rounded border border-gray-700 flex justify-between items-center">
@@ -675,10 +811,15 @@
 
             document.getElementById('resumen-todos-sistemas').innerHTML = resumenHtml || '<p class="text-xs text-gray-400 text-center">No hay datos de sistemas.</p>';
 
+            const totalCashea = calcularTotalCasheaCreditos();
+            const netoBrutoGlobal = totalVentasGlobal - totalComisionesGlobal - totalPremiosGlobal;
+            const netoGlobalFinal = netoBrutoGlobal - totalCashea;
+
             document.getElementById('acum-ventas').innerText = `Bs. ${totalVentasGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('acum-premios').innerText = `Bs. ${totalPremiosGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('acum-comisiones').innerText = `Bs. ${totalComisionesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-neto').innerText = `${totalNetoGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+            document.getElementById('acum-cashea-desc').innerText = `- Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            document.getElementById('acum-neto').innerText = `${netoGlobalFinal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
         }
 
         // --- GESTIÓN DE CLIENTES, CASHEA Y PREMIOS ---
@@ -694,7 +835,6 @@
             generarHTMLClientes(filtrados, clientes);
         }
 
-        // Función para copiar el resumen completo del cliente al portapapeles
         function copiarResumenCliente(index, listaOriginal = null) {
             const lista = listaOriginal || dbState.ag_clientes || [];
             const c = lista[index];
@@ -838,7 +978,6 @@
                 if (!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
             }
 
-            // Regla: Descontar primero de Cashea, si no alcanza, del Premio
             if (cashea >= monto) {
                 c.saldoCashea -= monto;
             } else if (cashea > 0) {
@@ -913,7 +1052,7 @@
             actualizarSaldoTaquilla();
         }
 
-        // --- GESTIÓN DE CUENTAS (Con copiado limpio y sin protocolo) ---
+        // --- GESTIÓN DE CUENTAS ---
         function renderizarCuentas() {
             const pmList = dbState.ag_pago_movil || [];
             const trList = dbState.ag_transferencia || [];
@@ -954,7 +1093,6 @@
             poblarSelectCuentas();
         }
 
-        // Copiado rápido y limpio de Pago Móvil (Solo Banco, Teléfono y Cédula)
         function copiarDatosPM(index) {
             const item = (dbState.ag_pago_movil || [])[index];
             if (!item) return;
@@ -962,7 +1100,6 @@
             navigator.clipboard.writeText(texto).then(() => alert("¡Pago Móvil copiado!"));
         }
 
-        // Copiado rápido y limpio de Cuenta Transferencia (Solo Banco, Cuenta y Titular)
         function copiarDatosTR(index) {
             const item = (dbState.ag_transferencia || [])[index];
             if (!item) return;
