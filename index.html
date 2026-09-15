@@ -276,7 +276,7 @@
             dias.forEach(dia => {
                 datos[dia] = {};
                 sistemasIniciales.forEach(sys => {
-                    datos[dia][sys.id] = { ventas: 0, premios: 0 };
+                    datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
                 });
             });
             localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
@@ -373,14 +373,10 @@
         }
 
         function agregarSistemaModal() {
-            let nombre = prompt("Ingrese el nombre del nuevo sistema (ej: MasPlay):");
+            let nombre = prompt("Ingrese el nombre del nuevo sistema (ej: Sistema Mixto):");
             if (!nombre) return;
-            let porcStr = prompt("Ingrese el porcentaje del sistema (ej: 14):", "14");
-            let porcentaje = parseFloat((porcStr || "0").replace(',', '.')) || 0;
-            if (porcentaje <= 0) {
-                alert("Porcentaje inválido.");
-                return;
-            }
+            let porcStr = prompt("Ingrese el porcentaje fijo (o deje en 0 / vacío si la comisión es manual por productos variados):", "0");
+            let porcentaje = porcStr ? parseFloat(porcStr.replace(',', '.')) || 0 : 0;
 
             let sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
             let id = 'sys_' + Date.now();
@@ -390,7 +386,7 @@
             let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
             ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => {
                 if (!datos[dia]) datos[dia] = {};
-                datos[dia][id] = { ventas: 0, premios: 0 };
+                datos[dia][id] = { ventas: 0, premios: 0, comision: 0 };
             });
             localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
 
@@ -410,24 +406,21 @@
         function reiniciarHistorialSemanal() {
             if (!confirm("¿Está seguro de eliminar el historial semanal? Esto pondrá en 0 los saldos, ventas y premios de todos los sistemas para toda la semana, y también pondrá en 0 el saldo de los clientes. Las cuentas y la caja no se tocarán.")) return;
 
-            // 1. Resetear ventas y premios de todos los sistemas de lunes a domingo
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
             const sistemas = JSON.parse(localStorage.getItem('ag_sistemas')) || [];
             const datos = {};
             dias.forEach(dia => {
                 datos[dia] = {};
                 sistemas.forEach(sys => {
-                    datos[dia][sys.id] = { ventas: 0, premios: 0 };
+                    datos[dia][sys.id] = { ventas: 0, premios: 0, comision: 0 };
                 });
             });
             localStorage.setItem('ag_sistemas_datos', JSON.stringify(datos));
 
-            // 2. Resetear saldos de clientes a 0
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             clientes = clientes.map(c => ({ ...c, saldo: 0 }));
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
 
-            // Actualizar vistas
             renderizarSistemas();
             renderizarClientes();
             alert("Historial semanal eliminado correctamente. ¡Todo listo para empezar de nuevo el lunes!");
@@ -436,7 +429,7 @@
         function actualizarDatoSistema(sistemaId, campo, valor) {
             let datos = JSON.parse(localStorage.getItem('ag_sistemas_datos')) || {};
             if (!datos[diaSeleccionado]) datos[diaSeleccionado] = {};
-            if (!datos[diaSeleccionado][sistemaId]) datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0 };
+            if (!datos[diaSeleccionado][sistemaId]) datos[diaSeleccionado][sistemaId] = { ventas: 0, premios: 0, comision: 0 };
 
             let val = parseFloat(valor.replace(',', '.')) || 0;
             datos[diaSeleccionado][sistemaId][campo] = val;
@@ -454,32 +447,63 @@
                 html = `<p class="text-xs text-gray-400 text-center py-4">No hay sistemas registrados.</p>`;
             } else {
                 sistemas.forEach(sys => {
-                    if (!datosDia[sys.id]) datosDia[sys.id] = { ventas: 0, premios: 0 };
+                    if (!datosDia[sys.id]) datosDia[sys.id] = { ventas: 0, premios: 0, comision: 0 };
                     let ventas = datosDia[sys.id].ventas || 0;
                     let premios = datosDia[sys.id].premios || 0;
-                    let comision = ventas * (sys.porcentaje / 100);
+                    let comisionCustom = datosDia[sys.id].comision || 0;
+                    
+                    let comision = sys.porcentaje > 0 ? ventas * (sys.porcentaje / 100) : comisionCustom;
                     let neto = ventas - comision - premios;
 
-                    html += `
-                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-sm text-yellow-400">${sys.nombre} (${sys.porcentaje}%)</span>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
-                                <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                    let tituloSistema = sys.porcentaje > 0 ? `${sys.nombre} (${sys.porcentaje}%)` : `${sys.nombre} (Comisión Manual)`;
+
+                    if (sys.porcentaje === 0) {
+                        html += `
+                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                                    <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
-                                <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
+                                    <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-yellow-400">Comisión Bs</label>
+                                    <input type="text" value="${comisionCustom || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'comision', this.value)" class="w-full bg-gray-800 border border-yellow-600 rounded p-1.5 text-xs text-yellow-300 outline-none focus:border-yellow-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
+                                    <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
-                                <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                                    <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                                </div>
                             </div>
-                        </div>
-                    </div>`;
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Ventas (${diaSeleccionado})</label>
+                                    <input type="text" value="${ventas || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'ventas', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Premios (${diaSeleccionado})</label>
+                                    <input type="text" value="${premios || ''}" placeholder="0.00" oninput="actualizarDatoSistema('${sys.id}', 'premios', this.value)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-yellow-400">
+                                </div>
+                            </div>
+                        </div>`;
+                    }
                 });
             }
             document.getElementById('lista-sistemas-dia').innerHTML = html;
@@ -506,12 +530,13 @@
                     if (datos[dia] && datos[dia][sys.id]) {
                         let v = datos[dia][sys.id].ventas || 0;
                         let p = datos[dia][sys.id].premios || 0;
+                        let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (datos[dia][sys.id].comision || 0);
                         sysVentas += v;
                         sysPremios += p;
+                        sysComision += c;
                     }
                 });
 
-                sysComision = sysVentas * (sys.porcentaje / 100);
                 let sysNeto = sysVentas - sysComision - sysPremios;
 
                 totalVentasGlobal += sysVentas;
@@ -868,7 +893,6 @@
             let valido = false;
             let tipoDetectado = "";
 
-            // --- NUEVO: EVITAR PAGOS ENVIADOS POR TI (DONDE TUS DATOS ESTÁN EN ORIGEN) ---
             const lineas = texto.split('\n');
             let textoOrigen = '';
             for (let i = 0; i < lineas.length; i++) {
@@ -898,7 +922,6 @@
                 statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado: Es un pago enviado por ti, no un ingreso.`;
                 return;
             }
-            // --------------------------------------------------------------------------
 
             for (let pm of pmList) {
                 const tieneCedula = pm.cedula && texto.includes(pm.cedula);
@@ -961,7 +984,6 @@
                 document.getElementById('input-monto').value = montoLimpio;
             }
 
-            // Validación de Referencia Duplicada
             if (refEncontrada) {
                 const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
                 const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
@@ -999,14 +1021,12 @@
                 return;
             }
             
-            // Validar duplicado antes de registrar
             let refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
             if (refsUsadas.some(r => r.referencia === referencia)) {
                 alert(`¡Error! La referencia ${referencia} ya se encuentra registrada en el sistema.`);
                 return;
             }
 
-            // 1. Acreditar saldo a la cuenta seleccionada
             if (cuentaDestinoSel) {
                 let partes = cuentaDestinoSel.split('_');
                 let tipo = partes[0];
@@ -1026,7 +1046,6 @@
                 }
             }
 
-            // 2. Acreditar saldo al cliente
             let clientes = JSON.parse(localStorage.getItem('ag_clientes')) || [];
             let clienteExistente = clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
             
@@ -1037,7 +1056,6 @@
             }
             localStorage.setItem('ag_clientes', JSON.stringify(clientes));
             
-            // 3. Guardar la referencia como utilizada
             refsUsadas.push({
                 referencia: referencia,
                 cliente: clienteNombre,
@@ -1048,7 +1066,6 @@
             
             alert(`¡Pago registrado exitosamente! Se acreditaron Bs. ${monto.toLocaleString('es-VE')} a ${clienteNombre} y se sumó al saldo de la cuenta elegida. (Ref: ${referencia})`);
             
-            // Limpiar campos
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente').value = '';
             document.getElementById('input-monto').value = '';
