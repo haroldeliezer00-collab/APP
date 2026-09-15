@@ -449,8 +449,9 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
-                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosPM(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('pm', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
+                        ${pmList.length > 1 ? `<button onclick="eliminarPM(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>`;
             });
@@ -465,14 +466,54 @@
                         <p class="text-xs text-green-400 font-bold">Saldo: Bs. ${(item.saldo || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-pen"></i></button>
-                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <button onclick="copiarDatosTR(${index})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Copiar datos para cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                        <button onclick="editarSaldoCuenta('tr', ${index})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Editar saldo"><i class="fa-solid fa-pen"></i></button>
+                        ${trList.length > 1 ? `<button onclick="eliminarTR(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-700 rounded" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>`;
             });
             document.getElementById('lista-transferencia').innerHTML = trHtml;
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
+        }
+
+        // --- COPIAR DATOS PARA CLIENTE ---
+        function copiarDatosPM(index) {
+            const pmList = JSON.parse(localStorage.getItem('ag_pago_movil')) || [];
+            const item = pmList[index];
+            if (!item) return;
+
+            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n` +
+                          `• *Banco:* Banco de Venezuela (0102)\n` +
+                          `• *Teléfono:* ${item.telefono}\n` +
+                          `• *Cédula:* ${item.cedula}\n` +
+                          `📌 *Agencia Harold José*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("¡Datos de Pago Móvil copiados al portapapeles! Ya puedes pegárselos al cliente.");
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
+            });
+        }
+
+        function copiarDatosTR(index) {
+            const trList = JSON.parse(localStorage.getItem('ag_transferencia')) || [];
+            const item = trList[index];
+            if (!item) return;
+
+            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n` +
+                          `• *Banco:* Banco de Venezuela (0102)\n` +
+                          `• *Nro. de Cuenta (Terminación):* ${item.terminacion}\n` +
+                          `• *Titular:* ${item.titular}\n` +
+                          `📌 *Agencia Harold José*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("¡Datos de Transferencia copiados al portapapeles! Ya puedes pegárselos al cliente.");
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert("No se pudo copiar automáticamente. Intenta de nuevo.");
+            });
         }
 
         function poblarSelectCuentas() {
@@ -653,7 +694,7 @@
                 document.getElementById('input-monto').value = montoLimpio;
             }
 
-            // NUEVA VALIDACIÓN: Verificar si la referencia ya fue utilizada
+            // Validación de Referencia Duplicada
             if (refEncontrada) {
                 const refsUsadas = JSON.parse(localStorage.getItem('ag_referencias_usadas')) || [];
                 const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
