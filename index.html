@@ -694,6 +694,32 @@
             generarHTMLClientes(filtrados, clientes);
         }
 
+        // Función para copiar el resumen completo del cliente al portapapeles
+        function copiarResumenCliente(index, listaOriginal = null) {
+            const lista = listaOriginal || dbState.ag_clientes || [];
+            const c = lista[index];
+            if (!c) return;
+
+            let cashea = parseFloat(c.saldoCashea) || 0;
+            let premio = parseFloat(c.saldoPremio) || 0;
+            let total = cashea + premio;
+
+            let mensaje = `*Agencia Harold José - Seguridad y Confianza*\n`;
+            mensaje += `• Cliente: ${c.nombre}\n`;
+            mensaje += `• Saldo de Premio: Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+            
+            if (cashea > 0) {
+                mensaje += `• Crédito Cashea: Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+            }
+            mensaje += `• *Saldo Total:* Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            navigator.clipboard.writeText(mensaje).then(() => {
+                alert("¡Resumen del cliente copiado al portapapeles!");
+            }).catch(err => {
+                console.error("Error al copiar resumen", err);
+            });
+        }
+
         function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
             const original = listaOriginal || listaAMostrar;
             const todosClientes = dbState.ag_clientes || [];
@@ -741,7 +767,10 @@
                                 </div>
                                 <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
-                            <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="copiarResumenCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Copiar resumen del cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                                <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
                         <div class="grid grid-cols-4 gap-1.5 pt-1">
                             <button onclick="modificarSaldoCliente(${index}, 'cashea')" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-credit-card mr-0.5"></i> +Cashea</button>
@@ -884,7 +913,7 @@
             actualizarSaldoTaquilla();
         }
 
-        // --- GESTIÓN DE CUENTAS ---
+        // --- GESTIÓN DE CUENTAS (Con copiado limpio y sin protocolo) ---
         function renderizarCuentas() {
             const pmList = dbState.ag_pago_movil || [];
             const trList = dbState.ag_transferencia || [];
@@ -925,18 +954,20 @@
             poblarSelectCuentas();
         }
 
+        // Copiado rápido y limpio de Pago Móvil (Solo Banco, Teléfono y Cédula)
         function copiarDatosPM(index) {
             const item = (dbState.ag_pago_movil || [])[index];
             if (!item) return;
-            const texto = `🏦 *DATOS DE PAGO MÓVIL (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Teléfono:* ${item.telefono}\n• *Cédula:* ${item.cedula}\n📌 *Agencia Harold José*`;
-            navigator.clipboard.writeText(texto).then(() => alert("¡Datos copiados!"));
+            const texto = `Banco de Venezuela | Tel: ${item.telefono} | C.I: ${item.cedula}`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Pago Móvil copiado!"));
         }
 
+        // Copiado rápido y limpio de Cuenta Transferencia (Solo Banco, Cuenta y Titular)
         function copiarDatosTR(index) {
             const item = (dbState.ag_transferencia || [])[index];
             if (!item) return;
-            const texto = `🏦 *DATOS PARA TRANSFERENCIA (BDV)*\n• *Banco:* Banco de Venezuela (0102)\n• *Cuenta:* ${item.terminacion}\n• *Titular:* ${item.titular}\n📌 *Agencia Harold José*`;
-            navigator.clipboard.writeText(texto).then(() => alert("¡Datos copiados!"));
+            const texto = `Banco de Venezuela | Cuenta: ${item.terminacion} | Titular: ${item.titular}`;
+            navigator.clipboard.writeText(texto).then(() => alert("¡Datos de cuenta copiados!"));
         }
 
         function poblarSelectCuentas() {
