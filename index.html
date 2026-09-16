@@ -59,24 +59,31 @@
                 </div>
                 <div>
                     <label class="text-xs text-gray-400">Cliente / Pronosticador</label>
-                    <input type="text" id="input-cliente" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Nombre del cliente">
+                    <input type="text" id="input-cliente" list="sugerencias-clientes-list" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="Selecciona o escribe el cliente">
+                    <datalist id="sugerencias-clientes-list">
+                        <!-- Relleno dinámico -->
+                    </datalist>
                 </div>
                 <div>
-                    <label class="text-xs text-gray-400">Monto (Bs)</label>
+                    <label class="text-xs text-gray-400">Monto Total del Comprobante (Bs)</label>
                     <input type="text" id="input-monto" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none" placeholder="0.00">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-400">Cuenta de Destino (Acreditar Saldo)</label>
+                    <label class="text-xs text-yellow-400 font-semibold">¿Cuánto jugó de este pago? (Bs) <span class="text-[10px] text-gray-400 font-normal">(0 si todo va a saldo)</span></label>
+                    <input type="text" id="input-monto-jugado" value="0,00" class="w-full bg-gray-900 border border-yellow-600/60 rounded p-2 text-sm text-yellow-300 font-bold focus:border-yellow-400 outline-none" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">Cuenta de Destino (Acreditar Banco)</label>
                     <select id="select-cuenta-destino" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:border-yellow-400 outline-none">
                         <!-- Relleno dinámico -->
                     </select>
                 </div>
                 <div class="flex items-center space-x-2 pt-1">
                     <input type="checkbox" id="check-cashea" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0">
-                    <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Pago vía Cashea</label>
+                    <label for="check-cashea" class="text-xs text-yellow-400 font-semibold">Acreditar sobrante vía Cashea</label>
                 </div>
                 <button onclick="registrarPago()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2.5 rounded-lg transition text-sm shadow">
-                    Registrar y Acreditar Saldo
+                    Registrar, Acreditar y Procesar Jugada
                 </button>
             </div>
         </section>
@@ -158,7 +165,7 @@
                         <i class="fa-solid fa-users mr-1 text-green-400"></i> Saldos Positivos de Clientes
                     </p>
                     <p id="display-caja-saldos-clientes" class="text-xl font-extrabold text-green-400">Bs. 0,00</p>
-                    <p class="text-[10px] text-gray-400">Suma total de saldos de clientes (Cashea + Cartera Premium).</p>
+                    <p class="text-[10px] text-gray-400">Suma total de saldos de clientes (Cashea + Saldo Retirable).</p>
                 </div>
 
                 <!-- 8. Casilla de Cuadre de Caja -->
@@ -275,18 +282,18 @@
             </div>
         </section>
 
-        <!-- VISTA: CLIENTES (CARTERA PREMIUM / PREMIOS Y CREDITO CASHEA) -->
+        <!-- VISTA: CLIENTES (SALDO RETIRABLE Y CREDITO CASHEA) -->
         <section id="view-clientes" class="hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos (Cartera Premium)</h2>
+                    <h2 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-users mr-2"></i> Clientes y Saldos</h2>
                     <button onclick="agregarClienteManual()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-user-plus mr-1"></i> Nuevo</button>
                 </div>
-                <p class="text-xs text-gray-400">Control de créditos Cashea, saldos de cartera premium (premios retirables) y jugadas.</p>
+                <p class="text-xs text-gray-400">Control de créditos Cashea, saldo retirable y jugadas con historial de movimientos.</p>
                 
                 <!-- Tarjeta Suma Total de Saldos Positivos -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
-                    <p class="text-xs text-gray-400">Suma Total de Saldos (Cashea + Cartera Premium)</p>
+                    <p class="text-xs text-gray-400">Suma Total de Saldos (Cashea + Retirable)</p>
                     <p id="display-total-saldos-clientes" class="text-xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
@@ -359,6 +366,20 @@
 
     </main>
 
+    <!-- MODAL DE HISTORIAL DE CLIENTE -->
+    <div id="modal-historial" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-md w-full p-4 space-y-3 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                <h3 id="historial-titulo" class="text-sm font-bold text-yellow-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial de Movimientos</h3>
+                <button onclick="cerrarHistorialModal()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="historial-contenido" class="space-y-2 text-xs">
+                <!-- Dinámico -->
+            </div>
+            <button onclick="cerrarHistorialModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-1.5 rounded text-xs">Cerrar</button>
+        </div>
+    </div>
+
     <!-- Barra de Navegación Inferior -->
     <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-2 flex justify-around shadow-lg z-50">
         <button onclick="cambiarVista('pagos')" id="nav-pagos" class="nav-btn flex flex-col items-center text-yellow-400">
@@ -430,15 +451,49 @@
             if (dbState.ag_remanente_dom === undefined) dbState.ag_remanente_dom = 0;
             if (dbState.ag_neto_sistemas_pasado === undefined) dbState.ag_neto_sistemas_pasado = 0;
             if (dbState.ag_extra_comision === undefined) dbState.ag_extra_comision = 0;
+            if (!dbState.ag_clientes) dbState.ag_clientes = [];
+
+            // Migración de saldoPremio a saldoRetirable y asegurar historial
+            dbState.ag_clientes.forEach(c => {
+                if (c.saldo !== undefined && c.saldoCashea === undefined) {
+                    c.saldoCashea = 0;
+                    c.saldoRetirable = c.saldo;
+                    delete c.saldo;
+                }
+                if (c.saldoPremio !== undefined && c.saldoRetirable === undefined) {
+                    c.saldoRetirable = c.saldoPremio;
+                    delete c.saldoPremio;
+                }
+                if (c.saldoRetirable === undefined) c.saldoRetirable = 0;
+                if (c.saldoCashea === undefined) c.saldoCashea = 0;
+                if (!c.historial) c.historial = [];
+            });
         }
 
         async function cargarDatosRemotos() {
+            // Cargar desde localStorage primero como respaldo prioritario inmediato
+            try {
+                const localData = localStorage.getItem('ag_db_state_harold');
+                if (localData) {
+                    dbState = JSON.parse(localData);
+                }
+            } catch(e) {
+                console.error("Error al leer localStorage", e);
+            }
+
             try {
                 let response = await fetch('/api/data');
-                dbState = await response.json();
+                if (response.ok) {
+                    let servidorData = await response.json();
+                    if (servidorData && Object.keys(servidorData).length > 0) {
+                        // Combinar o usar servidor si tiene datos
+                        dbState = servidorData;
+                    }
+                }
             } catch (e) {
-                console.error("Error al conectar con el servidor", e);
+                console.log("Usando almacenamiento local offline", e);
             }
+
             if (!dbState) dbState = {};
             inicializarSistemasPorDefecto();
             renderizarCuentas();
@@ -447,9 +502,16 @@
             actualizarSaldoTaquilla();
             poblarSelectCuentas();
             renderizarSistemas();
+            actualizarDatalistClientes();
         }
 
         async function guardarDatosRemotos() {
+            try {
+                localStorage.setItem('ag_db_state_harold', JSON.stringify(dbState));
+            } catch(e) {
+                console.error("Error al guardar en localStorage", e);
+            }
+
             try {
                 await fetch('/api/data', {
                     method: 'POST',
@@ -493,9 +555,22 @@
                 if (vistaId === 'clientes') renderizarClientes();
                 if (vistaId === 'cashea') renderizarCashea();
                 if (vistaId === 'caja') actualizarSaldoTaquilla();
-                if (vistaId === 'pagos') poblarSelectCuentas();
+                if (vistaId === 'pagos') {
+                    poblarSelectCuentas();
+                    actualizarDatalistClientes();
+                }
                 if (vistaId === 'sistemas') renderizarSistemas();
             });
+        }
+
+        function actualizarDatalistClientes() {
+            const clientes = dbState.ag_clientes || [];
+            let html = '';
+            clientes.forEach(c => {
+                html += `<option value="${c.nombre}">`;
+            });
+            const dl = document.getElementById('sugerencias-clientes-list');
+            if (dl) dl.innerHTML = html;
         }
 
         // --- CÁLCULO DE TOTALES CASHEA Y NETO SISTEMAS ---
@@ -549,12 +624,16 @@
             clientes.forEach(c => {
                 if (c.saldo !== undefined && c.saldoCashea === undefined) {
                     c.saldoCashea = 0;
-                    c.saldoPremio = c.saldo;
+                    c.saldoRetirable = c.saldo;
                     delete c.saldo;
                 }
+                if (c.saldoPremio !== undefined && c.saldoRetirable === undefined) {
+                    c.saldoRetirable = c.saldoPremio;
+                    delete c.saldoPremio;
+                }
                 let cashea = parseFloat(c.saldoCashea) || 0;
-                let premio = parseFloat(c.saldoPremio) || 0;
-                total += (cashea + premio);
+                let retirable = parseFloat(c.saldoRetirable) || 0;
+                total += (cashea + retirable);
             });
             return total;
         }
@@ -617,7 +696,6 @@
                 elNetoSistemas.innerText = textoNeto;
             }
 
-            // Calcular comisiones SRQ y comisiones totales de sistemas
             const sistemas = dbState.ag_sistemas || [];
             const datos = dbState.ag_sistemas_datos || {};
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -647,7 +725,6 @@
             const remanenteDom = parseFloat(dbState.ag_remanente_dom) || 0;
             const extraComision = parseFloat(dbState.ag_extra_comision) || 0;
 
-            // COMISIONES TOTALES (MIS COMISIONES) - Excluye SRQ para evitar duplicación
             const comisionesTotales = comisionesSistemas + remanenteDom + extraComision;
             const elComisionesTotales = document.getElementById('display-caja-comisiones-totales');
             if(elComisionesTotales) elComisionesTotales.innerText = `Bs. ${comisionesTotales.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
@@ -662,7 +739,6 @@
                 inputNetoPasado.value = netoSistemasPasado > 0 ? netoSistemasPasado.toLocaleString('es-VE', {minimumFractionDigits: 2}) : '0,00';
             }
 
-            // CORRECCIÓN APLICADA AQUÍ: Se restan Comisiones Totales y Comisión SRQ para igualar tu Excel (=B19 - B15 - B22 - B23 - B24 - B25)
             const cuadre = totalBancos - totalNetoSistemas - comisionesTotales - comisionSRQ - totalClientes;
             
             const elCuadre = document.getElementById('display-cuadre-caja');
@@ -746,22 +822,31 @@
             if (cli) {
                 if (cli.saldo !== undefined && cli.saldoCashea === undefined) {
                     cli.saldoCashea = 0;
-                    cli.saldoPremio = cli.saldo;
+                    cli.saldoRetirable = cli.saldo;
                     delete cli.saldo;
                 }
+                if (cli.saldoPremio !== undefined && cli.saldoRetirable === undefined) {
+                    cli.saldoRetirable = cli.saldoPremio;
+                    delete cli.saldoPremio;
+                }
                 cli.saldoCashea = (cli.saldoCashea || 0) + monto;
+                if (!cli.historial) cli.historial = [];
+                cli.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Crédito Cashea', monto: monto, desc: `Crédito Cashea otorgado por Bs. ${monto.toLocaleString('es-VE')}` });
             } else {
-                dbState.ag_clientes.push({
+                let nuevoCli = {
                     nombre: cliente.trim(),
                     saldoCashea: monto,
-                    saldoPremio: 0
-                });
+                    saldoRetirable: 0,
+                    historial: [{ fecha: new Date().toLocaleString(), tipo: 'Crédito Cashea', monto: monto, desc: `Crédito Cashea inicial por Bs. ${monto.toLocaleString('es-VE')}` }]
+                };
+                dbState.ag_clientes.push(nuevoCli);
             }
 
             guardarDatosRemotos();
             renderizarCashea();
             renderizarClientes();
             actualizarSaldoTaquilla();
+            actualizarDatalistClientes();
             alert(`Crédito Cashea de Bs. ${monto.toLocaleString('es-VE')} registrado para ${cliente}.`);
         }
 
@@ -836,7 +921,12 @@
             dbState.ag_extra_comision = 0;
 
             if (dbState.ag_clientes) {
-                dbState.ag_clientes = dbState.ag_clientes.map(c => ({ ...c, saldoCashea: 0, saldoPremio: 0 }));
+                dbState.ag_clientes = dbState.ag_clientes.map(c => ({
+                    ...c,
+                    saldoCashea: 0,
+                    saldoRetirable: 0,
+                    historial: [{ fecha: new Date().toLocaleString(), tipo: 'Reinicio', monto: 0, desc: 'Reinicio de historial semanal' }]
+                }));
             }
 
             guardarDatosRemotos();
@@ -1027,7 +1117,7 @@
             document.getElementById('acum-neto').innerText = `${netoGlobalFinal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
         }
 
-        // --- GESTIÓN DE CLIENTES Y CARTERA PREMIUM ---
+        // --- GESTIÓN DE CLIENTES Y HISTORIAL ---
         function renderizarClientes() {
             const clientes = dbState.ag_clientes || [];
             generarHTMLClientes(clientes);
@@ -1047,12 +1137,12 @@
             if (!c) return;
 
             let cashea = parseFloat(c.saldoCashea) || 0;
-            let premio = parseFloat(c.saldoPremio) || 0;
-            let total = cashea + premio;
+            let retirable = parseFloat(c.saldoRetirable) || 0;
+            let total = cashea + retirable;
 
             let mensaje = `*Agencia Harold José - Seguridad y Confianza*\n`;
             mensaje += `• Cliente: ${c.nombre}\n`;
-            mensaje += `• Saldo Cartera Premium (Premio): Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+            mensaje += `• Saldo Retirable: Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
             
             if (cashea > 0) {
                 mensaje += `• Crédito Cashea: Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
@@ -1066,20 +1156,49 @@
             });
         }
 
+        function verHistorialCliente(index, listaOriginal = null) {
+            const lista = listaOriginal || dbState.ag_clientes || [];
+            const c = lista[index];
+            if (!c) return;
+
+            document.getElementById('historial-titulo').innerHTML = `<i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial: ${c.nombre}`;
+            let html = '';
+            let historial = c.historial || [];
+
+            if (historial.length === 0) {
+                html = `<p class="text-xs text-gray-400 text-center py-4">No hay movimientos registrados para este cliente.</p>`;
+            } else {
+                historial.forEach(h => {
+                    let colorMonto = h.monto > 0 ? 'text-green-400' : 'text-gray-300';
+                    html += `
+                    <div class="bg-gray-900 p-2.5 rounded border border-gray-700 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-yellow-400 text-[11px]">${h.tipo}</span>
+                            <span class="text-[10px] text-gray-400">${h.fecha}</span>
+                        </div>
+                        <p class="text-xs text-gray-200">${h.desc}</p>
+                        ${h.monto ? `<p class="text-xs font-bold ${colorMonto}">Monto: Bs. ${Math.abs(h.monto).toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>` : ''}
+                    </div>`;
+                });
+            }
+
+            document.getElementById('historial-contenido').innerHTML = html;
+            document.getElementById('modal-historial').classList.remove('hidden');
+        }
+
+        function cerrarHistorialModal() {
+            document.getElementById('modal-historial').classList.add('hidden');
+        }
+
         function generarHTMLClientes(listaAMostrar, listaOriginal = null) {
             const original = listaOriginal || listaAMostrar;
             const todosClientes = dbState.ag_clientes || [];
 
             let sumaTotalSaldos = 0;
             todosClientes.forEach(c => {
-                if (c.saldo !== undefined && c.saldoCashea === undefined) {
-                    c.saldoCashea = 0;
-                    c.saldoPremio = c.saldo;
-                    delete c.saldo;
-                }
                 let cashea = parseFloat(c.saldoCashea) || 0;
-                let premio = parseFloat(c.saldoPremio) || 0;
-                sumaTotalSaldos += (cashea + premio);
+                let retirable = parseFloat(c.saldoRetirable) || 0;
+                sumaTotalSaldos += (cashea + retirable);
             });
 
             const elTotalSaldos = document.getElementById('display-total-saldos-clientes');
@@ -1092,14 +1211,9 @@
                 html = `<p class="text-xs text-gray-400 text-center py-4">No se encontraron clientes.</p>`;
             } else {
                 listaAMostrar.forEach((c) => {
-                    if (c.saldo !== undefined && c.saldoCashea === undefined) {
-                        c.saldoCashea = 0;
-                        c.saldoPremio = c.saldo;
-                        delete c.saldo;
-                    }
                     let cashea = parseFloat(c.saldoCashea) || 0;
-                    let premio = parseFloat(c.saldoPremio) || 0;
-                    let totalCliente = cashea + premio;
+                    let retirable = parseFloat(c.saldoRetirable) || 0;
+                    let totalCliente = cashea + retirable;
 
                     let index = original.findIndex(orig => orig.nombre === c.nombre);
                     html += `
@@ -1109,18 +1223,19 @@
                                 <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
                                 <div class="text-[11px] text-gray-300 space-x-2 mt-0.5">
                                     <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
-                                    <span>Cartera Premium: <strong class="text-green-400">Bs. ${premio.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
+                                    <span>Retirable: <strong class="text-green-400">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
                                 </div>
                                 <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button onclick="copiarResumenCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Copiar resumen del cliente"><i class="fa-solid fa-copy"></i> Copiar</button>
+                                <button onclick="verHistorialCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Ver Historial"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                                <button onclick="copiarResumenCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-green-400 hover:text-green-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Copiar resumen"><i class="fa-solid fa-copy"></i></button>
                                 <button onclick="eliminarCliente(${index})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="grid grid-cols-4 gap-1.5 pt-1">
                             <button onclick="modificarSaldoCliente(${index}, 'cashea')" class="bg-blue-700 hover:bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-credit-card mr-0.5"></i> +Cashea</button>
-                            <button onclick="modificarSaldoCliente(${index}, 'premio')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> +Premium</button>
+                            <button onclick="modificarSaldoCliente(${index}, 'retirable')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-award mr-0.5"></i> +Retirable</button>
                             <button onclick="descontarJugadaCliente(${index})" class="bg-yellow-700 hover:bg-yellow-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-ticket mr-0.5"></i> Descontar</button>
                             <button onclick="pagarPremioCliente(${index})" class="bg-red-700 hover:bg-red-600 text-white text-[10px] py-1.5 rounded font-semibold"><i class="fa-solid fa-money-bill-wave mr-0.5"></i> Pagar</button>
                         </div>
@@ -1135,21 +1250,35 @@
             if (!nombre) return;
             let casheaStr = prompt("Ingrese saldo inicial Cashea (Crédito):", "0");
             let saldoCashea = parseFloat((casheaStr || "0").replace(',', '.')) || 0;
-            let premioStr = prompt("Ingrese saldo inicial Cartera Premium (Premio retirable):", "0");
-            let saldoPremio = parseFloat((premioStr || "0").replace(',', '.')) || 0;
+            let retirableStr = prompt("Ingrese saldo inicial Retirable:", "0");
+            let saldoRetirable = parseFloat((retirableStr || "0").replace(',', '.')) || 0;
             
             if (!dbState.ag_clientes) dbState.ag_clientes = [];
-            dbState.ag_clientes.push({ nombre: nombre.trim(), saldoCashea, saldoPremio });
+            
+            let nuevoCli = {
+                nombre: nombre.trim(),
+                saldoCashea,
+                saldoRetirable,
+                historial: [{
+                    fecha: new Date().toLocaleString(),
+                    tipo: 'Creación Manual',
+                    monto: saldoCashea + saldoRetirable,
+                    desc: `Cliente creado. Cashea: Bs. ${saldoCashea.toLocaleString('es-VE')} | Retirable: Bs. ${saldoRetirable.toLocaleString('es-VE')}`
+                }]
+            };
+
+            dbState.ag_clientes.push(nuevoCli);
             guardarDatosRemotos();
             renderizarClientes();
             actualizarSaldoTaquilla();
+            actualizarDatalistClientes();
             alert("Cliente agregado con éxito.");
         }
 
         function modificarSaldoCliente(index, tipo) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
-            let mensaje = tipo === 'cashea' ? `Ingrese monto a sumar al crédito Cashea de ${c.nombre}:` : `Ingrese monto a sumar a la Cartera Premium de ${c.nombre}:`;
+            let mensaje = tipo === 'cashea' ? `Ingrese monto a sumar al crédito Cashea de ${c.nombre}:` : `Ingrese monto a sumar al Saldo Retirable de ${c.nombre}:`;
             let montoStr = prompt(mensaje);
             if (!montoStr) return;
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
@@ -1157,8 +1286,10 @@
 
             if (tipo === 'cashea') {
                 c.saldoCashea = (c.saldoCashea || 0) + monto;
+                c.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Abono Cashea', monto: monto, desc: `Se acreditó Bs. ${monto.toLocaleString('es-VE')} a Cashea` });
             } else {
-                c.saldoPremio = (c.saldoPremio || 0) + monto;
+                c.saldoRetirable = (c.saldoRetirable || 0) + monto;
+                c.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Abono Retirable', monto: monto, desc: `Se acreditó Bs. ${monto.toLocaleString('es-VE')} a Saldo Retirable (Premio/Pago)` });
             }
 
             dbState.ag_clientes = clientes;
@@ -1171,28 +1302,34 @@
         function descontarJugadaCliente(index) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto de la jugada realizada por ${c.nombre} (Se descuenta primero de Cashea y luego de Cartera Premium):`);
+            let montoStr = prompt(`Ingrese el monto de la jugada realizada por ${c.nombre} (Se descuenta primero de Cashea y luego de Saldo Retirable):`);
             if (!montoStr) return;
             let monto = parseFloat(montoStr.replace(',', '.')) || 0;
             if (monto <= 0) return alert("Monto inválido.");
 
             let cashea = c.saldoCashea || 0;
-            let premio = c.saldoPremio || 0;
-            let totalDisponible = cashea + premio;
+            let retirable = c.saldoRetirable || 0;
+            let totalDisponible = cashea + retirable;
 
             if (totalDisponible < monto) {
                 if (!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
             }
 
+            let descDetalle = "";
             if (cashea >= monto) {
                 c.saldoCashea -= monto;
+                descDetalle = `Jugada descontada de Cashea: Bs. ${monto.toLocaleString('es-VE')}`;
             } else if (cashea > 0) {
                 let resto = monto - cashea;
                 c.saldoCashea = 0;
-                c.saldoPremio = Math.max(0, premio - resto);
+                c.saldoRetirable = Math.max(0, retirable - resto);
+                descDetalle = `Jugada descontada (Cashea agotado + Bs. ${resto.toLocaleString('es-VE')} de Retirable)`;
             } else {
-                c.saldoPremio = Math.max(0, premio - monto);
+                c.saldoRetirable = Math.max(0, retirable - monto);
+                descDetalle = `Jugada descontada de Saldo Retirable: Bs. ${monto.toLocaleString('es-VE')}`;
             }
+
+            c.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Jugada (Descuento)', monto: -monto, desc: descDetalle });
 
             dbState.ag_clientes = clientes;
             guardarDatosRemotos();
@@ -1204,39 +1341,40 @@
         function pagarPremioCliente(index) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
-            let montoStr = prompt(`Ingrese el monto de la Cartera Premium a pagar / retirar a ${c.nombre} (Se descontará de su saldo de premio y de la taquilla):`, c.saldoPremio || 0);
+            let montoStr = prompt(`Ingrese el monto del Saldo Retirable a pagar / retirar a ${c.nombre} (Se descontará de su saldo y de la taquilla):`, c.saldoRetirable || 0);
             if (!montoStr) return;
-            let premio = parseFloat(montoStr.replace(',', '.')) || 0;
-            if (premio <= 0) return alert("Monto inválido.");
+            let retirableMonto = parseFloat(montoStr.replace(',', '.')) || 0;
+            if (retirableMonto <= 0) return alert("Monto inválido.");
 
-            if ((c.saldoPremio || 0) < premio) {
-                if (!confirm("El cliente no tiene suficiente saldo en su Cartera Premium. ¿Desea continuar igual?")) return;
+            if ((c.saldoRetirable || 0) < retirableMonto) {
+                if (!confirm("El cliente no tiene suficiente saldo retirable. ¿Desea continuar igual?")) return;
             }
 
-            c.saldoPremio = Math.max(0, (c.saldoPremio || 0) - premio);
+            c.saldoRetirable = Math.max(0, (c.saldoRetirable || 0) - retirableMonto);
+            c.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Pago / Retiro', monto: -retirableMonto, desc: `Pago de premio/saldo retirable entregado por Bs. ${retirableMonto.toLocaleString('es-VE')}` });
 
             let pmList = dbState.ag_pago_movil || [];
             let trList = dbState.ag_transferencia || [];
             let descontado = false;
 
             for (let pm of pmList) {
-                if (pm.saldo >= premio) {
-                    pm.saldo -= premio;
+                if (pm.saldo >= retirableMonto) {
+                    pm.saldo -= retirableMonto;
                     descontado = true;
                     break;
                 }
             }
             if (!descontado) {
                 for (let tr of trList) {
-                    if (tr.saldo >= premio) {
-                        tr.saldo -= premio;
+                    if (tr.saldo >= retirableMonto) {
+                        tr.saldo -= retirableMonto;
                         descontado = true;
                         break;
                     }
                 }
             }
             if (!descontado && pmList.length > 0) {
-                pmList[0].saldo -= premio;
+                pmList[0].saldo -= retirableMonto;
             }
 
             dbState.ag_clientes = clientes;
@@ -1247,7 +1385,7 @@
             renderizarClientes();
             renderizarCuentas();
             actualizarSaldoTaquilla();
-            alert(`¡Pago de Cartera Premium por Bs. ${premio.toLocaleString('es-VE')} realizado a ${c.nombre}!`);
+            alert(`¡Pago de Saldo Retirable por Bs. ${retirableMonto.toLocaleString('es-VE')} realizado a ${c.nombre}!`);
         }
 
         function eliminarCliente(index) {
@@ -1255,6 +1393,7 @@
             dbState.ag_clientes.splice(index, 1);
             guardarDatosRemotos();
             renderizarClientes();
+            actualizarDatalistClientes();
             actualizarSaldoTaquilla();
         }
 
@@ -1375,7 +1514,7 @@
             renderizarCuentas();
         }
 
-        // --- PROCESAMIENTO OCR Y REGISTRO ---
+        // --- PROCESAMIENTO OCR Y REGISTRO DE PAGOS CON MONTO JUGADO ---
         function procesarComprobanteArchivo(event) {
             const file = event.target.files[0];
             if (file) procesarBlobImagen(file);
@@ -1510,7 +1649,11 @@
             }
 
             if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
-            if (montoEncontrado) document.getElementById('input-monto').value = montoEncontrado.replace(/\./g, '').replace(',', '.');
+            if (montoEncontrado) {
+                let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
+                document.getElementById('input-monto').value = montoLimpio;
+                document.getElementById('input-monto-jugado').value = montoLimpio; // Por defecto sugiere jugarlo todo
+            }
 
             if (refEncontrada) {
                 const refsUsadas = dbState.ag_referencias_usadas || [];
@@ -1539,62 +1682,86 @@
         function registrarPago() {
             const referencia = document.getElementById('input-ref').value.trim();
             const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
-            const monto = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
+            const montoComprobante = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
+            const montoJugado = parseFloat(document.getElementById('input-monto-jugado').value.trim().replace(',', '.')) || 0;
             const cuentaDestinoSel = document.getElementById('select-cuenta-destino').value;
             const esCashea = document.getElementById('check-cashea').checked;
             
-            if(!referencia || !monto) return alert("Rellena la referencia y el monto.");
+            if(!referencia || !montoComprobante) return alert("Rellena la referencia y el monto del comprobante.");
+            if(montoJugado > montoComprobante) return alert("El monto jugado no puede ser mayor al monto total del comprobante.");
             
             if (!dbState.ag_referencias_usadas) dbState.ag_referencias_usadas = [];
             if (dbState.ag_referencias_usadas.some(r => r.referencia === referencia)) return alert("¡Referencia duplicada!");
 
+            // 1. Acreditar el monto total del comprobante al banco seleccionado
             if (cuentaDestinoSel) {
                 let partes = cuentaDestinoSel.split('_');
                 let tipo = partes[0];
                 let idx = parseInt(partes[1]);
                 if (tipo === 'pm' && dbState.ag_pago_movil[idx]) {
-                    dbState.ag_pago_movil[idx].saldo = (dbState.ag_pago_movil[idx].saldo || 0) + monto;
+                    dbState.ag_pago_movil[idx].saldo = (dbState.ag_pago_movil[idx].saldo || 0) + montoComprobante;
                 } else if (tipo === 'tr' && dbState.ag_transferencia[idx]) {
-                    dbState.ag_transferencia[idx].saldo = (dbState.ag_transferencia[idx].saldo || 0) + monto;
+                    dbState.ag_transferencia[idx].saldo = (dbState.ag_transferencia[idx].saldo || 0) + montoComprobante;
                 }
             }
+
+            // 2. Calcular sobrante que va a saldo del cliente: montoComprobante - montoJugado
+            let montoASaldo = Math.max(0, montoComprobante - montoJugado);
 
             if (!dbState.ag_clientes) dbState.ag_clientes = [];
             let clienteExistente = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
             
+            let fechaActual = new Date().toLocaleString();
+
             if (clienteExistente) {
-                if (clienteExistente.saldo !== undefined && clienteExistente.saldoCashea === undefined) {
-                    clienteExistente.saldoCashea = 0;
-                    clienteExistente.saldoPremio = clienteExistente.saldo;
-                    delete clienteExistente.saldo;
-                }
-                if (esCashea) {
-                    clienteExistente.saldoCashea = (clienteExistente.saldoCashea || 0) + monto;
-                } else {
-                    clienteExistente.saldoPremio = (clienteExistente.saldoPremio || 0) + monto;
+                if (!clienteExistente.historial) clienteExistente.historial = [];
+
+                // Registrar pago recibido en historial
+                clienteExist.historial = clienteExistente.historial || [];
+                clienteExistente.historial.unshift({
+                    fecha: fechaActual,
+                    tipo: 'Pago Recibido',
+                    monto: montoComprobante,
+                    desc: `Pago ref ${referencia} por Bs. ${montoComprobante.toLocaleString('es-VE')}. Jugó: Bs. ${montoJugado.toLocaleString('es-VE')}. Acreditado a saldo: Bs. ${montoASaldo.toLocaleString('es-VE')}`
+                });
+
+                if (montoASaldo > 0) {
+                    if (esCashea) {
+                        clienteExistente.saldoCashea = (clienteExistente.saldoCashea || 0) + montoASaldo;
+                    } else {
+                        clienteExistente.saldoRetirable = (clienteExistente.saldoRetirable || 0) + montoASaldo;
+                    }
                 }
             } else {
                 let nuevoCliente = {
                     nombre: clienteNombre,
-                    saldoCashea: esCashea ? monto : 0,
-                    saldoPremio: esCashea ? 0 : monto
+                    saldoCashea: (esCashea && montoASaldo > 0) ? montoASaldo : 0,
+                    saldoRetirable: (!esCashea && montoASaldo > 0) ? montoASaldo : 0,
+                    historial: [{
+                        fecha: fechaActual,
+                        tipo: 'Pago Recibido',
+                        monto: montoComprobante,
+                        desc: `Pago inicial ref ${referencia} por Bs. ${montoComprobante.toLocaleString('es-VE')}. Jugó: Bs. ${montoJugado.toLocaleString('es-VE')}. Acreditado a saldo: Bs. ${montoASaldo.toLocaleString('es-VE')}`
+                    }]
                 };
                 dbState.ag_clientes.push(nuevoCliente);
             }
             
-            dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, monto, fecha: new Date().toLocaleString() });
+            dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, monto: montoComprobante, fecha: fechaActual });
             
             guardarDatosRemotos();
-            alert(`¡Pago registrado con éxito! Bs. ${monto.toLocaleString('es-VE')} acreditados a ${clienteNombre}.`);
+            alert(`¡Pago registrado con éxito! Ref: ${referencia}. Bs. ${montoComprobante.toLocaleString('es-VE')} en banco. Jugó: Bs. ${montoJugado.toLocaleString('es-VE')}. Saldo acreditado: Bs. ${montoASaldo.toLocaleString('es-VE')}.`);
             
             document.getElementById('input-ref').value = '';
             document.getElementById('input-cliente').value = '';
             document.getElementById('input-monto').value = '';
+            document.getElementById('input-monto-jugado').value = '0,00';
             document.getElementById('check-cashea').checked = false;
             document.getElementById('resultado-container').classList.add('hidden');
             document.getElementById('alerta-antifraude').classList.add('hidden');
             renderizarClientes();
             renderizarCuentas();
+            actualizarDatalistClientes();
             actualizarSaldoTaquilla();
         }
     </script>
