@@ -1213,6 +1213,7 @@
                 listaAMostrar.forEach((c) => {
                     let cashea = parseFloat(c.saldoCashea) || 0;
                     let retirable = parseFloat(c.saldoRetirable) || 0;
+                    let retirableNeto = retirable * (1 - 0.003); // Descuento del 0.3% comisión bancaria
                     let totalCliente = cashea + retirable;
 
                     let index = original.findIndex(orig => orig.nombre === c.nombre);
@@ -1225,6 +1226,7 @@
                                     <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
                                     <span>Retirable: <strong class="text-green-400">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
                                 </div>
+                                <p class="text-[11px] text-yellow-400 mt-0.5">Neto a Pagar (-0.3%): <strong class="text-yellow-300">Bs. ${retirableNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                                 <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
                             <div class="flex items-center space-x-1">
@@ -1717,7 +1719,7 @@
                 if (!clienteExistente.historial) clienteExistente.historial = [];
 
                 // Registrar pago recibido en historial
-                clienteExist.historial = clienteExistente.historial || [];
+                clienteExistente.historial = clienteExistente.historial || [];
                 clienteExistente.historial.unshift({
                     fecha: fechaActual,
                     tipo: 'Pago Recibido',
