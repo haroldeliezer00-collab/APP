@@ -123,6 +123,28 @@
             <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700 space-y-4">
                 <h2 class="text-lg font-bold text-yellow-400 mb-2"><i class="fa-solid fa-vault mr-2"></i> Control Saldo Taquilla y Cuadre</h2>
                 
+                <!-- TARJETA: TASA OFICIAL DÓLAR BCV -->
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-3 rounded-lg border border-yellow-500/50 text-center space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <p class="text-xs text-yellow-400 font-bold uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-building-columns mr-1.5 text-yellow-400"></i> Tasa Oficial Dólar BCV
+                        </p>
+                        <button onclick="obtenerTasaBCV(true)" class="text-[10px] bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-2 py-1 rounded transition flex items-center shadow" title="Actualizar Tasa BCV">
+                            <i class="fa-solid fa-rotate mr-1"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="flex justify-center items-baseline space-x-2 py-1">
+                        <span class="text-xs text-gray-400 font-semibold">1 USD =</span>
+                        <span id="display-bcv-rate" class="text-2xl font-extrabold text-yellow-300">Bs. 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-gray-400 border-t border-gray-800/80 pt-1">
+                        <span id="display-bcv-fecha">Fuente: BCV (www.bcv.org.ve)</span>
+                        <a href="https://www.bcv.org.ve/" target="_blank" rel="noopener noreferrer" class="text-yellow-400 hover:text-yellow-300 font-semibold hover:underline flex items-center">
+                            Ver en BCV <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- 1. Saldo Total Disponible en Taquilla (Cuentas) -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
                     <p class="text-xs text-gray-400">Saldo Total Disponible en Taquilla (Todas las Cuentas)</p>
@@ -196,10 +218,10 @@
                     <p class="text-[10px] text-gray-400">Incluye comisiones de sistemas, remanente y propinas/gastos (Sin SRQ).</p>
                 </div>
 
-                <!-- 7. Saldos Positivos de los Clientes -->
+                <!-- 7. Saldos Totales de los Clientes -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center space-y-1">
                     <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                        <i class="fa-solid fa-users mr-1 text-green-400"></i> Saldos Positivos de Clientes
+                        <i class="fa-solid fa-users mr-1 text-green-400"></i> Saldos Netos de Clientes (A Favor / Deuda)
                     </p>
                     <p id="display-caja-saldos-clientes" class="text-xl font-extrabold text-green-400">Bs. 0,00</p>
                     <p class="text-[10px] text-gray-400">Suma total de saldos de clientes (Cashea + Saldo Retirable).</p>
@@ -328,9 +350,9 @@
                 </div>
                 <p class="text-xs text-gray-400">Control de créditos Cashea, saldo retirable y jugadas con historial de movimientos.</p>
                 
-                <!-- Tarjeta Suma Total de Saldos Positivos -->
+                <!-- Tarjeta Suma Total de Saldos Positivos / Deudas -->
                 <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
-                    <p class="text-xs text-gray-400">Suma Total de Saldos (Cashea + Retirable)</p>
+                    <p class="text-xs text-gray-400">Suma Total de Saldos Clientes (Cashea + Retirable)</p>
                     <p id="display-total-saldos-clientes" class="text-xl font-extrabold text-green-400 mt-1">Bs. 0,00</p>
                 </div>
 
@@ -552,6 +574,7 @@
             renderizarSistemas();
             actualizarDatalistClientes();
             actualizarSelectClientesRapido();
+            obtenerTasaBCV(false);
         }
 
         async function guardarDatosRemotos() {
@@ -603,7 +626,10 @@
                 if (vistaId === 'cuentas') renderizarCuentas();
                 if (vistaId === 'clientes') renderizarClientes();
                 if (vistaId === 'cashea') renderizarCashea();
-                if (vistaId === 'caja') actualizarSaldoTaquilla();
+                if (vistaId === 'caja') {
+                    actualizarSaldoTaquilla();
+                    obtenerTasaBCV(false);
+                }
                 if (vistaId === 'pagos') {
                     poblarSelectCuentas();
                     actualizarDatalistClientes();
@@ -611,6 +637,83 @@
                 }
                 if (vistaId === 'sistemas') renderizarSistemas();
             });
+        }
+
+        // --- CONSULTA OFICIAL Y VISUALIZACIÓN TASA DÓLAR BCV ---
+        async function obtenerTasaBCV(mostrarAlerta = false) {
+            const elRate = document.getElementById('display-bcv-rate');
+            const elFecha = document.getElementById('display-bcv-fecha');
+
+            if (elRate && mostrarAlerta) elRate.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-lg"></i>';
+
+            let tasaObtenida = null;
+            let fechaObtenida = null;
+
+            // Intento 1: API DolarAPI (Oficial BCV)
+            try {
+                let resp = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+                if (resp.ok) {
+                    let data = await resp.json();
+                    if (data && data.promedio) {
+                        tasaObtenida = parseFloat(data.promedio);
+                        if (data.fechaActualizacion) {
+                            let f = new Date(data.fechaActualizacion);
+                            fechaObtenida = f.toLocaleDateString('es-VE') + ' ' + f.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'});
+                        }
+                    }
+                }
+            } catch(e) {
+                console.log("Error consultando ve.dolarapi.com", e);
+            }
+
+            // Intento 2: Fallback PyDolarVE API
+            if (!tasaObtenida) {
+                try {
+                    let resp = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
+                    if (resp.ok) {
+                        let data = await resp.json();
+                        if (data && data.monedas && data.monedas.usd) {
+                            tasaObtenida = parseFloat(data.monedas.usd.price);
+                        } else if (data && data.price) {
+                            tasaObtenida = parseFloat(data.price);
+                        }
+                    }
+                } catch(e) {
+                    console.log("Error consultando pydolarve.org", e);
+                }
+            }
+
+            if (tasaObtenida) {
+                let textoTasa = `Bs. ${tasaObtenida.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+                if (elRate) elRate.innerText = textoTasa;
+                if (elFecha) elFecha.innerText = `Actualizado: ${fechaObtenida || new Date().toLocaleDateString('es-VE')} (BCV)`;
+                dbState.ag_tasa_bcv = tasaObtenida;
+                dbState.ag_tasa_bcv_fecha = fechaObtenida || new Date().toLocaleString();
+                guardarDatosRemotos();
+                if (mostrarAlerta) alert(`Tasa BCV obtenida con éxito: ${textoTasa}`);
+            } else {
+                if (dbState.ag_tasa_bcv) {
+                    let t = parseFloat(dbState.ag_tasa_bcv) || 0;
+                    if (elRate) elRate.innerText = `Bs. ${t.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+                    if (elFecha) elFecha.innerText = `Guardado: ${dbState.ag_tasa_bcv_fecha || 'Anterior'}`;
+                } else {
+                    if (elRate) elRate.innerText = "Bs. 0,00";
+                    if (elFecha) elFecha.innerText = "Sin conexión con BCV";
+                }
+                if (mostrarAlerta) {
+                    let manual = prompt("No se pudo conectar automáticamente con la página del BCV. Ingrese el precio del dólar BCV manualmente:", dbState.ag_tasa_bcv || "");
+                    if (manual) {
+                        let t = parseFloat(manual.replace(',', '.')) || 0;
+                        if (t > 0) {
+                            dbState.ag_tasa_bcv = t;
+                            dbState.ag_tasa_bcv_fecha = new Date().toLocaleString() + ' (Manual)';
+                            if (elRate) elRate.innerText = `Bs. ${t.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+                            if (elFecha) elFecha.innerText = `Manual: ${dbState.ag_tasa_bcv_fecha}`;
+                            guardarDatosRemotos();
+                        }
+                    }
+                }
+            }
         }
 
         function actualizarDatalistClientes() {
@@ -633,7 +736,8 @@
                 let cashea = parseFloat(c.saldoCashea) || 0;
                 let retirable = parseFloat(c.saldoRetirable) || 0;
                 let total = cashea + retirable;
-                html += `<option value="${i}">${c.nombre} (Total: Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})})</option>`;
+                let estadoTexto = total < 0 ? ' (DEUDOR)' : '';
+                html += `<option value="${i}">${c.nombre} (Total: Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}${estadoTexto})</option>`;
             });
             select.innerHTML = html;
             actualizarInfoClienteRapido();
@@ -658,16 +762,19 @@
             let retirable = parseFloat(c.saldoRetirable) || 0;
             let total = cashea + retirable;
 
+            let colorTotal = total < 0 ? 'text-red-400 font-extrabold' : 'text-yellow-400 font-extrabold';
+            let textoTotal = total < 0 ? `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})} (DEUDOR)` : `Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
             infoDiv.innerHTML = `
                 <div class="bg-gray-900/90 p-2.5 rounded border border-gray-700 text-xs space-y-1">
                     <p class="font-bold text-yellow-400">${c.nombre}</p>
                     <div class="flex justify-between text-[11px]">
                         <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
-                        <span>Retirable: <strong class="text-green-400">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
+                        <span>Retirable: <strong class="${retirable < 0 ? 'text-red-400' : 'text-green-400'}">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
                     </div>
-                    <p class="text-xs font-extrabold text-white pt-1 border-t border-gray-800 flex justify-between">
+                    <p class="text-xs text-white pt-1 border-t border-gray-800 flex justify-between">
                         <span>Saldo Total Disponible:</span>
-                        <span class="text-yellow-400">Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}</span>
+                        <span class="${colorTotal}">${textoTotal}</span>
                     </p>
                 </div>
             `;
@@ -827,7 +934,14 @@
 
             const totalClientes = calcularSumaTotalSaldosClientes();
             const elClientes = document.getElementById('display-caja-saldos-clientes');
-            if(elClientes) elClientes.innerText = `Bs. ${totalClientes.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            if(elClientes) {
+                elClientes.innerText = `Bs. ${totalClientes.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+                if (totalClientes < 0) {
+                    elClientes.className = "text-xl font-extrabold text-red-400";
+                } else {
+                    elClientes.className = "text-xl font-extrabold text-green-400";
+                }
+            }
 
             const netoCalculadoSistemas = calcularNetoGlobalSistemas();
             const netoSistemasPasado = parseFloat(dbState.ag_neto_sistemas_pasado) || 0;
@@ -1092,9 +1206,26 @@
 
             let val = parseFloat(valor.replace(',', '.')) || 0;
             dbState.ag_sistemas_datos[diaSeleccionado][sistemaId][campo] = val;
+
+            // Actualizar el indicador visual Neto en la tarjeta del sistema dinámicamente sin re-renderizar todo para mantener el cursor/foco
+            const sys = (dbState.ag_sistemas || []).find(s => s.id === sistemaId);
+            if (sys) {
+                let sysData = dbState.ag_sistemas_datos[diaSeleccionado][sistemaId];
+                let v = sysData.ventas || 0;
+                let p = sysData.premios || 0;
+                let c = sys.porcentaje > 0 ? v * (sys.porcentaje / 100) : (sysData.comision || 0);
+                let neto = v - c - p;
+                let elNeto = document.getElementById('sys-neto-' + sistemaId);
+                if (elNeto) {
+                    elNeto.innerText = `Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+                    elNeto.className = `text-xs font-bold ${neto < 0 ? 'text-red-400' : 'text-green-400'}`;
+                }
+            }
+
             guardarDatosRemotos();
-            renderizarResumenSistemas();
-            actualizarSaldoTaquilla();
+            renderizarResumenDiario(); // <--- ACTUALIZA EL RESUMEN DIARIO EN TIEMPO REAL
+            renderizarResumenSistemas(); // <--- ACTUALIZA EL RESUMEN GENERAL
+            actualizarSaldoTaquilla(); // <--- ACTUALIZA LA CAJA
         }
 
         function renderizarResumenDiario() {
@@ -1123,7 +1254,12 @@
             document.getElementById('dia-ventas').innerText = `Bs. ${ventasDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('dia-premios').innerText = `Bs. ${premiosDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('dia-comisiones').innerText = `Bs. ${comisionesDia.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('dia-neto').innerText = `${netoDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+            
+            const elDiaNeto = document.getElementById('dia-neto');
+            if (elDiaNeto) {
+                elDiaNeto.innerText = `${netoDia.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+                elDiaNeto.className = netoDia < 0 ? "text-red-400 font-bold" : "text-green-400 font-bold";
+            }
         }
 
         function renderizarSistemas() {
@@ -1152,7 +1288,7 @@
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                                    <span id="sys-neto-${sys.id}" class="text-xs ${neto < 0 ? 'text-red-400' : 'text-green-400'} font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
                                     <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             </div>
@@ -1177,7 +1313,7 @@
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-sm text-yellow-400">${tituloSistema}</span>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-green-400 font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
+                                    <span id="sys-neto-${sys.id}" class="text-xs ${neto < 0 ? 'text-red-400' : 'text-green-400'} font-bold">Neto: ${neto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</span>
                                     <button onclick="eliminarSistema('${sys.id}')" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 bg-gray-800 rounded"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             </div>
@@ -1245,7 +1381,7 @@
                         <p class="text-[11px] text-gray-400">Ventas: ${sysVentas.toLocaleString('es-VE', {minimumFractionDigits: 2})} | Premios: ${sysPremios.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-green-400 font-bold">Neto: ${sysNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
+                        <p class="${sysNeto < 0 ? 'text-red-400' : 'text-green-400'} font-bold">Neto: ${sysNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs</p>
                         <p class="text-[10px] text-gray-400">Comisión: ${sysComision.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
                     </div>
                 </div>`;
@@ -1265,7 +1401,12 @@
             document.getElementById('acum-comisiones').innerText = `Bs. ${totalComisionesGlobal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('acum-comision-srq').innerText = `Bs. ${comisionSRQRestante.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             document.getElementById('acum-cashea-desc').innerText = `- Bs. ${totalCashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            document.getElementById('acum-neto').innerText = `${netoGlobalFinal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+            
+            const elAcumNeto = document.getElementById('acum-neto');
+            if (elAcumNeto) {
+                elAcumNeto.innerText = `${netoGlobalFinal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs`;
+                elAcumNeto.className = netoGlobalFinal < 0 ? "text-red-400 font-bold" : "text-green-400 font-bold";
+            }
         }
 
         // --- GESTIÓN DE CLIENTES Y HISTORIAL ---
@@ -1293,12 +1434,17 @@
 
             let mensaje = `*Agencia Harold José - Seguridad y Confianza*\n`;
             mensaje += `• Cliente: ${c.nombre}\n`;
-            mensaje += `• Saldo Retirable: Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
             
-            if (cashea > 0) {
-                mensaje += `• Crédito Cashea: Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+            if (total < 0) {
+                mensaje += `• *SALDO NEGATIVO / DEUDOR:* Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+                mensaje += `• *Nota:* Posee un saldo pendiente por cancelar a la agencia de Bs. ${Math.abs(total).toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            } else {
+                mensaje += `• Saldo Retirable: Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+                if (cashea > 0) {
+                    mensaje += `• Crédito Cashea: Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}\n`;
+                }
+                mensaje += `• *Saldo Total A Favor:* Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             }
-            mensaje += `• *Saldo Total:* Bs. ${total.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
             navigator.clipboard.writeText(mensaje).then(() => {
                 alert("¡Resumen del cliente copiado al portapapeles!");
@@ -1355,6 +1501,11 @@
             const elTotalSaldos = document.getElementById('display-total-saldos-clientes');
             if (elTotalSaldos) {
                 elTotalSaldos.innerText = `Bs. ${sumaTotalSaldos.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+                if (sumaTotalSaldos < 0) {
+                    elTotalSaldos.className = "text-xl font-extrabold text-red-400 mt-1";
+                } else {
+                    elTotalSaldos.className = "text-xl font-extrabold text-green-400 mt-1";
+                }
             }
 
             let html = '';
@@ -1367,18 +1518,22 @@
                     let retirableNeto = retirable * (1 - 0.003);
                     let totalCliente = cashea + retirable;
 
+                    let colorRetirable = retirable < 0 ? 'text-red-400 font-bold' : 'text-green-400';
+                    let colorTotal = totalCliente < 0 ? 'text-red-400 font-extrabold' : 'text-white';
+                    let badgeDeudor = totalCliente < 0 ? '<span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold ml-1 uppercase">Deudor / Negativo</span>' : '';
+
                     let index = original.findIndex(orig => orig.nombre === c.nombre);
                     html += `
-                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex flex-col space-y-2">
+                    <div class="bg-gray-900 p-3 rounded-lg border ${totalCliente < 0 ? 'border-red-500/70' : 'border-gray-700'} flex flex-col space-y-2">
                         <div class="flex justify-between items-center">
                             <div>
-                                <p class="font-bold text-sm text-yellow-400">${c.nombre}</p>
+                                <p class="font-bold text-sm text-yellow-400 flex items-center">${c.nombre} ${badgeDeudor}</p>
                                 <div class="text-[11px] text-gray-300 space-x-2 mt-0.5">
                                     <span>Cashea: <strong class="text-blue-400">Bs. ${cashea.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
-                                    <span>Retirable: <strong class="text-green-400">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
+                                    <span>Retirable: <strong class="${colorRetirable}">Bs. ${retirable.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></span>
                                 </div>
-                                <p class="text-[11px] text-yellow-400 mt-0.5">Neto a Pagar (-0.3%): <strong class="text-yellow-300">Bs. ${retirableNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
-                                <p class="text-xs text-gray-400 mt-0.5">Total: <strong class="text-white">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
+                                ${retirable > 0 ? `<p class="text-[11px] text-yellow-400 mt-0.5">Neto a Pagar (-0.3%): <strong class="text-yellow-300">Bs. ${retirableNeto.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>` : ''}
+                                <p class="text-xs text-gray-400 mt-0.5">Total Saldo: <strong class="${colorTotal}">Bs. ${totalCliente.toLocaleString('es-VE', {minimumFractionDigits: 2})}</strong></p>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <button onclick="verHistorialCliente(${index}, ${listaOriginal ? 'window._listaOriginalFiltrada' : 'null'})" class="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 bg-gray-800 rounded" title="Ver Historial"><i class="fa-solid fa-clock-rotate-left"></i></button>
@@ -1456,6 +1611,7 @@
             alert("Saldo actualizado con éxito.");
         }
 
+        // DESCUENTO DE JUGADA CLIENTE CON SOPORTE PARA SALDO NEGATIVO (DEUDA)
         function descontarJugadaCliente(index, montoDirecto = null) {
             let clientes = dbState.ag_clientes || [];
             let c = clientes[index];
@@ -1475,7 +1631,7 @@
             let totalDisponible = cashea + retirable;
 
             if (totalDisponible < monto && montoDirecto === null) {
-                if (!confirm("El cliente tiene saldo menor al monto a descontar. ¿Desea continuar igual?")) return;
+                if (!confirm(`El cliente posee Bs. ${totalDisponible.toLocaleString('es-VE', {minimumFractionDigits: 2})} disponible.\n\nAl descontar Bs. ${monto.toLocaleString('es-VE', {minimumFractionDigits: 2})}, su saldo quedará en NEGATIVO (debiendo Bs. ${(monto - totalDisponible).toLocaleString('es-VE', {minimumFractionDigits: 2})}).\n\n¿Desea proceder?`)) return;
             }
 
             let descDetalle = "";
@@ -1485,10 +1641,10 @@
             } else if (cashea > 0) {
                 let resto = monto - cashea;
                 c.saldoCashea = 0;
-                c.saldoRetirable = Math.max(0, retirable - resto);
+                c.saldoRetirable = retirable - resto; // Permite saldo negativo sin Math.max(0)
                 descDetalle = `Jugada descontada (Cashea agotado + Bs. ${resto.toLocaleString('es-VE', {minimumFractionDigits: 2})} de Retirable)`;
             } else {
-                c.saldoRetirable = Math.max(0, retirable - monto);
+                c.saldoRetirable = retirable - monto; // Permite saldo negativo sin Math.max(0)
                 descDetalle = `Jugada descontada de Saldo Retirable: Bs. ${monto.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
             }
 
@@ -1500,7 +1656,13 @@
             renderizarClientes();
             actualizarSaldoTaquilla();
             actualizarSelectClientesRapido();
-            alert(`Jugada de Bs. ${monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} descontada con éxito a ${c.nombre}.`);
+            
+            let nuevoTotal = (c.saldoCashea || 0) + (c.saldoRetirable || 0);
+            if (nuevoTotal < 0) {
+                alert(`Jugada descontada con éxito.\n¡ATENCIÓN! ${c.nombre} ha quedado con SALDO NEGATIVO (Deuda): Bs. ${nuevoTotal.toLocaleString('es-VE', {minimumFractionDigits: 2})}`);
+            } else {
+                alert(`Jugada de Bs. ${monto.toLocaleString('es-VE', {minimumFractionDigits: 2})} descontada con éxito a ${c.nombre}.`);
+            }
         }
 
         function pagarPremioCliente(index) {
@@ -1515,7 +1677,7 @@
                 if (!confirm("El cliente no tiene suficiente saldo retirable. ¿Desea continuar igual?")) return;
             }
 
-            c.saldoRetirable = Math.max(0, (c.saldoRetirable || 0) - retirableMonto);
+            c.saldoRetirable = (c.saldoRetirable || 0) - retirableMonto;
             if (!c.historial) c.historial = [];
             c.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Pago / Retiro', monto: -retirableMonto, desc: `Pago de premio/saldo retirable entregado por Bs. ${retirableMonto.toLocaleString('es-VE')}` });
 
@@ -1634,7 +1796,6 @@
             const trList = dbState.ag_transferencia || [];
             let html = '';
             
-            // Colocar cuenta 7201 de primero o por defecto
             let index7201 = trList.findIndex(t => t.terminacion && t.terminacion.includes('7201'));
             if (index7201 !== -1) {
                 html += `<option value="tr_${index7201}">Cuenta Principal (*7201) - Destino Automático Pago Móvil</option>`;
@@ -1675,10 +1836,18 @@
             renderizarCuentas();
         }
 
+        function eliminarPM(index) {
+            if (!confirm("¿Desea eliminar esta cuenta de Pago Móvil?")) return;
+            dbState.ag_pago_movil.splice(index, 1);
+            guardarDatosRemotos();
+            renderizarCuentas();
+        }
+
         function agregarTransferencia() {
             const terminacion = document.getElementById('nuevo-tr-term').value.trim();
             const titular = document.getElementById('nuevo-tr-titular').value.trim();
-            const saldo = parseFloat((document.getElementById('nuevo-tr-saldo').value || "0").replace(',', '.')) || 0;
+            const saldoStr = document.getElementById('nuevo-tr-saldo').value.trim();
+            const saldo = parseFloat(saldoStr.replace(',', '.')) || 0;
             if (!terminacion || !titular) return alert("Ingresa terminación y titular.");
             if (!dbState.ag_transferencia) dbState.ag_transferencia = [];
             dbState.ag_transferencia.push({ terminacion, titular, saldo });
@@ -1689,249 +1858,167 @@
             renderizarCuentas();
         }
 
-        function eliminarPM(index) {
-            dbState.ag_pago_movil.splice(index, 1);
-            guardarDatosRemotos();
-            renderizarCuentas();
-        }
-
         function eliminarTR(index) {
+            if (!confirm("¿Desea eliminar esta cuenta de transferencia?")) return;
             dbState.ag_transferencia.splice(index, 1);
             guardarDatosRemotos();
             renderizarCuentas();
         }
 
-        // --- PROCESAMIENTO OCR (MERCANTIL / BDV) Y REGISTRO CON AUTOMATIZACIÓN DE CUENTA 7201 ---
-        function procesarComprobanteArchivo(event) {
-            const file = event.target.files[0];
+        // --- LECTURA OCR Y REGISTRO DE PAGOS ---
+        async function procesarComprobanteArchivo(e) {
+            const file = e.target.files[0];
             if (file) procesarBlobImagen(file);
         }
 
-        function procesarBlobImagen(blob) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgPreview = document.getElementById('img-preview');
-                imgPreview.src = e.target.result;
-                document.getElementById('resultado-container').classList.remove('hidden');
-                document.getElementById('loading-ocr').classList.remove('hidden');
-                
-                Tesseract.recognize(e.target.result, 'spa').then(({ data: { text } }) => {
-                    document.getElementById('loading-ocr').classList.add('hidden');
-                    analizarTextoYExtraer(text);
-                }).catch(err => {
-                    console.error(err);
-                    document.getElementById('loading-ocr').classList.add('hidden');
-                    alert("Error al procesar la imagen con OCR.");
-                });
-            }
-            reader.readAsDataURL(blob);
-        }
-
-        function analizarTextoYExtraer(textoOCR) {
-            const texto = textoOCR.toUpperCase();
-            const alerta = document.getElementById('alerta-antifraude');
+        async function procesarBlobImagen(blob) {
+            const loading = document.getElementById('loading-ocr');
+            const resContainer = document.getElementById('resultado-container');
+            const imgPreview = document.getElementById('img-preview');
             const statusBadge = document.getElementById('status-badge');
-            
-            const pmList = dbState.ag_pago_movil || [];
-            const trList = dbState.ag_transferencia || [];
-            
-            const lineas = texto.split('\n');
-            let lineaOrigen = '';
-            let lineaDestino = '';
 
-            for (let l of lineas) {
-                if (l.includes('DEBITADA') || l.includes('CUENTA ORIGEN') || l.includes('DESDE MI CUENTA') || l.includes('PAGADOR') || l.includes('DATOS DEL EMISOR')) {
-                    lineaOrigen += " " + l;
-                }
-                if (l.includes('DESTINO') || l.includes('BENEFICIARIO') || l.includes('ABONADA') || l.includes('IDENTIFICACION')) {
-                    lineaDestino += " " + l;
-                }
-            }
+            if (loading) loading.classList.remove('hidden');
+            if (resContainer) resContainer.classList.add('hidden');
 
-            // Detección Estricta Anti-Fraude (Solo si la línea de Origen contiene explícitamente los datos de Harold)
-            let origenContieneMisDatos = false;
-            if (lineaOrigen.length > 5) {
-                for (let pm of pmList) {
-                    if ((pm.cedula && lineaOrigen.includes(pm.cedula)) || (pm.telefono && lineaOrigen.includes(pm.telefono))) {
-                        origenContieneMisDatos = true;
+            const url = URL.createObjectURL(blob);
+            if (imgPreview) imgPreview.src = url;
+
+            try {
+                const worker = await Tesseract.createWorker('spa');
+                const ret = await worker.recognize(blob);
+                await worker.terminate();
+
+                const text = ret.data.text || '';
+                console.log("OCR Texto:", text);
+
+                let refMatch = text.match(/(?:ref|operaci[oó]n|referencia|nro|num|n°)?\s*:?\s*(\d{4,12})/i);
+                if (refMatch && refMatch[1]) {
+                    document.getElementById('input-ref').value = refMatch[1];
+                }
+
+                let montoMatch = text.match(/(?:bs\.?|monto|total|importe)?\s*:?\s*([\d\.\,]+\d{2})/i);
+                if (montoMatch && montoMatch[1]) {
+                    let m = montoMatch[1].replace('.', '').replace(',', '.');
+                    if (!isNaN(parseFloat(m))) {
+                        document.getElementById('input-monto').value = parseFloat(m).toFixed(2).replace('.', ',');
                     }
                 }
-            }
 
-            if (origenContieneMisDatos) {
-                alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Este comprobante es un pago SALIENTE (Tú enviaste este dinero).`;
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Comprobante rechazado.`;
-                return;
-            }
+                if (loading) loading.classList.add('hidden');
+                if (resContainer) resContainer.classList.remove('hidden');
 
-            // Reconocimiento Flexible Ampliado (Mercantil, BDV, BNC, Banesco y Harold Galea)
-            const palabrasCoincidencia = [
-                "HAROLD", "GALEA", "SANCHEZ", "7201", "MERCANTIL", "BANCO MERCANTIL", 
-                "MERCANTIL BANCO", "BANCO DE VENEZUELA", "BDV", "BNC", "BANESCO"
-            ];
+                const misCedulas = (dbState.ag_pago_movil || []).map(p => p.cedula.replace(/\D/g, ''));
+                const misTels = (dbState.ag_pago_movil || []).map(p => p.telefono.replace(/\D/g, ''));
+                const textLimpio = text.replace(/\D/g, '');
 
-            let esParaMisCuentas = false;
-            let tipoDetectado = "";
+                let coincide = misCedulas.some(c => c && textLimpio.includes(c)) || misTels.some(t => t && textLimpio.includes(t.slice(-7)));
 
-            palabrasCoincidencia.forEach(kw => {
-                if (texto.includes(kw)) {
-                    esParaMisCuentas = true;
-                    if (kw.includes("MERCANTIL")) tipoDetectado = "Comprobante Mercantil Válido";
-                    else if (kw.includes("VENEZUELA") || kw.includes("BDV")) tipoDetectado = "Pago Móvil / Transferencia BDV Válido";
-                    else tipoDetectado = "Comprobante Válido";
-                }
-            });
-
-            for (let pm of pmList) {
-                if ((pm.cedula && texto.includes(pm.cedula)) || (pm.telefono && texto.includes(pm.telefono))) {
-                    esParaMisCuentas = true;
-                    tipoDetectado = "Pago Móvil Válido";
-                    break;
-                }
-            }
-
-            for (let tr of trList) {
-                if (tr.terminacion && texto.includes(tr.terminacion)) {
-                    esParaMisCuentas = true;
-                    tipoDetectado = "Transferencia Válida (*" + tr.terminacion + ")";
-                    break;
-                }
-            }
-
-            let refEncontrada = '';
-            let montoEncontrado = '';
-
-            // Extracción de Referencia
-            for (let i = 0; i < lineas.length; i++) {
-                let linea = lineas[i];
-                if (linea.includes('REFERENCIA') || linea.includes('OPERACIÓN') || linea.includes('OPERACION') || linea.includes('REF') || linea.includes('NRO')) {
-                    let nums = linea.match(/\d{6,}/);
-                    if (nums) {
-                        refEncontrada = nums[0];
-                    } else if (i + 1 < lineas.length) {
-                        let numsNext = lineas[i + 1].match(/\d{6,}/);
-                        if (numsNext) refEncontrada = numsNext[0];
+                const alerta = document.getElementById('alerta-antifraude');
+                if (!coincide && misCedulas.length > 0) {
+                    if (alerta) alerta.classList.remove('hidden');
+                    if (statusBadge) {
+                        statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-200 border border-red-500";
+                        statusBadge.innerText = "¡ALERTA! El comprobante parece no pertenecer a tus datos registrados.";
+                    }
+                } else {
+                    if (alerta) alerta.classList.add('hidden');
+                    if (statusBadge) {
+                        statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-200 border border-green-500";
+                        statusBadge.innerText = "Comprobante verificado con éxito.";
                     }
                 }
-                if (linea.includes('BS') || linea.includes(',00') || linea.includes('MONTO')) {
-                    let matchMonto = linea.match(/([\d\.,]+)\s*BS?/i);
-                    if (matchMonto && matchMonto[1].length > 1) montoEncontrado = matchMonto[1];
+            } catch (err) {
+                console.error("Error OCR:", err);
+                if (loading) loading.classList.add('hidden');
+                if (resContainer) resContainer.classList.remove('hidden');
+                if (statusBadge) {
+                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-yellow-900/80 text-yellow-200 border border-yellow-500";
+                    statusBadge.innerText = "No se pudo leer automáticamente. Ingrese los datos manualmente.";
                 }
-            }
-
-            if (!refEncontrada) {
-                let matches = texto.match(/\b\d{6,12}\b/g);
-                if (matches) {
-                    for (let m of matches) {
-                        let esCedulaOTel = false;
-                        for (let pm of pmList) {
-                            if (m === pm.cedula || m === pm.telefono) esCedulaOTel = true;
-                        }
-                        if (!esCedulaOTel) {
-                            refEncontrada = m;
-                            break;
-                        }
-                    }
-                    if (!refEncontrada && matches.length > 0) refEncontrada = matches[0];
-                }
-            }
-
-            if (!montoEncontrado) {
-                let matchesMonto = texto.match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/);
-                if (matchesMonto) montoEncontrado = matchesMonto[0];
-            }
-
-            if (refEncontrada) document.getElementById('input-ref').value = refEncontrada;
-            if (montoEncontrado) {
-                let montoLimpio = montoEncontrado.replace(/\./g, '').replace(',', '.');
-                document.getElementById('input-monto').value = montoLimpio;
-                document.getElementById('input-monto-jugado').value = montoLimpio;
-            }
-
-            if (refEncontrada) {
-                const refsUsadas = dbState.ag_referencias_usadas || [];
-                const duplicada = refsUsadas.find(r => r.referencia === refEncontrada);
-                if (duplicada) {
-                    alerta.classList.remove('hidden');
-                    document.getElementById('texto-alerta').innerText = `¡REFERENCIA DUPLICADA! Ya fue usada por "${duplicada.cliente}".`;
-                    statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-red-900/80 text-red-300 border border-red-700";
-                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Referencia ya registrada.`;
-                    return;
-                }
-            }
-
-            if (esParaMisCuentas || (refEncontrada && montoEncontrado)) {
-                alerta.classList.add('hidden');
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-green-900/80 text-green-300 border border-green-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${tipoDetectado || "Comprobante"} aprobado.`;
-            } else {
-                alerta.classList.remove('hidden');
-                document.getElementById('texto-alerta').innerText = `¡ALERTA ANTI-FRAUDE! Verifique que el comprobante sea para Harold Galea.`;
-                statusBadge.className = "p-2 rounded text-xs font-bold text-center bg-yellow-900/80 text-yellow-300 border border-yellow-700";
-                statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Verificación requerida.`;
             }
         }
 
         function registrarPago() {
-            const referencia = document.getElementById('input-ref').value.trim();
-            const clienteNombre = document.getElementById('input-cliente').value.trim() || "Cliente General";
-            const montoComprobante = parseFloat(document.getElementById('input-monto').value.trim().replace(',', '.')) || 0;
-            const montoJugado = parseFloat(document.getElementById('input-monto-jugado').value.trim().replace(',', '.')) || 0;
-            const esCashea = document.getElementById('check-cashea').checked;
+            const ref = document.getElementById('input-ref').value.trim();
+            const clienteNombre = document.getElementById('input-cliente').value.trim();
+            const montoStr = document.getElementById('input-monto').value.trim();
+            const montoJugadoStr = document.getElementById('input-monto-jugado').value.trim();
+            const checkCashea = document.getElementById('check-cashea').checked;
+            const selectCuenta = document.getElementById('select-cuenta-destino').value;
 
-            if (montoComprobante <= 0) return alert("Ingrese un monto válido de comprobante.");
+            let montoTotal = parseFloat(montoStr.replace(',', '.')) || 0;
+            let montoJugado = parseFloat(montoJugadoStr.replace(',', '.')) || 0;
 
-            // Acreditar saldo automáticamente a la Cuenta Principal (*7201)
+            if (!clienteNombre) return alert("Por favor, ingresa o selecciona un cliente.");
+            if (montoTotal <= 0) return alert("Por favor, ingresa un monto válido de comprobante.");
+
+            let sobrante = Math.max(0, montoTotal - montoJugado);
+
             let trList = dbState.ag_transferencia || [];
-            let cuenta7201 = trList.find(t => t.terminacion && t.terminacion.includes('7201'));
-
-            if (cuenta7201) {
-                cuenta7201.saldo = (cuenta7201.saldo || 0) + montoComprobante;
+            if (selectCuenta && selectCuenta.startsWith('tr_')) {
+                let idx = parseInt(selectCuenta.replace('tr_', ''));
+                if (trList[idx]) {
+                    trList[idx].saldo = (trList[idx].saldo || 0) + montoTotal;
+                }
             } else if (trList.length > 0) {
-                trList[0].saldo = (trList[0].saldo || 0) + montoComprobante;
+                trList[0].saldo = (trList[0].saldo || 0) + montoTotal;
             }
 
-            // Sobrante a cliente si comprobante > monto jugado
-            let sobrante = Math.max(0, montoComprobante - montoJugado);
+            if (!dbState.ag_clientes) dbState.ag_clientes = [];
+            let cliente = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
+
+            if (!cliente) {
+                cliente = {
+                    nombre: clienteNombre,
+                    saldoCashea: 0,
+                    saldoRetirable: 0,
+                    historial: []
+                };
+                dbState.ag_clientes.push(cliente);
+            }
+
             if (sobrante > 0) {
-                if (!dbState.ag_clientes) dbState.ag_clientes = [];
-                let cli = dbState.ag_clientes.find(c => c.nombre.toUpperCase() === clienteNombre.toUpperCase());
-                if (!cli) {
-                    cli = { nombre: clienteNombre, saldoCashea: 0, saldoRetirable: 0, historial: [] };
-                    dbState.ag_clientes.push(cli);
-                }
-                if (esCashea) {
-                    cli.saldoCashea = (cli.saldoCashea || 0) + sobrante;
-                    if (!cli.historial) cli.historial = [];
-                    cli.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Abono Cashea', monto: sobrante, desc: `Sobrante de pago (Ref: ${referencia}) a Cashea` });
+                if (checkCashea) {
+                    cliente.saldoCashea = (cliente.saldoCashea || 0) + sobrante;
+                    if (!dbState.ag_cashea_creditos) dbState.ag_cashea_creditos = [];
+                    dbState.ag_cashea_creditos.push({
+                        cliente: clienteNombre,
+                        monto: sobrante,
+                        fecha: new Date().toLocaleString()
+                    });
                 } else {
-                    cli.saldoRetirable = (cli.saldoRetirable || 0) + sobrante;
-                    if (!cli.historial) cli.historial = [];
-                    cli.historial.unshift({ fecha: new Date().toLocaleString(), tipo: 'Abono Retirable', monto: sobrante, desc: `Sobrante de pago (Ref: ${referencia}) a Retirable` });
+                    cliente.saldoRetirable = (cliente.saldoRetirable || 0) + sobrante;
                 }
             }
 
-            // Registrar referencia usada
-            if (referencia) {
-                if (!dbState.ag_referencias_usadas) dbState.ag_referencias_usadas = [];
-                dbState.ag_referencias_usadas.push({ referencia, cliente: clienteNombre, fecha: new Date().toLocaleString() });
-            }
+            if (!cliente.historial) cliente.historial = [];
+            let descHist = `Pago recibido de Bs. ${montoTotal.toLocaleString('es-VE')}. Ref: ${ref || 'S/N'}.`;
+            if (montoJugado > 0) descHist += ` Jugó: Bs. ${montoJugado.toLocaleString('es-VE')}.`;
+            if (sobrante > 0) descHist += ` Sobrante a ${checkCashea ? 'Cashea' : 'Retirable'}: Bs. ${sobrante.toLocaleString('es-VE')}.`;
+
+            cliente.historial.unshift({
+                fecha: new Date().toLocaleString(),
+                tipo: 'Registro Pago',
+                monto: sobrante,
+                desc: descHist
+            });
 
             guardarDatosRemotos();
             renderizarCuentas();
             renderizarClientes();
+            renderizarCashea();
             actualizarSaldoTaquilla();
             actualizarDatalistClientes();
             actualizarSelectClientesRapido();
 
-            // Limpiar formulario
             document.getElementById('input-ref').value = '';
+            document.getElementById('input-cliente').value = '';
             document.getElementById('input-monto').value = '';
             document.getElementById('input-monto-jugado').value = '0,00';
+            document.getElementById('check-cashea').checked = false;
             document.getElementById('resultado-container').classList.add('hidden');
-            alert("Pago registrado exitosamente. El dinero ingresó a la Cuenta Principal (*7201).");
+
+            alert(`¡Pago registrado con éxito!\nCliente: ${clienteNombre}\nMonto Registrado: Bs. ${montoTotal.toLocaleString('es-VE')}\nSobrante acreditado: Bs. ${sobrante.toLocaleString('es-VE')}`);
         }
     </script>
 </body>
